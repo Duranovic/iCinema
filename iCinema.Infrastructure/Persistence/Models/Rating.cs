@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace iCinema.Infrastructure.Persistence.Models;
+
+public partial class Rating
+{
+    public int RatingID { get; set; }
+
+    public int UserID { get; set; }
+
+    public int MovieID { get; set; }
+
+    public byte RatingValue { get; set; }
+
+    public DateTime RatedAt { get; set; }
+
+    public virtual Movie Movie { get; set; } = null!;
+
+    public virtual User User { get; set; } = null!;
+}
