@@ -1,18 +1,17 @@
-using iCinema.Infrastructure.Persistence.Models;
-using Microsoft.EntityFrameworkCore;
+using iCinema.Api.DependencyInjection;
+using iCinema.Application.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddSwaggerGen(); // Registers Swagger generator
-
-builder.Services.AddDbContext<iCinemaDbContext>(opts =>
-    opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 
