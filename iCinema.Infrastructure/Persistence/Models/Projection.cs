@@ -5,15 +5,21 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Projection
 {
-    public int ProjectionID { get; set; }
+    public Guid Id { get; set; }
 
-    public int MovieID { get; set; }
+    public Guid MovieId { get; set; }
 
-    public int HallID { get; set; }
+    public Guid HallId { get; set; }
 
     public DateTime StartTime { get; set; }
 
     public decimal Price { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public string? ProjectionType { get; set; }
+
+    public bool? IsSubtitled { get; set; }
 
     public virtual Hall Hall { get; set; } = null!;
 

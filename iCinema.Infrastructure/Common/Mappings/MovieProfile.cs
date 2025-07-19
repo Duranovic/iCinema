@@ -1,8 +1,8 @@
 using AutoMapper;
 using iCinema.Application.DTOs;
-using iCinema.Domain.Entities;
+using iCinema.Infrastructure.Persistence.Models;
 
-namespace iCinema.Application.Mappings;
+namespace iCinema.Infrastructure.Common.Mappings;
 
 public class MovieProfile : Profile
 {
@@ -10,5 +10,6 @@ public class MovieProfile : Profile
     {
         CreateMap<Movie, MovieDto>();
         CreateMap<MovieDto, Movie>();
+        
     }
 }

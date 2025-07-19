@@ -5,15 +5,17 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Ticket
 {
-    public int TicketID { get; set; }
+    public Guid Id { get; set; }
 
-    public int ReservationID { get; set; }
+    public Guid ReservationId { get; set; }
 
-    public int SeatID { get; set; }
+    public Guid SeatId { get; set; }
 
-    public string QRCode { get; set; } = null!;
+    public string? QRCode { get; set; }
 
-    public string TicketStatus { get; set; } = null!;
+    public string? TicketStatus { get; set; }
+
+    public string? TicketType { get; set; }
 
     public virtual Reservation Reservation { get; set; } = null!;
 

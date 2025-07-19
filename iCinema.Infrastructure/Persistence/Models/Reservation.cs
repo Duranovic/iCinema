@@ -5,13 +5,17 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Reservation
 {
-    public int ReservationID { get; set; }
+    public Guid Id { get; set; }
 
-    public int UserID { get; set; }
+    public Guid UserId { get; set; }
 
-    public int ProjectionID { get; set; }
+    public Guid ProjectionId { get; set; }
 
     public DateTime ReservedAt { get; set; }
+
+    public DateTime? ExpiresAt { get; set; }
+
+    public bool? IsCanceled { get; set; }
 
     public virtual Projection Projection { get; set; } = null!;
 

@@ -5,13 +5,15 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Rating
 {
-    public int RatingID { get; set; }
+    public Guid Id { get; set; }
 
-    public int UserID { get; set; }
+    public Guid UserId { get; set; }
 
-    public int MovieID { get; set; }
+    public Guid MovieId { get; set; }
 
     public byte RatingValue { get; set; }
+
+    public string? Review { get; set; }
 
     public DateTime RatedAt { get; set; }
 

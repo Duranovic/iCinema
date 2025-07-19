@@ -5,9 +5,9 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class City
 {
-    public int CityID { get; set; }
+    public Guid Id { get; set; }
 
-    public int CountryID { get; set; }
+    public Guid CountryId { get; set; }
 
     public string Name { get; set; } = null!;
 

@@ -5,15 +5,21 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Hall
 {
-    public int HallID { get; set; }
+    public Guid Id { get; set; }
 
-    public int CinemaID { get; set; }
+    public Guid CinemaId { get; set; }
 
     public string Name { get; set; } = null!;
 
     public int RowsCount { get; set; }
 
     public int SeatsPerRow { get; set; }
+
+    public string? HallType { get; set; }
+
+    public string? ScreenSize { get; set; }
+
+    public bool? IsDolbyAtmos { get; set; }
 
     public virtual Cinema Cinema { get; set; } = null!;
 

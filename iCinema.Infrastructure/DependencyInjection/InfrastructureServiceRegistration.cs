@@ -1,11 +1,12 @@
 using iCinema.Application.Interfaces.Repositories;
-using iCinema.Infrastructure.Persistence.Models;
+using iCinema.Infrastructure.Common.Mappings;
+using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace iCinema.Api.DependencyInjection;
+namespace iCinema.Infrastructure.DependencyInjection;
 
 public static class InfrastructureServiceRegistration
 {
@@ -15,7 +16,13 @@ public static class InfrastructureServiceRegistration
         services.AddDbContext<iCinemaDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
         
+        // Repositories
         services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<ICountryRepository, CountryRepository>();
+        
+        // Automapper Profiles
+        services.AddAutoMapper(typeof(MovieProfile).Assembly);
+        services.AddAutoMapper(typeof(CountryProfile).Assembly);
         
         return services;
     }

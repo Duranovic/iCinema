@@ -5,9 +5,9 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Seat
 {
-    public int SeatID { get; set; }
+    public Guid Id { get; set; }
 
-    public int HallID { get; set; }
+    public Guid HallId { get; set; }
 
     public int RowNumber { get; set; }
 

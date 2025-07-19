@@ -1,5 +1,5 @@
-using iCinema.Api.DependencyInjection;
 using iCinema.Application.DependencyInjection;
+using iCinema.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +11,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(); // Registers Swagger generator
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 

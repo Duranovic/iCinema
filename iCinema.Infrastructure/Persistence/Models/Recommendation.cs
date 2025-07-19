@@ -5,11 +5,11 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class Recommendation
 {
-    public int RecommendationID { get; set; }
+    public Guid Id { get; set; }
 
-    public int UserID { get; set; }
+    public Guid UserId { get; set; }
 
-    public int MovieID { get; set; }
+    public Guid MovieId { get; set; }
 
     public double Score { get; set; }
 

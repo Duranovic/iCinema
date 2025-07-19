@@ -5,7 +5,9 @@ namespace iCinema.Infrastructure.Persistence.Models;
 
 public partial class User
 {
-    public int UserID { get; set; }
+    public Guid Id { get; set; }
+
+    public Guid RoleId { get; set; }
 
     public string Username { get; set; } = null!;
 
@@ -13,9 +15,15 @@ public partial class User
 
     public string PasswordHash { get; set; } = null!;
 
-    public int RoleID { get; set; }
+    public string? PhoneNumber { get; set; }
+
+    public bool EmailConfirmed { get; set; }
+
+    public bool IsActive { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<PromoCode> PromoCodes { get; set; } = new List<PromoCode>();
 
     public virtual ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 

@@ -1,8 +1,8 @@
-using iCinema.Domain.Entities;
+using iCinema.Application.DTOs;
 
 namespace iCinema.Application.Interfaces.Repositories;
 
 public interface IMovieRepository
 {
-    Task<List<Movie>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<MovieDto>> GetAllAsync(CancellationToken cancellationToken = default);
 }
