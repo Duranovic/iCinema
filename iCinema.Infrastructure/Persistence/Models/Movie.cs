@@ -7,8 +7,6 @@ public partial class Movie
 {
     public Guid Id { get; set; }
 
-    public Guid GenreId { get; set; }
-
     public Guid? DirectorId { get; set; }
 
     public string Title { get; set; } = null!;
@@ -29,9 +27,9 @@ public partial class Movie
 
     public virtual Director? Director { get; set; }
 
-    public virtual Genre Genre { get; set; } = null!;
-
     public virtual ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
+
+    public virtual ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
 
     public virtual ICollection<Projection> Projections { get; set; } = new List<Projection>();
 

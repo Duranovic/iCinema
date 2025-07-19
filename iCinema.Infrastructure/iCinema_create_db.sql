@@ -1,8 +1,6 @@
-CREATE DATABASE iCinemaDb;
-
+CREATE DATABASE iCinema;
 GO
-
-USE iCinemaDb;
+USE iCinema;
 GO
 
 -- COUNTRIES
@@ -72,17 +70,15 @@ CREATE TABLE Directors
 CREATE TABLE Movies
 (
     Id          UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    GenreId     UNIQUEIDENTIFIER NOT NULL,
     DirectorId  UNIQUEIDENTIFIER,
-    Title       NVARCHAR(200)    NOT NULL,
+    Title       NVARCHAR(200) NOT NULL,
     Description NVARCHAR(MAX),
-    DurationMin INT              NOT NULL,
+    DurationMin INT           NOT NULL,
     ReleaseDate DATE,
     PosterUrl   NVARCHAR(250),
     AgeRating   NVARCHAR(10), -- e.g. PG, R
     Language    NVARCHAR(50),
     TrailerUrl  NVARCHAR(250),
-    CONSTRAINT FK_Movies_Genres FOREIGN KEY (GenreId) REFERENCES Genres (Id),
     CONSTRAINT FK_Movies_Director FOREIGN KEY (DirectorId) REFERENCES Directors (Id)
 );
 
@@ -95,6 +91,16 @@ CREATE TABLE MovieActors
     PRIMARY KEY (MovieId, ActorId),
     CONSTRAINT FK_MovieActors_Movie FOREIGN KEY (MovieId) REFERENCES Movies (Id),
     CONSTRAINT FK_MovieActors_Actor FOREIGN KEY (ActorId) REFERENCES Actors (Id)
+);
+
+CREATE TABLE MovieGenres
+(
+    MovieId   UNIQUEIDENTIFIER,
+    GenreId   UNIQUEIDENTIFIER,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    PRIMARY KEY (MovieId, GenreId),
+    CONSTRAINT FK_MovieGenres_Movie FOREIGN KEY (MovieId) REFERENCES Movies (Id),
+    CONSTRAINT FK_MovieGenres_Genre FOREIGN KEY (GenreId) REFERENCES Genres (Id)
 );
 
 -- ROLES

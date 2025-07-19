@@ -8,7 +8,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<iCinemaDbC
 {
     public iCinemaDbContext CreateDbContext(string[] args)
     {
-        // Navigate to ../iCinema.Api/appsettings.json relative to Infrastructure
         var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../iCinema.Api");
 
         IConfigurationRoot configuration = new ConfigurationBuilder()

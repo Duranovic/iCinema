@@ -1,4 +1,6 @@
-﻿using iCinema.Infrastructure.Persistence.Models;
+﻿using System;
+using System.Collections.Generic;
+using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence;
@@ -28,6 +30,8 @@ public partial class iCinemaDbContext : DbContext
 
     public virtual DbSet<MovieActor> MovieActors { get; set; }
 
+    public virtual DbSet<MovieGenre> MovieGenres { get; set; }
+
     public virtual DbSet<Projection> Projections { get; set; }
 
     public virtual DbSet<PromoCode> PromoCodes { get; set; }
@@ -50,7 +54,7 @@ public partial class iCinemaDbContext : DbContext
     {
         modelBuilder.Entity<Actor>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Actors__3214EC07D0925FC7");
+            entity.HasKey(e => e.Id).HasName("PK__Actors__3214EC07DC3757D0");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.FullName).HasMaxLength(100);
@@ -59,7 +63,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Cinema>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Cinemas__3214EC0751440523");
+            entity.HasKey(e => e.Id).HasName("PK__Cinemas__3214EC07336722AE");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Address).HasMaxLength(250);
@@ -73,7 +77,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<City>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Cities__3214EC07EC7B6656");
+            entity.HasKey(e => e.Id).HasName("PK__Cities__3214EC07B6373934");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(100);
@@ -86,7 +90,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Country>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Countrie__3214EC076E0EF6F5");
+            entity.HasKey(e => e.Id).HasName("PK__Countrie__3214EC07A87D9B58");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(100);
@@ -94,7 +98,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Director>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Director__3214EC07791F353C");
+            entity.HasKey(e => e.Id).HasName("PK__Director__3214EC0717AA3D8B");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.FullName).HasMaxLength(100);
@@ -103,7 +107,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Genre>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Genres__3214EC072358E139");
+            entity.HasKey(e => e.Id).HasName("PK__Genres__3214EC07DEAD6A98");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(50);
@@ -111,7 +115,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Hall>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Halls__3214EC075CC4C2E3");
+            entity.HasKey(e => e.Id).HasName("PK__Halls__3214EC073E00AFC8");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.HallType).HasMaxLength(50);
@@ -127,7 +131,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Movie>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Movies__3214EC076ACA7E1B");
+            entity.HasKey(e => e.Id).HasName("PK__Movies__3214EC07269DD239");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.AgeRating).HasMaxLength(10);
@@ -139,16 +143,11 @@ public partial class iCinemaDbContext : DbContext
             entity.HasOne(d => d.Director).WithMany(p => p.Movies)
                 .HasForeignKey(d => d.DirectorId)
                 .HasConstraintName("FK_Movies_Director");
-
-            entity.HasOne(d => d.Genre).WithMany(p => p.Movies)
-                .HasForeignKey(d => d.GenreId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Movies_Genres");
         });
 
         modelBuilder.Entity<MovieActor>(entity =>
         {
-            entity.HasKey(e => new { e.MovieId, e.ActorId }).HasName("PK__MovieAct__EEA9AABE1B15CA55");
+            entity.HasKey(e => new { e.MovieId, e.ActorId }).HasName("PK__MovieAct__EEA9AABED67E3EC6");
 
             entity.Property(e => e.RoleName).HasMaxLength(100);
 
@@ -163,9 +162,28 @@ public partial class iCinemaDbContext : DbContext
                 .HasConstraintName("FK_MovieActors_Movie");
         });
 
+        modelBuilder.Entity<MovieGenre>(entity =>
+        {
+            entity.HasKey(e => new { e.MovieId, e.GenreId }).HasName("PK__MovieGen__BBEAC44DD7E15F1F");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Genre).WithMany(p => p.MovieGenres)
+                .HasForeignKey(d => d.GenreId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MovieGenres_Genre");
+
+            entity.HasOne(d => d.Movie).WithMany(p => p.MovieGenres)
+                .HasForeignKey(d => d.MovieId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MovieGenres_Movie");
+        });
+
         modelBuilder.Entity<Projection>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Projecti__3214EC075E9258FC");
+            entity.HasKey(e => e.Id).HasName("PK__Projecti__3214EC07DD1D3F4C");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
@@ -187,7 +205,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<PromoCode>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PromoCod__3214EC0752A2B088");
+            entity.HasKey(e => e.Id).HasName("PK__PromoCod__3214EC079E76958B");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Code).HasMaxLength(50);
@@ -207,7 +225,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Rating>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Ratings__3214EC073B0666A1");
+            entity.HasKey(e => e.Id).HasName("PK__Ratings__3214EC07505DB668");
 
             entity.HasIndex(e => new { e.UserId, e.MovieId }, "UQ_Ratings_User_Movie").IsUnique();
 
@@ -230,7 +248,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Recommendation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Recommen__3214EC07BF832837");
+            entity.HasKey(e => e.Id).HasName("PK__Recommen__3214EC07657025E6");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
@@ -247,7 +265,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Reservation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Reservat__3214EC07C1769BEB");
+            entity.HasKey(e => e.Id).HasName("PK__Reservat__3214EC0776001C03");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
@@ -269,7 +287,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC07D6919DE3");
+            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC078929E38C");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(50);
@@ -277,7 +295,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Seat>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Seats__3214EC0730A70400");
+            entity.HasKey(e => e.Id).HasName("PK__Seats__3214EC070B40057A");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
@@ -289,7 +307,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<Ticket>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Tickets__3214EC07598414D2");
+            entity.HasKey(e => e.Id).HasName("PK__Tickets__3214EC076502CC96");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.QRCode).HasMaxLength(200);
@@ -309,7 +327,7 @@ public partial class iCinemaDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07DD3DC061");
+            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07A1B4EF31");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
