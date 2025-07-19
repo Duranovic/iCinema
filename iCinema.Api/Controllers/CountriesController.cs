@@ -6,19 +6,12 @@ namespace iCinema.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class CountriesController : ControllerBase
+public class CountriesController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public CountriesController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAllCountriesQuery());
+        var result = await mediator.Send(new GetAllCountriesQuery(), cancellationToken);
         return Ok(result);
     }
 }

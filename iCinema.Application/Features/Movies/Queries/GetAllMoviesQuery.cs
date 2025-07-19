@@ -3,4 +3,4 @@ using MediatR;
 
 namespace iCinema.Application.Features.Movies.Queries;
 
-public class GetAllMoviesQuery : IRequest<List<MovieDto>> { }
+public class GetAllMoviesQuery : IRequest<IQueryable<MovieDto>>;

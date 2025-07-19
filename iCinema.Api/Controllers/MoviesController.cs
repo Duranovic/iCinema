@@ -4,22 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
-
 [ApiController]
 [Route("[controller]")]
-public class MoviesController : ControllerBase
+public class MoviesController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public MoviesController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _mediator.Send(new GetAllMoviesQuery());
+        var result = await mediator.Send(new GetAllMoviesQuery());
         return Ok(result);
     }
 }

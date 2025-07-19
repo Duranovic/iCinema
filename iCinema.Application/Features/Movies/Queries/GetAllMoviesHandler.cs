@@ -5,20 +5,10 @@ using iCinema.Application.Interfaces.Repositories;
 
 namespace iCinema.Application.Features.Movies.Queries;
 
-public class GetAllMoviesHandler : IRequestHandler<GetAllMoviesQuery, List<MovieDto>>
+public class GetAllMoviesHandler(IMovieRepository movieRepository) : IRequestHandler<GetAllMoviesQuery, IQueryable<MovieDto>>
 {
-    private readonly IMovieRepository _movieRepository;
-    private readonly IMapper _mapper;
-
-    public GetAllMoviesHandler(IMovieRepository movieRepository, IMapper mapper)
+    public Task<IQueryable<MovieDto>> Handle(GetAllMoviesQuery request, CancellationToken cancellationToken)
     {
-        _movieRepository = movieRepository;
-        _mapper = mapper;
-    }
-
-    public async Task<List<MovieDto>> Handle(GetAllMoviesQuery request, CancellationToken cancellationToken)
-    {
-        var movies = await _movieRepository.GetAllAsync(cancellationToken);
-        return _mapper.Map<List<MovieDto>>(movies);
+        return movieRepository.GetAllAsync(cancellationToken);
     }
 }
