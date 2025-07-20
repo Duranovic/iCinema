@@ -4,5 +4,5 @@ namespace iCinema.Application.Interfaces.Repositories;
 
 public interface ICountryRepository
 {
-    Task<IEnumerable<CountryDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<CountryDto>> GetAllAsync(CancellationToken cancellationToken);
 }

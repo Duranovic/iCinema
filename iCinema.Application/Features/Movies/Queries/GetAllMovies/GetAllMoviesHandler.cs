@@ -9,6 +9,6 @@ public class GetAllMoviesHandler(IMovieRepository movieRepository) : IRequestHan
 {
     public Task<IQueryable<MovieDto>> Handle(GetAllMoviesQuery request, CancellationToken cancellationToken)
     {
-        return movieRepository.GetAllAsync(cancellationToken);
+        return movieRepository.GetAll(cancellationToken);
     }
 }

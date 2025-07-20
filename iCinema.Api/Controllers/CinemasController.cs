@@ -1,12 +1,38 @@
+using iCinema.Application.Features.Cinemas.Queries.GetAllCinemas;
+using iCinema.Application.Features.Cinemas.Queries.GetCinemaById;
+using iCinema.Application.Features.Cinemas.Queries.GetCinemasByCity;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
-public class CinemasController : Controller
+[ApiController]
+[Route("[controller]")]
+public class CinemasController(IMediator mediator) : Controller
 {
-    // GET
-    public IActionResult Index()
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        return View();
+        var result = await mediator.Send(new GetAllCinemasQuery(), cancellationToken);
+        return Ok(result);
     }
-}
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetCinemaByIdQuery(id),  cancellationToken);
+        
+        if (result == null)
+        {
+            return NotFound();
+        }
+        return Ok(result);
+    }
+
+    [HttpGet("cinemas/by-city/{cityId:guid}")]
+    public async Task<IActionResult> GetByCity(Guid cityId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetCinemasByCityQuery(cityId), cancellationToken);
+        return Ok(result);
+    }
+}   

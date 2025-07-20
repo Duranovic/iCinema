@@ -9,9 +9,9 @@ namespace iCinema.Api.Controllers;
 public class RolesController(IMediator mediator) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetAllRolesQuery());
+        var result = await mediator.Send(new GetAllRolesQuery(), cancellationToken);
         return Ok(result);
     }
 }

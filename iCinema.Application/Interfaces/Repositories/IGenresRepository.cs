@@ -4,5 +4,5 @@ namespace iCinema.Application.Interfaces.Repositories;
 
 public interface IGenresRepository
 {
-    Task<IEnumerable<GenreDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<GenreDto>> GetAllAsync(CancellationToken cancellationToken);
 }

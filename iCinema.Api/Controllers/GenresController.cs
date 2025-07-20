@@ -9,7 +9,7 @@ namespace iCinema.Api.Controllers;
 public class GenresController (IMediator mediator) : ControllerBase
 {
   [HttpGet]
-  public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
+  public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
   {
     var result = await mediator.Send(new GetAllGeneresQuery(), cancellationToken);
     return Ok(result);

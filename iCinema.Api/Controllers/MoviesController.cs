@@ -9,9 +9,9 @@ namespace iCinema.Api.Controllers;
 public class MoviesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetAllMoviesQuery());
+        var result = await mediator.Send(new GetAllMoviesQuery(), cancellationToken);
         return Ok(result);
     }
 }
