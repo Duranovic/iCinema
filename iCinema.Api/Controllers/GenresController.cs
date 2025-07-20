@@ -1,5 +1,4 @@
-using iCinema.Application.DTOs;
-using iCinema.Application.Features.Genres.Queries;
+using iCinema.Application.Features.Genres.Queries.GetAllGenres;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

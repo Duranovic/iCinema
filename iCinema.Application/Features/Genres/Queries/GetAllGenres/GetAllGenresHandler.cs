@@ -2,7 +2,7 @@ using iCinema.Application.DTOs;
 using iCinema.Application.Interfaces.Repositories;
 using MediatR;
 
-namespace iCinema.Application.Features.Genres.Queries;
+namespace iCinema.Application.Features.Genres.Queries.GetAllGenres;
 
 public class GetAllGenresHandler(IGenresRepository genresRepository) : IRequestHandler<GetAllGeneresQuery, IEnumerable<GenreDto>>
 {

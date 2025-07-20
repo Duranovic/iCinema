@@ -2,7 +2,7 @@ using iCinema.Application.DTOs;
 using iCinema.Application.Interfaces.Repositories;
 using MediatR;
 
-namespace iCinema.Application.Features.Cities.Queries;
+namespace iCinema.Application.Features.Cities.Queries.GetCitiesByCountry;
 
 public class GetCitiesByCountryHandler(ICityRepository cityRepository) : IRequestHandler<GetCitiesByCountryQuery, IEnumerable<CityDto>>
 {

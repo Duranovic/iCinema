@@ -1,4 +1,4 @@
-using iCinema.Application.Features.Movies.Queries;
+using iCinema.Application.Features.Movies.Queries.GetAllMovies;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

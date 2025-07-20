@@ -3,7 +3,7 @@ using AutoMapper;
 using iCinema.Application.DTOs;
 using iCinema.Application.Interfaces.Repositories;
 
-namespace iCinema.Application.Features.Movies.Queries;
+namespace iCinema.Application.Features.Movies.Queries.GetAllMovies;
 
 public class GetAllMoviesHandler(IMovieRepository movieRepository) : IRequestHandler<GetAllMoviesQuery, IQueryable<MovieDto>>
 {

@@ -1,4 +1,4 @@
-using iCinema.Application.Features.Countries.Queries;
+using iCinema.Application.Features.Countries.Queries.GetAllCountries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

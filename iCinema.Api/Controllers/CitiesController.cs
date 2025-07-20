@@ -1,9 +1,9 @@
-using iCinema.Application.Features.Cities.Queries;
+using iCinema.Application.Features.Cities.Queries.GetAllCities;
+using iCinema.Application.Features.Cities.Queries.GetCitiesByCountry;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
-
 
 [ApiController]
 [Route("[controller]")]
