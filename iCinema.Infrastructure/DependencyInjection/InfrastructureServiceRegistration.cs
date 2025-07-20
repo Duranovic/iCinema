@@ -23,6 +23,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICityRepository, CityRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ICinemaRepository, CinemaRepository>();
+        services.AddScoped<IProjectionRepository, ProjectionRepository>();
         
         // Automapper Profiles
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
@@ -31,6 +32,7 @@ public static class InfrastructureServiceRegistration
         services.AddAutoMapper(typeof(CityProfile).Assembly);
         services.AddAutoMapper(typeof(RoleProfile).Assembly);
         services.AddAutoMapper(typeof(CinemasProfile).Assembly);
+        services.AddAutoMapper(typeof(ProjectionsProfile).Assembly);
         
         return services;
     }
