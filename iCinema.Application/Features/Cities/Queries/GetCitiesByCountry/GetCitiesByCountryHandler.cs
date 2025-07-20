@@ -8,6 +8,6 @@ public class GetCitiesByCountryHandler(ICityRepository cityRepository) : IReques
 {
     public async Task<IEnumerable<CityDto>> Handle(GetCitiesByCountryQuery request, CancellationToken cancellationToken)
     {
-        return await cityRepository.GetAllByCountry(request.CountryId,  cancellationToken);
+        return await cityRepository.GetAllByCountryAsync(request.CountryId,  cancellationToken);
     }
 }

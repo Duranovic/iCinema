@@ -13,7 +13,7 @@ public class CityRepository(iCinemaDbContext context, IMapper mapper) : ICityRep
         return await context.Cities.ProjectTo<CityDto>(mapper.ConfigurationProvider).ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<CityDto>> GetAllByCountry(Guid countryId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<CityDto>> GetAllByCountryAsync(Guid countryId, CancellationToken cancellationToken = default)
     {
         return await  context.Cities
             .Where(c => c.CountryId == countryId)
