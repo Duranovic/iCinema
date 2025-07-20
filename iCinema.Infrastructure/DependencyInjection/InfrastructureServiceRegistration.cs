@@ -20,11 +20,13 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<IGenresRepository, GenresRepository>();
+        services.AddScoped<ICityRepository, CityRepository>();
         
         // Automapper Profiles
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
         services.AddAutoMapper(typeof(CountryProfile).Assembly);
         services.AddAutoMapper(typeof(GenresProfile).Assembly);
+        services.AddAutoMapper(typeof(CityProfile).Assembly);
         
         return services;
     }
