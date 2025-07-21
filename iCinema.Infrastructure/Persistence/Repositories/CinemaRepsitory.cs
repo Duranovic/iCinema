@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs;
 using iCinema.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,21 @@ public class CinemaRepository(iCinemaDbContext context, IMapper mapper) : ICinem
     {
         return await context.Cinemas
             .Where(c => c.CityId == cityId)
+            .ProjectTo<CinemaDto>(mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+    
+    public async Task<IEnumerable<CinemaDto>> GetFilteredAsync(CinemaFilter filter, CancellationToken cancellationToken)
+    {
+        var query = context.Cinemas.AsQueryable();
+
+        if (filter.CityId.HasValue)
+            query = query.Where(p => p.CityId == filter.CityId);
+
+        if (filter.CountryId.HasValue)
+            query = query.Where(p => p.City.CountryId == filter.CountryId);
+
+        return await query
             .ProjectTo<CinemaDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }

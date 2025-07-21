@@ -15,7 +15,7 @@ public class CitiesController(IMediator mediator) : Controller
         var result = await mediator.Send(new GetAllCitiesQuery(),  cancellationToken);
         return Ok(result);
     }
-
+    
     [HttpGet("by-country/{countryId:guid}")]
     public async Task<IActionResult> GetByCountry(Guid countryId, CancellationToken cancellationToken)
     {

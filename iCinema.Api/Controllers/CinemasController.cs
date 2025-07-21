@@ -1,6 +1,7 @@
+using iCinema.Application.Common.Filters;
 using iCinema.Application.Features.Cinemas.Queries.GetAllCinemas;
 using iCinema.Application.Features.Cinemas.Queries.GetCinemaById;
-using iCinema.Application.Features.Cinemas.Queries.GetCinemasByCity;
+using iCinema.Application.Features.Cinemas.Queries.GetFilteredCinemas;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,10 +30,12 @@ public class CinemasController(IMediator mediator) : Controller
         return Ok(result);
     }
 
-    [HttpGet("cinemas/by-city/{cityId:guid}")]
-    public async Task<IActionResult> GetByCity(Guid cityId, CancellationToken cancellationToken)
+    [HttpGet("filter")]
+    public async Task<IActionResult> Filter([FromQuery] CinemaFilter filter, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetCinemasByCityQuery(cityId), cancellationToken);
+        var query = new GetFilteredCinemasQuery { Filter = filter };
+        var result = await mediator.Send(new GetFilteredCinemasQuery(), cancellationToken);
+        
         return Ok(result);
     }
 }   
