@@ -1,5 +1,6 @@
+using iCinema.Application.Common.Filters;
 using iCinema.Application.Features.Cities.Queries.GetAllCities;
-using iCinema.Application.Features.Cities.Queries.GetCitiesByCountry;
+using iCinema.Application.Features.Cities.Queries.GetFilteredCities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +16,13 @@ public class CitiesController(IMediator mediator) : Controller
         var result = await mediator.Send(new GetAllCitiesQuery(),  cancellationToken);
         return Ok(result);
     }
-    
-    [HttpGet("by-country/{countryId:guid}")]
-    public async Task<IActionResult> GetByCountry(Guid countryId, CancellationToken cancellationToken)
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> Filter([FromQuery] CityFilter filter ,CancellationToken cancellationToken)
     {
-        var query = new GetCitiesByCountryQuery(countryId);
+        var query = new GetFilteredCitiesQuery { CityFilter = filter };
         var result = await mediator.Send(query, cancellationToken);
         return Ok(result);
     }
+    
 }
