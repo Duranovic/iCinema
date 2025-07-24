@@ -12,7 +12,7 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
     : IBaseRepository<TDto, TCreateDto, TUpdateDto>
     where TEntity : class
 {
-    private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
+    protected readonly DbSet<TEntity> DbSet = context.Set<TEntity>();
 
     protected virtual string[] SearchableFields => [];
 
@@ -31,35 +31,35 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         return Task.CompletedTask; // Override in child repositories for validation/business rules
     }
 
-    public async Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _dbSet
+        return await DbSet
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<TDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<TDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await _dbSet
+        return await DbSet
             .Where(e => EF.Property<Guid>(e, "Id") == id)
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<TDto?> CreateAsync(TCreateDto dto, CancellationToken cancellationToken)
+    public virtual async Task<TDto?> CreateAsync(TCreateDto dto, CancellationToken cancellationToken)
     {
         var entity = mapper.Map<TEntity>(dto);
         await BeforeInsert(entity, dto);
 
-        await _dbSet.AddAsync(entity, cancellationToken);
+        await DbSet.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<TDto>(entity);
     }
 
-    public async Task<TDto?> UpdateAsync(Guid id, TUpdateDto dto, CancellationToken cancellationToken)
+    public virtual async Task<TDto?> UpdateAsync(Guid id, TUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = await _dbSet.FindAsync([id], cancellationToken);
+        var entity = await DbSet.FindAsync([id], cancellationToken);
         if (entity == null) return default;
 
         mapper.Map(dto, entity);
@@ -68,19 +68,19 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         return mapper.Map<TDto>(entity);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public virtual async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _dbSet.FindAsync([id], cancellationToken);
+        var entity = await DbSet.FindAsync([id], cancellationToken);
         if (entity == null) return false;
 
-        _dbSet.Remove(entity);
+        DbSet.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    public async Task<PagedResult<TDto>> GetFilteredAsync(BaseFilter filter, CancellationToken cancellationToken)
+    public virtual async Task<PagedResult<TDto>> GetFilteredAsync(BaseFilter filter, CancellationToken cancellationToken)
     {
-        var query = _dbSet.AsQueryable();
+        var query = DbSet.AsQueryable();
         query = AddInclude(query);
         query = AddFilter(query, filter);
 

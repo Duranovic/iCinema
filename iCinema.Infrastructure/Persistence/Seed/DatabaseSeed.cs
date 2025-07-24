@@ -6,65 +6,64 @@ public static class DatabaseSeed
 {
     private static void SeedCountries(iCinemaDbContext context)
     {
-        if (!context.Countries.Any())
+        if (context.Countries.Any()) return;
+        
+        var countries = new List<Country>
         {
-            var countries = new List<Country>
-            {
-                new Country { Id = SeedConstants.Countries.BosniaAndHerzegovina, Name = "Bosna i Hercegovina" },
-                new Country { Id = SeedConstants.Countries.Croatia, Name = "Hrvatska" },
-            };
+            new Country { Id = SeedConstants.Countries.BosniaAndHerzegovina, Name = "Bosna i Hercegovina" },
+            new Country { Id = SeedConstants.Countries.Croatia, Name = "Hrvatska" },
+        };
 
-            context.Countries.AddRange(countries);
-            context.SaveChanges();
-        }
+        context.Countries.AddRange(countries);
+        context.SaveChanges();
     }
     private static void SeedCities(iCinemaDbContext context)
     {
-        if (!context.Cities.Any())
+        if (context.Cities.Any()) return;
+        
+        var cities = new List<City>
         {
-            var cities = new List<City>
-            {
-                new City { Id = SeedConstants.Cities.Sarajevo, Name = "Sarajevo", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
-                new City { Id = SeedConstants.Cities.Mostar, Name = "Mostar", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
-                new City { Id = SeedConstants.Cities.BanjaLuka, Name = "Banja Luka", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
-                new City { Id = SeedConstants.Cities.Zagreb, Name = "Zagreb", CountryId = SeedConstants.Countries.Croatia },
-                new City { Id = SeedConstants.Cities.Split, Name = "Split", CountryId = SeedConstants.Countries.Croatia },
-                new City { Id = SeedConstants.Cities.Pula, Name = "Pula", CountryId = SeedConstants.Countries.Croatia },
-            };
+            new City { Id = SeedConstants.Cities.Sarajevo, Name = "Sarajevo", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
+            new City { Id = SeedConstants.Cities.Mostar, Name = "Mostar", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
+            new City { Id = SeedConstants.Cities.BanjaLuka, Name = "Banja Luka", CountryId = SeedConstants.Countries.BosniaAndHerzegovina },
+            new City { Id = SeedConstants.Cities.Zagreb, Name = "Zagreb", CountryId = SeedConstants.Countries.Croatia },
+            new City { Id = SeedConstants.Cities.Split, Name = "Split", CountryId = SeedConstants.Countries.Croatia },
+            new City { Id = SeedConstants.Cities.Pula, Name = "Pula", CountryId = SeedConstants.Countries.Croatia },
+        };
 
-            context.Cities.AddRange(cities);
-            context.SaveChanges();
-        }
+        context.Cities.AddRange(cities);
+        context.SaveChanges();
     }
     private static void SeedRoles(iCinemaDbContext context)
     {
-        if (!context.Roles.Any())
+        if (context.Roles.Any()) return;
+        
+        var roles = new List<Role>
         {
-            var roles = new List<Role>
+            new Role
             {
-                new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Admin",
-                },
-                new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "User",
-                },
-                new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Staff"
-                }
-            };
+                Id = Guid.NewGuid(),
+                Name = "Admin",
+            },
+            new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "User",
+            },
+            new Role
+            {
+                Id = Guid.NewGuid(),
+                Name = "Staff"
+            }
+        };
 
-            context.Roles.AddRange(roles);
-            context.SaveChanges();
-        }
+        context.Roles.AddRange(roles);
+        context.SaveChanges();
     }
     private static void SeedGenres(iCinemaDbContext context)
     {
+        if (context.Genres.Any()) return;
+        
         var genres = new List<Genre>
         {
             new Genre { Id = Guid.NewGuid(), Name = "Action"},

@@ -1,4 +1,4 @@
-using iCinema.Application.Features.Roles.Queries.GetAllRoles;
+using iCinema.Application.Features.Roles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

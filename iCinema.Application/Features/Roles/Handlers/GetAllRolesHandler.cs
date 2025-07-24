@@ -1,8 +1,9 @@
 using iCinema.Application.DTOs;
+using iCinema.Application.Features.Roles.Queries;
 using iCinema.Application.Interfaces.Repositories;
 using MediatR;
 
-namespace iCinema.Application.Features.Roles.Queries.GetAllRoles;
+namespace iCinema.Application.Features.Roles.Handlers;
 
 public class GetAllRolesHandler(IRoleRepository roleRepository) : IRequestHandler<GetAllRolesQuery, IEnumerable<RoleDto>>
 {
