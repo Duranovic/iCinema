@@ -1,17 +1,8 @@
-using iCinema.Application.Features.Countries.Queries.GetAllCountries;
+using iCinema.Application.Common.Filters;
+using iCinema.Application.DTOs.Country;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
-[ApiController]
-[Route("[controller]")]
-public class CountriesController(IMediator mediator) : ControllerBase
-{
-    [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetAllCountriesQuery(), cancellationToken);
-        return Ok(result);
-    }
-}
+public class CountriesController(IMediator mediator)
+    : BaseController<CountryDto, CountryCreateDto, CountryUpdateDto, CountryFilter>(mediator);

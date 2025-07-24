@@ -1,62 +1,48 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs;
-using iCinema.Application.Features.Projections.GetFilteredProjectionsQuery;
-using iCinema.Application.Features.Projections.GetProjectionById;
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ProjectionRepository(iCinemaDbContext context, IMapper mapper) : IProjectionRepository
+public class ProjectionRepository(iCinemaDbContext context, IMapper mapper)
+    : BaseRepository<Projection, ProjectionDto, ProjectionCreateDto, ProjectionUpdateDto>(context, mapper),
+        IProjectionRepository
 {
-    public async Task<IEnumerable<ProjectionDto>> GetAllAsync(CancellationToken cancellationToken)
+    private readonly iCinemaDbContext _context = context;
+    protected override string[] SearchableFields => ["Price"];
+
+    protected override IQueryable<Projection> AddFilter(IQueryable<Projection> query, BaseFilter baseFilter)
     {
-        return await context.Projections
-            .ProjectTo<ProjectionDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
-    
-    public async Task<ProjectionDto?> GetByIdAsync(Guid movieId, CancellationToken cancellationToken)
-    {
-        return await context.Projections
-            .Where(p => p.MovieId == movieId)
-            .ProjectTo<ProjectionDto>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-    
-    public async Task<IEnumerable<ProjectionDto>> GetByMovieIdAsync(Guid movieId, CancellationToken cancellationToken)
-    {
-        return await context.Projections
-            .Where(p => p.MovieId == movieId)
-            .ProjectTo<ProjectionDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+        if (baseFilter is ProjectionFilter filter)
+        {
+            if (filter.MovieId.HasValue)
+                query = query.Where(p => p.MovieId == filter.MovieId);
+
+            if (filter.CinemaId.HasValue)
+                query = query.Where(p => p.Hall.CinemaId == filter.CinemaId);
+
+            if (filter.Date.HasValue)
+                query = query.Where(p => p.StartTime.Date == filter.Date.Value.Date);
+        }
+        return query;
     }
 
-    public async Task<IEnumerable<ProjectionDto>> GetByCinemaIdAsync(Guid cinemaId, CancellationToken cancellationToken)
+    protected override IQueryable<Projection> AddInclude(IQueryable<Projection> query)
     {
-        return await context.Projections
-            .Where(p => p.Hall.CinemaId == cinemaId)
-            .ProjectTo<ProjectionDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+        return query.Include(p => p.Hall).ThenInclude(h => h.Cinema);
     }
-    
-    public async Task<IEnumerable<ProjectionDto>> GetFilteredAsync(ProjectionFilter filter, CancellationToken cancellationToken)
+
+    protected override async Task BeforeInsert(Projection entity, ProjectionCreateDto dto)
     {
-        var query = context.Projections.AsQueryable();
+        // Prevent overlapping projections in same hall
+        var overlap = await _context.Projections.AnyAsync(p =>
+            p.HallId == dto.HallId &&
+            p.StartTime == dto.StartTime);
 
-        if (filter.MovieId.HasValue)
-            query = query.Where(p => p.MovieId == filter.MovieId);
-
-        if (filter.CinemaId.HasValue)
-            query = query.Where(p => p.Hall.CinemaId == filter.CinemaId);
-
-        if (filter.Date.HasValue)
-            query = query.Where(p => p.StartTime.Date == filter.Date.Value.Date);
-
-        return await query
-            .ProjectTo<ProjectionDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+        if (overlap)
+            throw new InvalidOperationException("Another projection is already scheduled at this time in the same hall.");
     }
 }

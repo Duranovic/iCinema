@@ -1,5 +1,5 @@
 using AutoMapper;
-using iCinema.Application.DTOs;
+using iCinema.Application.DTOs.Country;
 using iCinema.Infrastructure.Persistence.Models;
 
 namespace iCinema.Infrastructure.Common.Mappings;
@@ -10,5 +10,7 @@ public class CountryProfile : Profile
     {
         CreateMap<Country, CountryDto>();
         CreateMap<CountryDto, Country>();
+        CreateMap<CountryCreateDto, Country>();
+        CreateMap<CountryUpdateDto, Country>();
     }
 }

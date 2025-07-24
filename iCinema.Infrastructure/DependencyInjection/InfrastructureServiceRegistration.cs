@@ -19,7 +19,7 @@ public static class InfrastructureServiceRegistration
         // Repositories
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<ICountryRepository, CountryRepository>();
-        services.AddScoped<IGenresRepository, GenresRepository>();
+        services.AddScoped<IGenreRepository, GenreRepository>();
         services.AddScoped<ICityRepository, CityRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ICinemaRepository, CinemaRepository>();
@@ -31,7 +31,7 @@ public static class InfrastructureServiceRegistration
         services.AddAutoMapper(typeof(GenresProfile).Assembly);
         services.AddAutoMapper(typeof(CityProfile).Assembly);
         services.AddAutoMapper(typeof(RoleProfile).Assembly);
-        services.AddAutoMapper(typeof(CinemasProfile).Assembly);
+        services.AddAutoMapper(typeof(CinemaProfile).Assembly);
         services.AddAutoMapper(typeof(ProjectionsProfile).Assembly);
         
         return services;

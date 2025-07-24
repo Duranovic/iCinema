@@ -1,8 +1,5 @@
-using iCinema.Application.DTOs;
+using iCinema.Application.DTOs.Country;
 
 namespace iCinema.Application.Interfaces.Repositories;
 
-public interface ICountryRepository
-{
-    Task<IEnumerable<CountryDto>> GetAllAsync(CancellationToken cancellationToken);
-}
+public interface ICountryRepository : IBaseRepository<CountryDto, CountryCreateDto, CountryUpdateDto>;

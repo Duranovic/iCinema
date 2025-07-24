@@ -1,5 +1,6 @@
 using AutoMapper;
 using iCinema.Application.DTOs;
+using iCinema.Application.DTOs.Genres;
 using iCinema.Infrastructure.Persistence.Models;
 
 namespace iCinema.Infrastructure.Common.Mappings;

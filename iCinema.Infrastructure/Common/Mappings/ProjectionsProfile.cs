@@ -13,5 +13,7 @@ public class ProjectionsProfile : Profile
             .ForMember(dest => dest.CinemaName, opt => opt.MapFrom(src => src.Hall.Cinema.Name));
         
         CreateMap<ProjectionDto, Projection>();
+        CreateMap<ProjectionCreateDto, Projection>();
+        CreateMap<ProjectionUpdateDto, Projection>();
     }
 }
