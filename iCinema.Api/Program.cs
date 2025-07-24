@@ -1,3 +1,5 @@
+using FluentValidation.AspNetCore;
+using iCinema.Api.Middleware;
 using iCinema.Application.DependencyInjection;
 using iCinema.Infrastructure.DependencyInjection;
 using iCinema.Infrastructure.Persistence;
@@ -16,7 +18,10 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
-// 🆕 Add database seeding here - after app is built but before pipeline configuration
+// Global exception handling
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Add database seeding here - after app is built but before pipeline configuration
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<iCinemaDbContext>();

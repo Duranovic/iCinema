@@ -1,3 +1,7 @@
+using System.Reflection;
+using FluentValidation;
+using iCinema.Application.Common.Validations.Behaviors;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace iCinema.Application.DependencyInjection;
@@ -8,9 +12,10 @@ public static class ApplicationServiceRegistration
     {
         services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(ApplicationServiceRegistration).Assembly);
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         });
-
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         return services;
     }
 }
