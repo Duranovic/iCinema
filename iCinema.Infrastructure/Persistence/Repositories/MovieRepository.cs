@@ -63,4 +63,22 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper) : BaseRep
         await _context.SaveChangesAsync(cancellationToken);
         return _mapper.Map<MovieDto>(entity);
     }
+    
+    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var movie = await DbSet
+            .Include(m => m.MovieGenres)  // Load related genres
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+
+        if (movie == null)
+            return false;
+
+        // Remove related join table entries
+        _context.MovieGenres.RemoveRange(movie.MovieGenres);
+
+        DbSet.Remove(movie);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
 }
