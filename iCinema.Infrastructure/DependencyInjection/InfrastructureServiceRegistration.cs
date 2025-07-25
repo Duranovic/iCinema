@@ -1,12 +1,16 @@
+using System.Text;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Common.Mappings;
+using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Repositories;
 using iCinema.Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace iCinema.Infrastructure.DependencyInjection;
 
@@ -17,6 +21,18 @@ public static class InfrastructureServiceRegistration
     {
         services.AddDbContext<iCinemaDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        
+        services.AddDbContext<iCinemaIdentityContext>(options => 
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        
+        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            {
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+            .AddEntityFrameworkStores<iCinemaIdentityContext>()
+            .AddDefaultTokenProviders();
         
         // Repositories
         services.AddScoped<IMovieRepository, MovieRepository>();
@@ -35,6 +51,25 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICityRulesService, CityRulesService>();
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
         
+        // Identity Server
+        services.AddScoped<JwtTokenService>();
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = "Bearer";
+            options.DefaultChallengeScheme = "Bearer";
+        })
+        .AddJwtBearer("Bearer", options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidAudience = configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
+            };
+        });
+            
         // Automapper Profiles
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
         services.AddAutoMapper(typeof(CountryProfile).Assembly);

@@ -1,4 +1,6 @@
+using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace iCinema.Infrastructure.Persistence.Seed;
 
@@ -34,32 +36,42 @@ public static class DatabaseSeed
         context.Cities.AddRange(cities);
         context.SaveChanges();
     }
-    private static void SeedRoles(iCinemaDbContext context)
+    private static async Task SeedRoles(RoleManager<ApplicationRole> roleManager)
     {
-        if (context.Roles.Any()) return;
-        
-        var roles = new List<Role>
+        var roles = new[] { "Admin", "Customer", "Staff" };
+        foreach (var role in roles)
         {
-            new Role
-            {
-                Id = Guid.NewGuid(),
-                Name = "Admin",
-            },
-            new Role
-            {
-                Id = Guid.NewGuid(),
-                Name = "User",
-            },
-            new Role
-            {
-                Id = Guid.NewGuid(),
-                Name = "Staff"
-            }
-        };
-
-        context.Roles.AddRange(roles);
-        context.SaveChanges();
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new ApplicationRole { Name = role });
+        }
     }
+
+    private static async Task SeedUsers(iCinemaDbContext context, UserManager<ApplicationUser> userManager)
+    {
+        async Task CreateUserAsync(string email, string password, string role)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(user, password);
+                if (!result.Succeeded)
+                    throw new Exception($"Failed to create user {email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+
+                await userManager.AddToRoleAsync(user, role);
+            }
+        }
+        
+        await CreateUserAsync("admin@icinema.com", "Admin@12345", "Admin");
+        await CreateUserAsync("staff@icinema.com", "Staff@12345", "Staff");
+        await CreateUserAsync("customer@icinema.com", "Customer@12345", "Customer");
+    }
+    
     private static void SeedGenres(iCinemaDbContext context)
     {
         if (context.Genres.Any()) return;
@@ -73,11 +85,12 @@ public static class DatabaseSeed
         context.Genres.AddRange(genres);
         context.SaveChanges();
     }
-    public static void Seed(iCinemaDbContext context)
+    public static async Task SeedAsync(iCinemaDbContext context, UserManager<ApplicationUser> userManager,  RoleManager<ApplicationRole> roleManager)
     {
         SeedCountries(context);
         SeedCities(context);
-        SeedRoles(context);
         SeedGenres(context);
+        await SeedRoles(roleManager);
+        await SeedUsers(context, userManager);
     }
 }

@@ -3,17 +3,15 @@ using System.Collections.Generic;
 
 namespace iCinema.Infrastructure.Persistence.Models;
 
-public partial class Recommendation
+public partial class AspNetUserToken
 {
-    public Guid Id { get; set; }
-
     public Guid UserId { get; set; }
 
-    public Guid MovieId { get; set; }
+    public string LoginProvider { get; set; } = null!;
 
-    public double Score { get; set; }
+    public string Name { get; set; } = null!;
 
-    public virtual Movie Movie { get; set; } = null!;
+    public string? Value { get; set; }
 
     public virtual AspNetUser User { get; set; } = null!;
 }

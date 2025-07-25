@@ -19,5 +19,5 @@ public partial class Rating
 
     public virtual Movie Movie { get; set; } = null!;
 
-    public virtual User User { get; set; } = null!;
+    public virtual AspNetUser User { get; set; } = null!;
 }

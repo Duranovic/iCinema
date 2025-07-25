@@ -25,5 +25,5 @@ public partial class PromoCode
 
     public virtual Movie? AppliesToMovie { get; set; }
 
-    public virtual User? CreatedByNavigation { get; set; }
+    public virtual AspNetUser? CreatedByNavigation { get; set; }
 }

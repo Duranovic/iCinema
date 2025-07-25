@@ -21,5 +21,5 @@ public partial class Reservation
 
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 
-    public virtual User User { get; set; } = null!;
+    public virtual AspNetUser User { get; set; } = null!;
 }

@@ -14,6 +14,18 @@ public partial class iCinemaDbContext : DbContext
 
     public virtual DbSet<Actor> Actors { get; set; }
 
+    public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
+
+    public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
+
+    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+
+    public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
+
+    public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
+
+    public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
+
     public virtual DbSet<Cinema> Cinemas { get; set; }
 
     public virtual DbSet<City> Cities { get; set; }
@@ -42,13 +54,9 @@ public partial class iCinemaDbContext : DbContext
 
     public virtual DbSet<Reservation> Reservations { get; set; }
 
-    public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<Seat> Seats { get; set; }
 
     public virtual DbSet<Ticket> Tickets { get; set; }
-
-    public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +67,74 @@ public partial class iCinemaDbContext : DbContext
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.FullName).HasMaxLength(100);
             entity.Property(e => e.PhotoUrl).HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<AspNetRole>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedName, "RoleNameIndex")
+                .IsUnique()
+                .HasFilter("([NormalizedName] IS NOT NULL)");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(256);
+            entity.Property(e => e.NormalizedName).HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<AspNetRoleClaim>(entity =>
+        {
+            entity.HasIndex(e => e.RoleId, "IX_AspNetRoleClaims_RoleId");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.AspNetRoleClaims).HasForeignKey(d => d.RoleId);
+        });
+
+        modelBuilder.Entity<AspNetUser>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedEmail, "EmailIndex");
+
+            entity.HasIndex(e => e.NormalizedUserName, "UserNameIndex")
+                .IsUnique()
+                .HasFilter("([NormalizedUserName] IS NOT NULL)");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Email).HasMaxLength(256);
+            entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
+            entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
+            entity.Property(e => e.UserName).HasMaxLength(256);
+
+            entity.HasMany(d => d.Roles).WithMany(p => p.Users)
+                .UsingEntity<Dictionary<string, object>>(
+                    "AspNetUserRole",
+                    r => r.HasOne<AspNetRole>().WithMany().HasForeignKey("RoleId"),
+                    l => l.HasOne<AspNetUser>().WithMany().HasForeignKey("UserId"),
+                    j =>
+                    {
+                        j.HasKey("UserId", "RoleId");
+                        j.ToTable("AspNetUserRoles");
+                        j.HasIndex(new[] { "RoleId" }, "IX_AspNetUserRoles_RoleId");
+                    });
+        });
+
+        modelBuilder.Entity<AspNetUserClaim>(entity =>
+        {
+            entity.HasIndex(e => e.UserId, "IX_AspNetUserClaims_UserId");
+
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserClaims).HasForeignKey(d => d.UserId);
+        });
+
+        modelBuilder.Entity<AspNetUserLogin>(entity =>
+        {
+            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
+
+            entity.HasIndex(e => e.UserId, "IX_AspNetUserLogins_UserId");
+
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins).HasForeignKey(d => d.UserId);
+        });
+
+        modelBuilder.Entity<AspNetUserToken>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
+
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserTokens).HasForeignKey(d => d.UserId);
         });
 
         modelBuilder.Entity<Cinema>(entity =>
@@ -220,7 +296,7 @@ public partial class iCinemaDbContext : DbContext
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.PromoCodes)
                 .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("FK_PromoCodes_Admin");
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Rating>(entity =>
@@ -240,10 +316,7 @@ public partial class iCinemaDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Ratings_Movies");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Ratings)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Ratings_Users");
+            entity.HasOne(d => d.User).WithMany(p => p.Ratings).HasForeignKey(d => d.UserId);
         });
 
         modelBuilder.Entity<Recommendation>(entity =>
@@ -257,10 +330,7 @@ public partial class iCinemaDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Recommendations_Movies");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Recommendations)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Recommendations_Users");
+            entity.HasOne(d => d.User).WithMany(p => p.Recommendations).HasForeignKey(d => d.UserId);
         });
 
         modelBuilder.Entity<Reservation>(entity =>
@@ -279,18 +349,7 @@ public partial class iCinemaDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Reservations_Projections");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Reservations)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Reservations_Users");
-        });
-
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__3214EC078929E38C");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.HasOne(d => d.User).WithMany(p => p.Reservations).HasForeignKey(d => d.UserId);
         });
 
         modelBuilder.Entity<Seat>(entity =>
@@ -323,26 +382,6 @@ public partial class iCinemaDbContext : DbContext
                 .HasForeignKey(d => d.SeatId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tickets_Seats");
-        });
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07A1B4EF31");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.PasswordHash).HasMaxLength(200);
-            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-            entity.Property(e => e.Username).HasMaxLength(50);
-
-            entity.HasOne(d => d.Role).WithMany(p => p.Users)
-                .HasForeignKey(d => d.RoleId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Users_Roles");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -2,8 +2,10 @@ using FluentValidation.AspNetCore;
 using iCinema.Api.Middleware;
 using iCinema.Application.DependencyInjection;
 using iCinema.Infrastructure.DependencyInjection;
+using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +27,9 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<iCinemaDbContext>();
-    // Seed the database
-    DatabaseSeed.Seed(context);
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    await DatabaseSeed.SeedAsync(context, userManager, roleManager);
 }
 
 // Configure the HTTP request pipeline.

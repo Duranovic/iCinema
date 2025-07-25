@@ -10,6 +10,6 @@ public class RoleRepository(iCinemaDbContext context, IMapper mapper) : IRoleRep
 {
     public async Task<IEnumerable<RoleDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await context.Roles.ProjectTo<RoleDto>(mapper.ConfigurationProvider).ToListAsync(cancellationToken);
+        return await context.AspNetRoles.ProjectTo<RoleDto>(mapper.ConfigurationProvider).ToListAsync(cancellationToken);
     }
 }
