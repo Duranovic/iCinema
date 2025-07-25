@@ -1,7 +1,9 @@
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Common.Mappings;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Repositories;
+using iCinema.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,14 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ICinemaRepository, CinemaRepository>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
+        services.AddScoped<IHallRepository, HallRepository>();
+        
+        // Services
+        services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
+        services.AddScoped<ICountryRulesService, CountryRulesService>();
+        services.AddScoped<IGenreRulesService, GenreRulesService>();
+        services.AddScoped<ICityRulesService, CityRulesService>();
+        services.AddScoped<ICinemaRulesService, CinemaRulesService>();
         
         // Automapper Profiles
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
@@ -33,6 +43,7 @@ public static class InfrastructureServiceRegistration
         services.AddAutoMapper(typeof(RoleProfile).Assembly);
         services.AddAutoMapper(typeof(CinemaProfile).Assembly);
         services.AddAutoMapper(typeof(ProjectionsProfile).Assembly);
+        services.AddAutoMapper(typeof(HallProfile).Assembly);
         
         return services;
     }

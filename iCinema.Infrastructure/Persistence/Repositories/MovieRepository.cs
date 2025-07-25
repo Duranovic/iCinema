@@ -1,16 +1,19 @@
 using AutoMapper;
+using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs.Movie;
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class MovieRepository(iCinemaDbContext context, IMapper mapper) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper), IMovieRepository
+public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRulesService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper), IMovieRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IMapper _mapper = mapper;
+    private readonly IProjectionRulesService _projectionRulesService = projectionRulesService;
     protected override string[] SearchableFields => ["Title", "Description"];
     
     protected override IQueryable<Movie> AddInclude(IQueryable<Movie> query)
@@ -67,13 +70,18 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper) : BaseRep
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var movie = await DbSet
-            .Include(m => m.MovieGenres)  // Load related genres
+            .Include(m => m.MovieGenres)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
         if (movie == null)
             return false;
 
-        // Remove related join table entries
+        var hasFutureProjections = await _projectionRulesService.HasFutureProjectionsForMovie(movie.Id, cancellationToken);
+
+        if (hasFutureProjections)
+            throw new BusinessRuleException("Cannot delete a movie with scheduled future projections.");
+
+        // Remove MovieGenres entries
         _context.MovieGenres.RemoveRange(movie.MovieGenres);
 
         DbSet.Remove(movie);
