@@ -1,6 +1,5 @@
+using MediatR;
+
 namespace iCinema.Application.Features.Users.Commands;
 
-public class DeleteUserCommand
-{
-    
-}
+public record DeleteUserCommand(Guid UserId) : IRequest<bool>;
