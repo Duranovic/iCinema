@@ -42,7 +42,7 @@ public static class DatabaseSeed
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
-                await roleManager.CreateAsync(new ApplicationRole { Name = role });
+                await roleManager.CreateAsync(new ApplicationRole { Name = role, NormalizedName = role.ToUpper()});
         }
     }
 

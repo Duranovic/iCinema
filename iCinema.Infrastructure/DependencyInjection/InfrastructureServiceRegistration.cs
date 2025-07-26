@@ -43,6 +43,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICinemaRepository, CinemaRepository>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IHallRepository, HallRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         
         // Services
         services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
