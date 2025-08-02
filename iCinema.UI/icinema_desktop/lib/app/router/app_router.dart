@@ -1,6 +1,9 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:icinema_desktop/app/di/injection.dart';
 import 'package:icinema_desktop/app/layout/app_shell.dart';
-import 'package:icinema_desktop/pages/auth/login_page.dart';
+import 'package:icinema_desktop/features/auth/presentation/blocs/login/login_bloc.dart';
+import 'package:icinema_desktop/features/auth/presentation/pages/login_page.dart';
 import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/pages/home_page.dart';
 import 'package:icinema_desktop/pages/movies_page.dart';
@@ -10,7 +13,12 @@ import 'package:icinema_desktop/pages/reports_page.dart';
 import 'package:icinema_desktop/pages/users_page.dart';
 
 final GoRouter router = GoRouter(initialLocation: '/home', routes: [
-  GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+  GoRoute(
+      path: '/login',
+      builder: (context, state) => BlocProvider<LoginBloc>(
+            create: (_) => getIt<LoginBloc>(),
+            child: const LoginPage(),
+          )),
   ShellRoute(
       builder: (context, state, child) =>
           AppShell(currentLocation: state.uri.toString(), child: child),

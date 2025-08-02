@@ -76,7 +76,9 @@ class AppShell extends StatelessWidget {
             ],
           )),
       const VerticalDivider(thickness: 1, width: 1),
-      Expanded(child: child),
+      Expanded(
+          child:
+              Padding(padding: const EdgeInsetsGeometry.all(40), child: child)),
     ]));
   }
 }
