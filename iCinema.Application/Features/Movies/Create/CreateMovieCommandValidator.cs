@@ -12,8 +12,9 @@ public class CreateMovieCommandValidator : AbstractValidator<CreateCommand<Movie
             .NotEmpty().WithMessage("Title is required.")
             .MaximumLength(200).WithMessage("Title cannot exceed 200 characters.");
 
-        RuleFor(x => x.Dto.Year)
-            .InclusiveBetween(1900, DateTime.UtcNow.Year + 1).WithMessage("Year must be between 1900 and next year.");
+        RuleFor(x => x.Dto.ReleaseDate)
+            .Must(d => d == null || (d.Value.Year >= 1900 && d.Value.Year <= DateTime.UtcNow.Year + 1))
+            .WithMessage("Year must be between 1900 and next year.");
 
         RuleFor(x => x.Dto.Description)
             .NotEmpty().WithMessage("Description is required.")

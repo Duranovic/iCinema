@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-/// Allows injectable to register third-party types.
+// Allows injectable to register third-party types.
 @module
 abstract class NetworkModule {
-  /// Registers a lazy singleton Dio for entire app.
+  // Registers a lazy singleton Dio for entire app.
   @lazySingleton
   Dio get dio => Dio(
     BaseOptions(

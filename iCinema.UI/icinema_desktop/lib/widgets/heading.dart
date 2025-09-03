@@ -6,7 +6,7 @@ class Heading extends StatelessWidget {
   final double? fontSize;
   final Color? color;
 
-  const Heading(this.text, {super.key, this.textAlign = TextAlign.left, this.fontSize, this.color});
+  const Heading(this.text, {super.key, this.textAlign = TextAlign.left, this.fontSize = 20.0, this.color});
 
   @override
   Widget build(BuildContext context) {

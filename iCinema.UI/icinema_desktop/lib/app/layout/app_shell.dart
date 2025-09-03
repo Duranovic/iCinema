@@ -32,53 +32,60 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Row(children: [
-      SizedBox(
-          height: double.infinity,
-          child: Column(
-            children: [
-              Expanded(
-                child: NavigationRail(
-                    selectedIndex: _selectedIndexOrNull,
-                    labelType: NavigationRailLabelType.all,
-                    onDestinationSelected: (int index) {
-                      _onItemTapped(context, index);
-                    },
-                    destinations: mainNavigationItems),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: PopupMenuButton<UserAction>(
-                  tooltip: 'Open user menu',
-                  child: const CircleAvatar(
-                    radius: 25,
+      body: Row(
+        children: [
+          SizedBox(
+              height: double.infinity,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: NavigationRail(
+                      selectedIndex: _selectedIndexOrNull,
+                      labelType: NavigationRailLabelType.all,
+                      onDestinationSelected: (int index) {
+                        _onItemTapped(context, index);
+                      },
+                      destinations: mainNavigationItems,
+                    ),
                   ),
-                  onSelected: (action) {
-                    if (action == UserAction.profile) {
-                      context.go('/profile');
-                    } else {
-                      // TODO: Implement logout functionality
-                      context.go('/login');
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                        value: UserAction.profile, child: Text('Profile')),
-                    PopupMenuItem(
-                        value: UserAction.logout,
-                        child: Text(
-                          'Log out',
-                          style: TextStyle(color: Colors.red),
-                        )),
-                  ],
-                ),
-              ),
-            ],
-          )),
-      const VerticalDivider(thickness: 1, width: 1),
-      Expanded(
-          child:
-              Padding(padding: const EdgeInsetsGeometry.all(40), child: child)),
-    ]));
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: PopupMenuButton<UserAction>(
+                      tooltip: 'Open user menu',
+                      child: const CircleAvatar(
+                        radius: 25,
+                      ),
+                      onSelected: (action) {
+                        if (action == UserAction.profile) {
+                          context.go('/profile');
+                        } else {
+                          // TODO: Implement logout functionality
+                          context.go('/login');
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
+                            value: UserAction.profile, child: Text('Profile')),
+                        PopupMenuItem(
+                            value: UserAction.logout,
+                            child: Text(
+                              'Log out',
+                              style: TextStyle(color: Colors.red),
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              )),
+          const VerticalDivider(thickness: 1, width: 1),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsGeometry.all(40),
+              child: child,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -43,7 +43,32 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
                 .ToListAsync();
         }
     }
-    
+
+    public override async Task<MovieDto?> CreateAsync(MovieCreateDto dto, CancellationToken cancellationToken)
+    {
+        // Map basic properties
+        var entity = _mapper.Map<Movie>(dto);
+
+        // Update genres
+        entity.MovieGenres.Clear();
+        if (dto.GenreIds.Count != 0)
+        {
+            entity.MovieGenres = await _context.Genres
+                .Where(g => dto.GenreIds.Contains(g.Id))
+                .Select(g => new MovieGenre { GenreId = g.Id, MovieId = entity.Id })
+                .ToListAsync(cancellationToken);
+        }
+
+        DbSet.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+        
+        var createdEntity = await DbSet
+            .Include(m => m.MovieGenres)
+            .ThenInclude(mg => mg.Genre)
+            .FirstOrDefaultAsync(m => m.Id == entity.Id, cancellationToken);
+        return _mapper.Map<MovieDto>(createdEntity);
+    }
+
     public override async Task<MovieDto?> UpdateAsync(Guid id, MovieUpdateDto dto, CancellationToken cancellationToken)
     {
         var entity = await DbSet.Include(m => m.MovieGenres)
@@ -64,7 +89,13 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-        return _mapper.Map<MovieDto>(entity);
+        
+        var updatedEntity = await DbSet
+            .Include(m => m.MovieGenres)
+            .ThenInclude(mg => mg.Genre)
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+
+        return _mapper.Map<MovieDto>(updatedEntity);
     }
     
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)

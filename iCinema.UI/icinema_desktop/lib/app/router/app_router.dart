@@ -4,22 +4,27 @@ import 'package:icinema_desktop/app/di/injection.dart';
 import 'package:icinema_desktop/app/layout/app_shell.dart';
 import 'package:icinema_desktop/features/auth/presentation/blocs/login/login_bloc.dart';
 import 'package:icinema_desktop/features/auth/presentation/pages/login_page.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
+import 'package:icinema_desktop/features/movies/presentation/pages/movies_page.dart';
 import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/pages/home_page.dart';
-import 'package:icinema_desktop/pages/movies_page.dart';
 import 'package:icinema_desktop/pages/profile_page.dart';
 import 'package:icinema_desktop/pages/projections_page.dart';
 import 'package:icinema_desktop/pages/reports_page.dart';
 import 'package:icinema_desktop/pages/users_page.dart';
 
-final GoRouter router = GoRouter(initialLocation: '/home', routes: [
-  GoRoute(
+final GoRouter router = GoRouter(
+  initialLocation: '/home',
+  routes: [
+    GoRoute(
       path: '/login',
       builder: (context, state) => BlocProvider<LoginBloc>(
-            create: (_) => getIt<LoginBloc>(),
-            child: const LoginPage(),
-          )),
-  ShellRoute(
+        create: (_) => getIt<LoginBloc>(),
+        child: const LoginPage(),
+      ),
+    ),
+    ShellRoute(
       builder: (context, state, child) =>
           AppShell(currentLocation: state.uri.toString(), child: child),
       routes: [
@@ -29,10 +34,12 @@ final GoRouter router = GoRouter(initialLocation: '/home', routes: [
               return const HomePage();
             }),
         GoRoute(
-            path: '/movies',
-            builder: (context, state) {
-              return const MoviesPage();
-            }),
+          path: '/movies',
+          builder: (context, state) => BlocProvider<MoviesBloc>(
+            create: (_) => getIt<MoviesBloc>()..add(LoadMovies()),
+            child: const MoviesPage(),
+          ),
+        ),
         GoRoute(
             path: '/projections',
             builder: (context, state) {
@@ -57,6 +64,8 @@ final GoRouter router = GoRouter(initialLocation: '/home', routes: [
             path: '/profile',
             builder: (context, state) {
               return const ProfilePage();
-            })
-      ])
-]);
+            }),
+      ],
+    ),
+  ],
+);

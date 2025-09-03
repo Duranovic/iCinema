@@ -5,6 +5,8 @@ public class MovieDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
-    public int Year { get; set; }
+    public DateOnly? ReleaseDate { get; set; }
+    public int? Duration { get; set; }
+    public string Description { get; set; } = string.Empty;
     public List<string> Genres { get; set; } = [];
 }

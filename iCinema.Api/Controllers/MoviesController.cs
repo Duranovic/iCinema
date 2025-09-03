@@ -6,6 +6,4 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
-[Authorize(Roles = "Admin,Staff")]
-[ApiController]
 public class MoviesController(IMediator mediator) : BaseController<MovieDto, MovieCreateDto, MovieUpdateDto, MovieFilter>(mediator);
