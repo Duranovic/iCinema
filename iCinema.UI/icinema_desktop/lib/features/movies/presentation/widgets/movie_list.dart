@@ -120,7 +120,7 @@ class _MovieListState extends State<MovieList> {
               ),
               child: ListTile(
                 title: Text(filteredMovies[idx].title),
-                subtitle: Text('Godina: ${filteredMovies[idx].releaseDate?.year}'),
+                subtitle: Text('Godina: ${filteredMovies[idx].releaseDate?.year ?? "Nepoznato"}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
