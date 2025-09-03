@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icinema_desktop/app/di/injection.dart';
@@ -14,6 +15,18 @@ import 'package:icinema_desktop/pages/projections_page.dart';
 import 'package:icinema_desktop/pages/reports_page.dart';
 import 'package:icinema_desktop/pages/users_page.dart';
 
+// Helper function for simple fade transition
+Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, _, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
+}
+
 final GoRouter router = GoRouter(
   initialLocation: '/home',
   routes: [
@@ -29,42 +42,57 @@ final GoRouter router = GoRouter(
           AppShell(currentLocation: state.uri.toString(), child: child),
       routes: [
         GoRoute(
-            path: '/home',
-            builder: (context, state) {
-              return const HomePage();
-            }),
-        GoRoute(
-          path: '/movies',
-          builder: (context, state) => BlocProvider<MoviesBloc>(
-            create: (_) => getIt<MoviesBloc>()..add(LoadMovies()),
-            child: const MoviesPage(),
+          path: '/home',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const HomePage(),
+            state,
           ),
         ),
         GoRoute(
-            path: '/projections',
-            builder: (context, state) {
-              return const ProjectionsPage();
-            }),
+          path: '/movies',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            BlocProvider<MoviesBloc>(
+              create: (_) => getIt<MoviesBloc>()..add(LoadMovies()),
+              child: const MoviesPage(),
+            ),
+            state,
+          ),
+        ),
         GoRoute(
-            path: '/halls',
-            builder: (context, state) {
-              return const HallsPage();
-            }),
+          path: '/projections',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const ProjectionsPage(),
+            state,
+          ),
+        ),
         GoRoute(
-            path: '/users',
-            builder: (builderContext, state) {
-              return const UsersPage();
-            }),
+          path: '/halls',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const HallsPage(),
+            state,
+          ),
+        ),
         GoRoute(
-            path: '/reports',
-            builder: (context, state) {
-              return const ReportsPage();
-            }),
+          path: '/users',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const UsersPage(),
+            state,
+          ),
+        ),
         GoRoute(
-            path: '/profile',
-            builder: (context, state) {
-              return const ProfilePage();
-            }),
+          path: '/reports',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const ReportsPage(),
+            state,
+          ),
+        ),
+        GoRoute(
+          path: '/profile',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const ProfilePage(),
+            state,
+          ),
+        ),
       ],
     ),
   ],
