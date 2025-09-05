@@ -8,10 +8,10 @@ import 'package:icinema_desktop/features/auth/presentation/pages/login_page.dart
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
 import 'package:icinema_desktop/features/movies/presentation/pages/movies_page.dart';
+import 'package:icinema_desktop/features/projections/presentation/pages/projections_page.dart';
 import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/pages/home_page.dart';
 import 'package:icinema_desktop/pages/profile_page.dart';
-import 'package:icinema_desktop/pages/projections_page.dart';
 import 'package:icinema_desktop/pages/reports_page.dart';
 import 'package:icinema_desktop/pages/users_page.dart';
 
