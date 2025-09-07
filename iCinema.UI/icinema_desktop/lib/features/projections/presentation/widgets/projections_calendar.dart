@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icinema_desktop/features/projections/domain/projection.dart';
 import 'package:icinema_desktop/features/projections/domain/cinema.dart';
 import 'package:icinema_desktop/features/projections/domain/hall.dart';
 import 'package:icinema_desktop/features/movies/domain/movie.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_bloc.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection';
 import 'dart:math' as math;
 import 'package:icinema_desktop/app/utils/bs_calendar_labels.dart';
 import 'package:icinema_desktop/app/utils/date_gates.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:icinema_desktop/features/projections/presentation/bloc/projections_bloc.dart';
-import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
-import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
-import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_state.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
 
 class ProjectionsCalendar extends StatefulWidget {
   const ProjectionsCalendar({super.key});
@@ -210,8 +210,13 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                       color: colorScheme.onSurfaceVariant,
                     ),
                     onTap: () {
-                      // open detail/edit if you want
-                      Navigator.pop(ctx);
+                      Navigator.pop(ctx); // Close current modal
+                      // Use WidgetsBinding to schedule the edit modal after the frame
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          _showEditProjectionModal(context, p);
+                        }
+                      });
                     },
                   ),
                 )),
@@ -1030,69 +1035,75 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                             itemBuilder: (context, index) {
                               if (index < events.length && index < 2) {
                                 final event = events[index];
-                                return Container(
-                                  height: 16,
-                                  margin: const EdgeInsets.only(bottom: 2),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: _getEventColor(event, colorScheme).withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.circle,
-                                        size: 6,
-                                        color: _getEventColor(event, colorScheme),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                event.movieTitle,
-                                                style: textTheme.labelSmall?.copyWith(
-                                                  color: _getEventColor(event, colorScheme),
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 9,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              event.time.format(ctx),
-                                              style: textTheme.labelSmall?.copyWith(
-                                                color: _getEventColor(event, colorScheme).withOpacity(0.8),
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 8,
-                                              ),
-                                            ),
-                                          ],
+                                return GestureDetector(
+                                  onTap: () => _showEditProjectionModal(context, event),
+                                  child: Container(
+                                    height: 16,
+                                    margin: const EdgeInsets.only(bottom: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: _getEventColor(event, colorScheme).withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          size: 6,
+                                          color: _getEventColor(event, colorScheme),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  event.movieTitle,
+                                                  style: textTheme.labelSmall?.copyWith(
+                                                    color: _getEventColor(event, colorScheme),
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 9,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                event.time.format(ctx),
+                                                style: textTheme.labelSmall?.copyWith(
+                                                  color: _getEventColor(event, colorScheme).withOpacity(0.8),
+                                                  fontWeight: FontWeight.w400,
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               } else if (events.length > 2) {
-                                // Show "more" indicator
-                                return Container(
-                                  height: 14,
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "+${events.length - 2}",
-                                      style: textTheme.labelSmall?.copyWith(
-                                        color: colorScheme.primary,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 8,
+                                // Show "more" indicator - clickable to show all projections
+                                return GestureDetector(
+                                  onTap: () => _showAllProjectionsModal(context, events, day),
+                                  child: Container(
+                                    height: 14,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "+${events.length - 2}",
+                                        style: textTheme.labelSmall?.copyWith(
+                                          color: colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 8,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1138,5 +1149,860 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
       Colors.purple,
     ];
     return colors[hash.abs() % colors.length];
+  }
+
+  void _showAllProjectionsModal(BuildContext context, List<Projection> projections, DateTime day) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<MoviesBloc>()),
+          BlocProvider.value(value: context.read<ProjectionsBloc>()),
+        ],
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (sheetContext, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.event_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Projekcije - ${day.day}.${day.month}.${day.year}',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Projections list
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    itemCount: projections.length,
+                    itemBuilder: (listContext, index) {
+                      final projection = projections[index];
+                      final colorScheme = Theme.of(listContext).colorScheme;
+                      final textTheme = Theme.of(listContext).textTheme;
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(listContext).pop(); // Close current modal
+                              // Use WidgetsBinding to schedule the edit modal after the frame
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) {
+                                  _showEditProjectionModal(this.context, projection);
+                                }
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            splashColor: _getEventColor(projection, colorScheme).withOpacity(0.1),
+                            highlightColor: _getEventColor(projection, colorScheme).withOpacity(0.05),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: _getEventColor(projection, colorScheme).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _getEventColor(projection, colorScheme).withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                              children: [
+                                // Color indicator
+                                Container(
+                                  width: 4,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: _getEventColor(projection, colorScheme),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // Projection details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        projection.movieTitle,
+                                        style: textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_rounded,
+                                            size: 16,
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            projection.time.format(context),
+                                            style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Icon(
+                                            Icons.meeting_room_rounded,
+                                            size: 16,
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            projection.hall,
+                                            style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Price and edit indicator
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '${projection.price.toStringAsFixed(2)} KM',
+                                      style: textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: _getEventColor(projection, colorScheme),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Icon(
+                                      Icons.edit_rounded,
+                                      size: 16,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditProjectionModal(BuildContext context, Projection projection) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<MoviesBloc>()),
+          BlocProvider.value(value: context.read<ProjectionsBloc>()),
+        ],
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Uredi projekciju',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Form content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: _ProjectionEditForm(projection: projection),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectionEditForm extends StatefulWidget {
+  final Projection projection;
+
+  const _ProjectionEditForm({required this.projection});
+
+  @override
+  State<_ProjectionEditForm> createState() => _ProjectionEditFormState();
+}
+
+class _ProjectionEditFormState extends State<_ProjectionEditForm> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _priceController;
+  late TimeOfDay _selectedTime;
+  late DateTime _selectedDate;
+  String? _selectedMovieId;
+  String? _selectedHallId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prepopulate form with existing projection data
+    _priceController = TextEditingController(text: widget.projection.price.toString());
+    _selectedTime = widget.projection.time;
+    _selectedDate = widget.projection.date;
+    _selectedMovieId = widget.projection.movieId;
+    _selectedHallId = widget.projection.hallId;
+  }
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Movie Selection
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.movie_rounded, size: 20, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Film',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                BlocBuilder<MoviesBloc, MoviesState>(
+                  builder: (context, state) {
+                    if (state is MoviesLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    
+                    if (state is MoviesError) {
+                      return Text('Greška: ${state.message}');
+                    }
+                    
+                    if (state is MoviesLoaded) {
+                      return DropdownButtonFormField<String>(
+                        value: _selectedMovieId,
+                        decoration: InputDecoration(
+                          hintText: 'Odaberite film',
+                          filled: true,
+                          fillColor: colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        items: state.movies.map((movie) {
+                          return DropdownMenuItem<String>(
+                            value: movie.id,
+                            child: Text(movie.title),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMovieId = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Molimo odaberite film';
+                          }
+                          return null;
+                        },
+                      );
+                    }
+                    
+                    return const SizedBox();
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Hall Selection
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.meeting_room_rounded, size: 20, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Sala',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                BlocBuilder<ProjectionsBloc, ProjectionsState>(
+                  builder: (context, state) {
+                    // Find the cinema that owns this projection using cinemaId
+                    Cinema? projectionCinema;
+                    final availableCinemas = state is ProjectionsLoaded 
+                        ? state.availableCinemas
+                        : state is ProjectionsLoading
+                        ? state.availableCinemas
+                        : <Cinema>[];
+                    
+                    if (widget.projection.cinemaId != null && availableCinemas.isNotEmpty) {
+                      try {
+                        projectionCinema = availableCinemas.firstWhere(
+                          (cinema) => cinema.id == widget.projection.cinemaId,
+                        );
+                      } catch (e) {
+                        // Cinema not found, will fall back to current selection or empty
+                      }
+                    }
+                    
+                    // Get halls from the projection's cinema, fallback to selected cinema, then empty
+                    final halls = projectionCinema?.halls ?? 
+                                 (state is ProjectionsLoaded ? state.selectedCinema?.halls ?? [] :
+                                  state is ProjectionsLoading ? state.selectedCinema?.halls ?? [] : <Hall>[]);
+                    
+                    if (halls.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.meeting_room_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.projection.hall,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    
+                    return DropdownButtonFormField<String>(
+                      value: _selectedHallId,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                        ),
+                        prefixIcon: Icon(Icons.meeting_room_rounded, color: colorScheme.onSurfaceVariant),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      ),
+                      items: halls.map((hall) {
+                        return DropdownMenuItem<String>(
+                          value: hall.id,
+                          child: Text(
+                            hall.displayInfo,
+                            style: textTheme.bodyMedium,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedHallId = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Molimo odaberite salu';
+                        }
+                        return null;
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Date and Time Selection
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 20, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Datum i vrijeme',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              _selectedDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_selectedDate.day}.${_selectedDate.month}.${_selectedDate.year}',
+                                style: textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: _selectedTime,
+                          );
+                          if (time != null) {
+                            setState(() {
+                              _selectedTime = time;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedTime.format(context),
+                                style: textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Price
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.attach_money_rounded, size: 20, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Cijena',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Unesite cijenu',
+                    suffixText: 'KM',
+                    filled: true,
+                    fillColor: colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Molimo unesite cijenu';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Molimo unesite validnu cijenu';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Action Buttons
+          Column(
+            children: [
+              // Delete Button (separate row for emphasis)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _showDeleteConfirmation,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(color: colorScheme.error),
+                  ),
+                  icon: Icon(Icons.delete_outline_rounded, size: 20),
+                  label: const Text('Obriši projekciju'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Cancel and Update buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Otkaži'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _updateProjection,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Ažuriraj'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _updateProjection() {
+    if (_formKey.currentState!.validate()) {
+      final selectedMovie = context.read<MoviesBloc>().state;
+      final projectionsState = context.read<ProjectionsBloc>().state;
+      
+      if (selectedMovie is MoviesLoaded) {
+        final movie = selectedMovie.movies.firstWhere((m) => m.id == _selectedMovieId);
+        
+        // Get the selected hall from the cinema's halls
+        String hallName = widget.projection.hall; // Default fallback
+        final halls = projectionsState is ProjectionsLoaded 
+            ? projectionsState.selectedCinema?.halls ?? []
+            : projectionsState is ProjectionsLoading
+            ? projectionsState.selectedCinema?.halls ?? []
+            : <Hall>[];
+            
+        if (_selectedHallId != null && halls.isNotEmpty) {
+          final selectedHall = halls.firstWhere(
+            (hall) => hall.id == _selectedHallId,
+            orElse: () => halls.first,
+          );
+          hallName = selectedHall.name;
+        }
+        
+        final updatedProjection = Projection(
+          id: widget.projection.id, // Keep the same ID for update
+          movieId: _selectedMovieId!,
+          movieTitle: movie.title,
+          hallId: _selectedHallId ?? widget.projection.hallId, // Use selected hall ID
+          hall: hallName, // Use selected hall name
+          date: _selectedDate,
+          time: _selectedTime,
+          price: double.parse(_priceController.text),
+          cinemaId: widget.projection.cinemaId,
+        );
+
+        context.read<ProjectionsBloc>().add(UpdateProjection(updatedProjection));
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final colorScheme = Theme.of(context).colorScheme;
+        final textTheme = Theme.of(context).textTheme;
+        
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: colorScheme.error,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Potvrdi brisanje',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Da li ste sigurni da želite obrisati ovu projekciju?',
+                style: textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.errorContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: colorScheme.error.withOpacity(0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.projection.movieTitle,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${widget.projection.time.format(context)} - ${widget.projection.hall}',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${widget.projection.date.day}.${widget.projection.date.month}.${widget.projection.date.year}',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Ova akcija se ne može poništiti.',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Otkaži'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close confirmation dialog
+                _deleteProjection();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.error,
+                foregroundColor: colorScheme.onError,
+              ),
+              child: const Text('Obriši'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteProjection() {
+    if (widget.projection.id != null) {
+      context.read<ProjectionsBloc>().add(DeleteProjection(widget.projection.id));
+      Navigator.of(context).pop(); // Close edit modal
+    }
   }
 }
