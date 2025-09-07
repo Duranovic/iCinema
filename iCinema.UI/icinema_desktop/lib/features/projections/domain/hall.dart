@@ -43,6 +43,7 @@ class Hall {
       'name': name,
       'rowsCount': rowsCount,
       'seatsPerRow': seatsPerRow,
+      'capacity': capacity, // Include calculated capacity
       'hallType': hallType,
       'screenSize': screenSize,
       'isDolbyAtmos': isDolbyAtmos,

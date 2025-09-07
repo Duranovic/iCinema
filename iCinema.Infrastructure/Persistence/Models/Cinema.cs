@@ -12,6 +12,10 @@ public partial class Cinema
     public string Name { get; set; } = null!;
 
     public string? Address { get; set; }
+    
+    public string? Email { get; set; } = null!;
+
+    public string? PhoneNumber { get; set; } = null!;
 
     public virtual City City { get; set; } = null!;
 

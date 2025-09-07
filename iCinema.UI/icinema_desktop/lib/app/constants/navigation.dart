@@ -20,6 +20,12 @@ const mainNavigationItems = [
     padding: EdgeInsets.all(10),
   ),
   NavigationRailDestination(
+    icon: Icon(Icons.local_movies_outlined),
+    selectedIcon: Icon(Icons.local_movies),
+    label: Text('Kina'),
+    padding: EdgeInsets.all(10),
+  ),
+  NavigationRailDestination(
     icon: Icon(Icons.people_outline),
     selectedIcon: Icon(Icons.people),
     label: Text('Korisnici'),

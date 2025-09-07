@@ -20,6 +20,8 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
 import '../../features/auth/presentation/blocs/login/login_bloc.dart' as _i1018;
+import '../../features/cinemas/data/city_service.dart' as _i1012;
+import '../../features/cinemas/presentation/bloc/cinemas_bloc.dart' as _i415;
 import '../../features/movies/data/movie_service.dart' as _i1055;
 import '../../features/movies/presentation/bloc/movies_bloc.dart' as _i169;
 import '../../features/projections/data/cinema_service.dart' as _i468;
@@ -49,8 +51,14 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i1055.MovieService(gh<_i361.Dio>()));
     gh.lazySingleton<_i468.CinemaService>(
         () => _i468.CinemaService(gh<_i361.Dio>()));
+    gh.lazySingleton<_i1012.CityService>(
+        () => _i1012.CityService(gh<_i361.Dio>()));
     gh.lazySingleton<_i787.AuthRepository>(
         () => _i153.AuthRepositoryImpl(gh<_i161.AuthRemoteDataSource>()));
+    gh.factory<_i415.CinemasBloc>(() => _i415.CinemasBloc(
+          gh<_i468.CinemaService>(),
+          gh<_i1012.CityService>(),
+        ));
     gh.factory<_i188.LoginUseCase>(
         () => _i188.LoginUseCase(gh<_i787.AuthRepository>()));
     gh.factory<_i169.MoviesBloc>(

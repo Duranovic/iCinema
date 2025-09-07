@@ -9,6 +9,7 @@ import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.da
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
 import 'package:icinema_desktop/features/movies/presentation/pages/movies_page.dart';
 import 'package:icinema_desktop/features/projections/presentation/pages/projections_page.dart';
+import 'package:icinema_desktop/features/cinemas/presentation/pages/cinemas_page.dart';
 import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/pages/home_page.dart';
 import 'package:icinema_desktop/pages/profile_page.dart';
@@ -62,6 +63,13 @@ final GoRouter router = GoRouter(
           path: '/projections',
           pageBuilder: (context, state) => _fadeTransitionPage(
             const ProjectionsPage(),
+            state,
+          ),
+        ),
+        GoRoute(
+          path: '/cinemas',
+          pageBuilder: (context, state) => _fadeTransitionPage(
+            const CinemasPage(),
             state,
           ),
         ),

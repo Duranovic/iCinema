@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iCinema.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using iCinema.Infrastructure.Persistence;
 namespace iCinema.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(iCinemaDbContext))]
-    partial class iCinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250907210918_AddCinemaColumns")]
+    partial class AddCinemaColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

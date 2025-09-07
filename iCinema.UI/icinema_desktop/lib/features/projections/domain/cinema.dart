@@ -56,6 +56,30 @@ class Cinema {
 
   String get displayLocation => '$cityName, $countryName';
 
+  Cinema copyWith({
+    String? id,
+    String? name,
+    String? address,
+    String? email,
+    String? phoneNumber,
+    String? cityId,
+    String? cityName,
+    String? countryName,
+    List<Hall>? halls,
+  }) {
+    return Cinema(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      cityId: cityId ?? this.cityId,
+      cityName: cityName ?? this.cityName,
+      countryName: countryName ?? this.countryName,
+      halls: halls ?? this.halls,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
