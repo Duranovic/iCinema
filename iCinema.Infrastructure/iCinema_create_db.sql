@@ -33,6 +33,8 @@ CREATE TABLE Cinemas
     CityId  UNIQUEIDENTIFIER NOT NULL,
     Name    NVARCHAR(150)    NOT NULL,
     Address NVARCHAR(250),
+    Email       nvarchar(max),
+    PhoneNumber nvarchar(max),
     CONSTRAINT FK_Cinemas_Cities FOREIGN KEY (CityId) REFERENCES Cities (Id)
 );
 
