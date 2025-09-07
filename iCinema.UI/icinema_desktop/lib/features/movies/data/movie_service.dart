@@ -8,9 +8,15 @@ class MovieService {
   MovieService(this._dio);
 
   Future<List<Movie>> fetchMovies() async {
-    final res = await _dio.get('/movies');
-    final items = res.data['items'] as List<dynamic>;
-    return items.map((e) => Movie.fromJson(e)).toList();
+    try {
+      final res = await _dio.get('/movies');
+
+      final items = res.data['items'] as List<dynamic>;
+      final movies = items.map((e) => Movie.fromJson(e)).toList();
+      return movies;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<dynamic>> fetchGenres() async {

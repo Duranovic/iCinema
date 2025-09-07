@@ -10,8 +10,9 @@ public class ProjectionsProfile : Profile
     {
         CreateMap<Projection, ProjectionDto>()
             .ForMember(dest => dest.MovieTitle, opt => opt.MapFrom(src => src.Movie.Title))
-            .ForMember(dest => dest.CinemaName, opt => opt.MapFrom(src => src.Hall.Cinema.Name));
-        
+            .ForMember(dest => dest.CinemaName, opt => opt.MapFrom(src => src.Hall.Cinema.Name))
+            .ForMember(dest => dest.HallName, opt => opt.MapFrom(src => src.Hall.Name))
+            .ForMember(dest => dest.CinemaId, opt => opt.MapFrom(src => src.Hall.CinemaId));
         CreateMap<ProjectionDto, Projection>();
         CreateMap<ProjectionCreateDto, Projection>();
         CreateMap<ProjectionUpdateDto, Projection>();

@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:icinema_desktop/features/projections/domain/projection.dart';
+import 'package:icinema_desktop/features/projections/domain/cinema.dart';
+import 'package:icinema_desktop/features/projections/domain/hall.dart';
+import 'package:icinema_desktop/features/movies/domain/movie.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection';
 import 'dart:math' as math;
 import 'package:icinema_desktop/app/utils/bs_calendar_labels.dart';
 import 'package:icinema_desktop/app/utils/date_gates.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_bloc.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_state.dart';
+import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
 
 class ProjectionsCalendar extends StatefulWidget {
   const ProjectionsCalendar({super.key});
@@ -17,29 +27,17 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // Map of day -> list of projections (use SplayTreeMap to keep days sorted)
-  final SplayTreeMap<DateTime, List<Projection>> _data =
-  SplayTreeMap<DateTime, List<Projection>>(
-        (a, b) => DateUtils.dateOnly(a).compareTo(DateUtils.dateOnly(b)),
+  // UI-only cache of events for current visible month, derived from Bloc state
+  SplayTreeMap<DateTime, List<Projection>> _groupedEvents = SplayTreeMap<DateTime, List<Projection>>(
+    (a, b) => DateUtils.dateOnly(a).compareTo(DateUtils.dateOnly(b)),
   );
 
   @override
   void initState() {
     super.initState();
-    // seed demo data
-    final today = DateUtils.dateOnly(DateTime.now());
-    _data[today.subtract(const Duration(days: 1))] = [
-      Projection(movieTitle: "Dune: Part 2", hall: "Dvorana 1", time: const TimeOfDay(hour: 19, minute: 0)),
-      Projection(movieTitle: "IF", hall: "Dvorana 2", time: const TimeOfDay(hour: 21, minute: 0)),
-    ];
-    _data[today] = [
-      Projection(movieTitle: "Inside Out 2", hall: "Dvorana 1", time: const TimeOfDay(hour: 20, minute: 0)),
-    ];
   }
 
-  List<Projection> _eventsForDay(DateTime day) {
-    return _data[DateUtils.dateOnly(day)] ?? const [];
-  }
+  List<Projection> _eventsForDay(DateTime day) => _groupedEvents[DateUtils.dateOnly(day)] ?? const [];
 
   bool _isWeekend(DateTime day) {
     return day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
@@ -251,10 +249,46 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
   }
 
   Future<void> _openCreateSheet(DateTime day) async {
-    final titleCtrl = TextEditingController();
     TimeOfDay selected = const TimeOfDay(hour: 20, minute: 0);
     String hall = "Dvorana 1";
     final colorScheme = Theme.of(context).colorScheme;
+    final priceController = TextEditingController(text: "10.00"); // Default price
+    
+    // Get current state for cinema and hall selection
+    final currentState = context.read<ProjectionsBloc>().state;
+    Cinema? selectedCinema;
+    Hall? selectedHall;
+    List<Cinema> availableCinemas = [];
+    List<Hall> availableHalls = [];
+    
+    // Preselect cinema from current filter if available
+    if (currentState is ProjectionsLoaded) {
+      availableCinemas = currentState.availableCinemas;
+      selectedCinema = currentState.selectedCinema;
+      if (selectedCinema != null) {
+        availableHalls = selectedCinema.halls;
+        if (availableHalls.isNotEmpty) {
+          selectedHall = availableHalls.first;
+          hall = selectedHall.name;
+        }
+      }
+    } else if (currentState is ProjectionsError) {
+      availableCinemas = currentState.availableCinemas;
+      selectedCinema = currentState.selectedCinema;
+      if (selectedCinema != null) {
+        availableHalls = selectedCinema.halls;
+        if (availableHalls.isNotEmpty) {
+          selectedHall = availableHalls.first;
+          hall = selectedHall.name;
+        }
+      }
+    }
+
+    // Get MoviesBloc instance to pass to modal
+    final moviesBloc = context.read<MoviesBloc>();
+    
+    // Declare selectedMovie outside StatefulBuilder to persist selection
+    Movie? selectedMovie;
 
     await showModalBottomSheet(
       context: context,
@@ -264,7 +298,9 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Container(
+      builder: (ctx) => BlocProvider<MoviesBloc>.value(
+        value: moviesBloc,
+        child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -275,7 +311,9 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
             left: 24, right: 24, top: 16,
           ),
           child: StatefulBuilder(
-            builder: (ctx, setSheetState) => Column(
+            builder: (ctx, setSheetState) {
+              
+              return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -318,13 +356,167 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                 ),
                 const SizedBox(height: 24),
 
-                // Form fields
-                TextField(
-                  controller: titleCtrl,
+                // Movie selection dropdown with BlocBuilder
+                BlocBuilder<MoviesBloc, MoviesState>(
+                  builder: (context, moviesState) {
+                    
+                    if (moviesState is MoviesError) {
+                      return DropdownButtonFormField<Movie?>(
+                        value: null,
+                        items: [DropdownMenuItem<Movie?>(
+                          value: null,
+                          child: Text("Greška: ${moviesState.message}"),
+                        )],
+                        onChanged: null,
+                        decoration: InputDecoration(
+                          labelText: "Film",
+                          prefixIcon: const Icon(Icons.error_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: colorScheme.errorContainer.withOpacity(0.3),
+                        ),
+                      );
+                    } else if (moviesState is MoviesLoading || moviesState is MoviesInitial) {
+                      return DropdownButtonFormField<Movie?>(
+                        value: null,
+                        items: [const DropdownMenuItem<Movie?>(
+                          value: null,
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              SizedBox(width: 8),
+                              Text("Učitavanje filmova..."),
+                            ],
+                          ),
+                        )],
+                        onChanged: null,
+                        decoration: InputDecoration(
+                          labelText: "Film",
+                          prefixIcon: const Icon(Icons.movie_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                      );
+                    } else if (moviesState is MoviesLoaded) {
+                      final movies = moviesState.movies;
+                      return DropdownButtonFormField<Movie?>(
+                        value: selectedMovie,
+                        items: [
+                          const DropdownMenuItem<Movie?>(
+                            value: null,
+                            child: Text("Odaberite film"),
+                          ),
+                          ...movies.map((movie) => DropdownMenuItem<Movie?>(
+                            value: movie,
+                            child: Text(
+                              movie.title,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
+                        ],
+                        onChanged: (Movie? movie) {
+                          setSheetState(() {
+                            selectedMovie = movie;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Film",
+                          prefixIcon: const Icon(Icons.movie_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                      );
+                    } else {
+                      return DropdownButtonFormField<Movie?>(
+                        value: null,
+                        items: [const DropdownMenuItem<Movie?>(
+                          value: null,
+                          child: Text("Filmovi nisu dostupni"),
+                        )],
+                        onChanged: null,
+                        decoration: InputDecoration(
+                          labelText: "Film",
+                          prefixIcon: const Icon(Icons.movie_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Price input field
+                TextFormField(
+                  controller: priceController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: "Naziv filma",
-                    hintText: "Unesite naziv filma",
-                    prefixIcon: const Icon(Icons.movie_rounded),
+                    labelText: "Cijena (KM)",
+                    prefixIcon: const Icon(Icons.attach_money_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Molimo unesite cijenu';
+                    }
+                    final price = double.tryParse(value.trim());
+                    if (price == null || price <= 0) {
+                      return 'Molimo unesite validnu cijenu';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Cinema selection dropdown
+                DropdownButtonFormField<Cinema?>(
+                  value: selectedCinema,
+                  items: [
+                    // "All cinemas" option - only show if no cinema is preselected
+                    if (selectedCinema == null)
+                      const DropdownMenuItem<Cinema?>(
+                        value: null,
+                        child: Text("Odaberite kino"),
+                      ),
+                    // Individual cinema options
+                    ...availableCinemas.map((cinema) => DropdownMenuItem<Cinema?>(
+                      value: cinema,
+                      child: Text('${cinema.name} - ${cinema.displayLocation}'),
+                    )),
+                  ],
+                  onChanged: (Cinema? cinema) {
+                    setSheetState(() {
+                      selectedCinema = cinema;
+                      availableHalls = cinema?.halls ?? [];
+                      selectedHall = null;
+                      hall = availableHalls.isNotEmpty ? availableHalls.first.name : "Dvorana 1";
+                      if (availableHalls.isNotEmpty) {
+                        selectedHall = availableHalls.first;
+                      }
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Kino",
+                    prefixIcon: const Icon(Icons.location_on_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -334,82 +526,91 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                 ),
                 const SizedBox(height: 16),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: hall,
-                        items: const [
-                          DropdownMenuItem(value: "Dvorana 1", child: Text("Dvorana 1")),
-                          DropdownMenuItem(value: "Dvorana 2", child: Text("Dvorana 2")),
-                          DropdownMenuItem(value: "Dvorana 3", child: Text("Dvorana 3")),
-                        ],
-                        onChanged: (v) => setSheetState(() => hall = v ?? hall),
-                        decoration: InputDecoration(
-                          labelText: "Dvorana",
-                          prefixIcon: const Icon(Icons.meeting_room_rounded),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                // Hall selection dropdown (full width)
+                DropdownButtonFormField<Hall?>(
+                  value: selectedHall,
+                  items: availableHalls.isEmpty
+                      ? [const DropdownMenuItem<Hall?>(
+                          value: null,
+                          child: Text("Odaberite kino prvo"),
+                        )]
+                      : availableHalls.map((hall) => DropdownMenuItem<Hall?>(
+                          value: hall,
+                          child: Text(
+                            hall.displayInfo,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          filled: true,
-                          fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
-                        ),
-                      ),
+                        )).toList(),
+                  onChanged: availableHalls.isEmpty 
+                      ? null 
+                      : (Hall? selectedHallValue) {
+                          setSheetState(() {
+                            selectedHall = selectedHallValue;
+                            hall = selectedHallValue?.name ?? "Dvorana 1";
+                          });
+                        },
+                  decoration: InputDecoration(
+                    labelText: "Dvorana",
+                    prefixIcon: const Icon(Icons.meeting_room_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceVariant.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outline.withOpacity(0.5),
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () async {
-                              final t = await showTimePicker(
-                                context: ctx,
-                                initialTime: selected,
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: Theme.of(context).copyWith(
-                                      timePickerTheme: TimePickerThemeData(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
-                              );
-                              if (t != null) setSheetState(() => selected = t);
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.access_time_rounded,
-                                    color: colorScheme.onSurfaceVariant,
+                    filled: true,
+                    fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Time selection (full width)
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.outline.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final t = await showTimePicker(
+                          context: ctx,
+                          initialTime: selected,
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                timePickerTheme: TimePickerThemeData(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    selected.format(ctx),
-                                    style: Theme.of(ctx).textTheme.bodyLarge,
-                                  ),
-                                ],
+                                ),
                               ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (t != null) setSheetState(() => selected = t);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Text(
+                              selected.format(ctx),
+                              style: Theme.of(ctx).textTheme.bodyLarge,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -433,13 +634,54 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                       flex: 2,
                       child: FilledButton.icon(
                         onPressed: () {
-                          final list = _data.putIfAbsent(DateUtils.dateOnly(day), () => []);
-                          list.add(Projection(
-                            movieTitle: titleCtrl.text.isEmpty ? "Nepoznato" : titleCtrl.text,
-                            hall: hall,
+                          // Validation: require movie, cinema, hall and price
+                          if (selectedMovie == null) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Molimo odaberite film')),
+                            );
+                            return;
+                          }
+                          if (selectedCinema == null) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Molimo odaberite kino')),
+                            );
+                            return;
+                          }
+                          if (selectedHall == null) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Molimo odaberite dvoranu')),
+                            );
+                            return;
+                          }
+                          
+                          // Validate price
+                          final priceText = priceController.text.trim();
+                          if (priceText.isEmpty) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Molimo unesite cijenu')),
+                            );
+                            return;
+                          }
+                          final price = double.tryParse(priceText);
+                          if (price == null || price <= 0) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(content: Text('Molimo unesite validnu cijenu')),
+                            );
+                            return;
+                          }
+
+                          final projection = Projection(
+                            movieTitle: selectedMovie!.title,
+                            hall: selectedHall!.name,
                             time: selected,
-                          ));
-                          setState(() {}); // refresh calendar
+                            date: DateUtils.dateOnly(day),
+                            price: price,
+                            cinemaId: selectedCinema!.id,
+                            hallId: selectedHall!.id,
+                            movieId: selectedMovie!.id,
+                            isActive: true, // Set as active by default as requested
+                          );
+                          context.read<ProjectionsBloc>().add(AddProjection(projection));
                           Navigator.pop(ctx);
                         },
                         icon: const Icon(Icons.save_rounded),
@@ -455,8 +697,10 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                   ],
                 ),
               ],
-            ),
+            );
+            },
           ),
+        ),
         ),
       ),
     );
@@ -465,112 +709,185 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    return BlocConsumer<ProjectionsBloc, ProjectionsState>(
+      listenWhen: (prev, curr) => curr is ProjectionsLoaded || curr is ProjectionsLoading || curr is ProjectionsError,
+      listener: (context, state) {
+        if (state is ProjectionsLoaded) {
+          // regroup events by date for current month
+          final map = SplayTreeMap<DateTime, List<Projection>>(
+            (a, b) => DateUtils.dateOnly(a).compareTo(DateUtils.dateOnly(b)),
+          );
+          for (final p in state.projections) {
+            final day = DateUtils.dateOnly(p.date);
+            map.putIfAbsent(day, () => []).add(p);
+          }
+          setState(() => _groupedEvents = map);
+        }
+      },
+      builder: (context, state) {
+        final isLoadingForFocusedMonth = state is ProjectionsLoading && DateUtils.isSameDay(
+          DateUtils.dateOnly(DateTime(state.month.year, state.month.month, 1)),
+          DateUtils.dateOnly(DateTime(_focusedDay.year, _focusedDay.month, 1)),
+        );
+        final isErrorForFocusedMonth = state is ProjectionsError && DateUtils.isSameDay(
+          DateUtils.dateOnly(DateTime(state.month.year, state.month.month, 1)),
+          DateUtils.dateOnly(DateTime(_focusedDay.year, _focusedDay.month, 1)),
+        );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: TableCalendar<Projection>(
-          firstDay: DateTime.utc(2018, 1, 1),
-          lastDay: DateTime.utc(2032, 12, 31),
-          focusedDay: _focusedDay,
-          selectedDayPredicate: (d) => isSameDay(_selectedDay, d),
-          eventLoader: _eventsForDay,
-          calendarFormat: CalendarFormat.month,
-          // Make each date tile taller
-          rowHeight: 160,
-          daysOfWeekHeight: 32,
-          startingDayOfWeek: StartingDayOfWeek.monday,
-          onDaySelected: (selected, focused) {
-            setState(() {
-              _selectedDay = selected;
-              _focusedDay = focused;
-            });
-            _openListSheet(selected);
-          },
-          onPageChanged: (focusedDay) {
-            setState(() {
-              _focusedDay = focusedDay;
-            });
-          },
-          headerStyle: HeaderStyle(
-            formatButtonVisible: false,
-            titleCentered: true,
-            titleTextStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
-            ) ?? const TextStyle(),
-            // Use Bosnian month/year while keeping default centering
-            titleTextFormatter: (date, locale) => formatBsMonthYear(date),
-            leftChevronIcon: Icon(
-              Icons.chevron_left_rounded,
-              color: colorScheme.primary,
-              size: 28,
-            ),
-            rightChevronIcon: Icon(
-              Icons.chevron_right_rounded,
-              color: colorScheme.primary,
-              size: 28,
-            ),
-            headerPadding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceVariant.withOpacity(0.3),
-            ),
-          ),
-          daysOfWeekStyle: DaysOfWeekStyle(
-            weekdayStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ) ?? const TextStyle(),
-            weekendStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ) ?? const TextStyle(),
-          ),
-          calendarStyle: CalendarStyle(
-            outsideDaysVisible: false,
-            cellMargin: const EdgeInsets.all(8),
-            defaultDecoration: const BoxDecoration(),
-            weekendDecoration: const BoxDecoration(),
-            holidayDecoration: const BoxDecoration(),
-            selectedDecoration: const BoxDecoration(),
-            todayDecoration: const BoxDecoration(),
-            markerDecoration: const BoxDecoration(),
-            rowDecoration: const BoxDecoration(),
-          ),
-          calendarBuilders: CalendarBuilders(
-            // Bosnian days-of-week labels
-            dowBuilder: (ctx, day) {
-              final colorScheme = Theme.of(ctx).colorScheme;
-              final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
-              return Center(
-                child: Text(
-                  bsWeekdayShort(day.weekday),
-                  style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
-                        color: isWeekend ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
+        return Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: TableCalendar<Projection>(
+                  firstDay: DateTime.utc(2018, 1, 1),
+                  lastDay: DateTime.utc(2032, 12, 31),
+                  focusedDay: _focusedDay,
+                  selectedDayPredicate: (d) => isSameDay(_selectedDay, d),
+                  eventLoader: _eventsForDay,
+                  calendarFormat: CalendarFormat.month,
+                  // Make each date tile taller
+                  rowHeight: 160,
+                  daysOfWeekHeight: 32,
+                  startingDayOfWeek: StartingDayOfWeek.monday,
+                  onDaySelected: (selected, focused) {
+                    setState(() {
+                      _selectedDay = selected;
+                      _focusedDay = focused;
+                    });
+                    _openListSheet(selected);
+                  },
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay;
+                    });
+                    context.read<ProjectionsBloc>().add(LoadProjectionsForMonth(focusedDay));
+                  },
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    titleTextStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ) ?? const TextStyle(),
+                    // Use Bosnian month/year while keeping default centering
+                    titleTextFormatter: (date, locale) => formatBsMonthYear(date),
+                    leftChevronIcon: Icon(
+                      Icons.chevron_left_rounded,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.chevron_right_rounded,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
+                    headerPadding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceVariant.withOpacity(0.3),
+                    ),
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ) ?? const TextStyle(),
+                    weekendStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ) ?? const TextStyle(),
+                  ),
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    cellMargin: const EdgeInsets.all(8),
+                    defaultDecoration: const BoxDecoration(),
+                    weekendDecoration: const BoxDecoration(),
+                    holidayDecoration: const BoxDecoration(),
+                    selectedDecoration: const BoxDecoration(),
+                    todayDecoration: const BoxDecoration(),
+                    markerDecoration: const BoxDecoration(),
+                    rowDecoration: const BoxDecoration(),
+                  ),
+                  calendarBuilders: CalendarBuilders(
+                    // Bosnian days-of-week labels
+                    dowBuilder: (ctx, day) {
+                      final colorScheme = Theme.of(ctx).colorScheme;
+                      final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+                      return Center(
+                        child: Text(
+                          bsWeekdayShort(day.weekday),
+                          style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
+                                color: isWeekend ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      );
+                    },
+                    defaultBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isWeekend: _isWeekend(day)),
+                    todayBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isToday: true, isWeekend: _isWeekend(day)),
+                    selectedBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isSelected: true, isWeekend: _isWeekend(day)),
+                    outsideBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isOutside: true, isWeekend: _isWeekend(day)),
+                    markerBuilder: (ctx, day, events) => const SizedBox.shrink(), // We handle markers in _buildDayCell
+                  ),
                 ),
-              );
-            },
-            defaultBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isWeekend: _isWeekend(day)),
-            todayBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isToday: true, isWeekend: _isWeekend(day)),
-            selectedBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isSelected: true, isWeekend: _isWeekend(day)),
-            outsideBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isOutside: true, isWeekend: _isWeekend(day)),
-            markerBuilder: (ctx, day, events) => const SizedBox.shrink(), // We handle markers in _buildDayCell
-          ),
-        ),
-      ),
+              ),
+            ),
+            if (isLoadingForFocusedMonth)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            if (isErrorForFocusedMonth)
+              Positioned(
+                left: 16,
+                right: 16,
+                top: 16,
+                child: Material(
+                  color: colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Greška pri učitavanju projekcija',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onErrorContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.read<ProjectionsBloc>().add(LoadProjectionsForMonth(_focusedDay)),
+                          child: Text('Pokušaj ponovo', style: TextStyle(color: colorScheme.onErrorContainer)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -731,14 +1048,30 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                                       ),
                                       const SizedBox(width: 4),
                                       Expanded(
-                                        child: Text(
-                                          event.time.format(ctx),
-                                          style: textTheme.labelSmall?.copyWith(
-                                            color: _getEventColor(event, colorScheme),
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 9,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                event.movieTitle,
+                                                style: textTheme.labelSmall?.copyWith(
+                                                  color: _getEventColor(event, colorScheme),
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 9,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              event.time.format(ctx),
+                                              style: textTheme.labelSmall?.copyWith(
+                                                color: _getEventColor(event, colorScheme).withOpacity(0.8),
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 8,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -805,35 +1138,5 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
       Colors.purple,
     ];
     return colors[hash.abs() % colors.length];
-  }
-
-  // --- Bosnian labels helpers ---
-  String _formatBsMonthYear(DateTime d) {
-    return "${_bsMonthName(d.month)} ${d.year}";
-  }
-
-  String _bsMonthName(int month) {
-    const months = [
-      'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
-    ];
-    return months[(month - 1).clamp(0, 11)];
-  }
-
-  // e.g., "Čet, 11. sep"
-  String _formatBsMediumDate(DateTime d) {
-    return "${_bsWeekdayShort(d.weekday)}, ${d.day}. ${_bsMonthShort(d.month)}";
-  }
-
-  String _bsMonthShort(int month) {
-    const months = [
-      'jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'avg', 'sep', 'okt', 'nov', 'dec'
-    ];
-    return months[(month - 1).clamp(0, 11)];
-  }
-
-  String _bsWeekdayShort(int weekday) {
-    // Monday=1 ... Sunday=7
-    const days = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
-    return days[(weekday - 1).clamp(0, 6)];
   }
 }

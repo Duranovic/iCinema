@@ -18,7 +18,21 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
 
     protected virtual IQueryable<TEntity> AddFilter(IQueryable<TEntity> query, BaseFilter filter)
     {
-        return query; // Override in child repositories for custom filtering
+        if (filter is null) return query;  // Override in child repositories for custom filtering
+
+        // Choose a safe default
+        if (filter.SortBy != null)
+        {
+            var sortBy = string.IsNullOrWhiteSpace(filter.SortBy) ? "CreatedAt" : filter.SortBy!;
+            var desc   = filter.Descending;
+
+            // Dynamic order using EF.Property so it translates to SQL
+            query = desc
+                ? query.OrderByDescending(e => EF.Property<object?>(e, sortBy))
+                : query.OrderBy(e => EF.Property<object?>(e, sortBy));    
+        }
+       
+        return query;
     }
 
     protected virtual IQueryable<TEntity> AddInclude(IQueryable<TEntity> query)

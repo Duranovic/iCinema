@@ -12,7 +12,10 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
   MoviesBloc(this.movieService) : super(MoviesInitial()) {
     on<LoadMovies>((event, emit) async {
       try {
+        print('MoviesBloc: LoadMovies event received');
         emit(MoviesLoading());
+        print('MoviesBloc: Emitted MoviesLoading state');
+        
         final results = await Future.wait([
           movieService.fetchMovies(),
           movieService.fetchGenres(),
@@ -21,9 +24,12 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
         final movies = results[0] as List<Movie>;
         final genres = results[1];
 
+        print('MoviesBloc: Successfully loaded ${movies.length} movies');
         emit(MoviesLoaded(movies, genres));
+        print('MoviesBloc: Emitted MoviesLoaded state');
       } catch (e) {
-        emit(MoviesError('Failed to load movies'));
+        print('MoviesBloc: Error loading movies: $e');
+        emit(MoviesError('Failed to load movies: $e'));
       }
     });
 

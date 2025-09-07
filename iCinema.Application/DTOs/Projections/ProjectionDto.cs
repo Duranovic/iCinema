@@ -7,6 +7,8 @@ public class ProjectionDto
     public string MovieTitle { get; set; } = string.Empty;
     public Guid CinemaId { get; set; }
     public string CinemaName { get; set; } = string.Empty;
+    public Guid HallId { get; set; }
+    public string HallName { get; set; } = string.Empty;
     public DateTime StartTime { get; set; }
     public decimal Price { get; set; }
 }

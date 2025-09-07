@@ -1,4 +1,6 @@
 
+using iCinema.Application.DTOs.Hall;
+
 namespace iCinema.Application.DTOs.Cinema;
 
 public class CinemaDto
@@ -16,4 +18,6 @@ public class CinemaDto
     public Guid CityId { get; set; }
     public string CityName { get; set; } = string.Empty;
     public string CountryName { get; set; } = string.Empty;
+    
+    public virtual ICollection<HallDto> Halls { get; set; } = new List<HallDto>();
 }

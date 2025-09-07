@@ -27,6 +27,11 @@ public class CinemaRepository(iCinemaDbContext context, IMapper mapper, ICinemaR
         return query;
     }
     
+    protected override IQueryable<Cinema> AddInclude(IQueryable<Cinema> query)
+    {
+        return query.Include(item => item.Halls);
+    }
+    
     protected override async Task BeforeInsert(Cinema entity, CinemaCreateDto dto)
     {
         await rules.EnsureCinemaNameIsUnique(dto.Name, dto.CityId);

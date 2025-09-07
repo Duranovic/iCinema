@@ -26,8 +26,11 @@ public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IPro
             if (filter.CinemaId.HasValue)
                 query = query.Where(p => p.Hall.CinemaId == filter.CinemaId);
 
-            if (filter.Date.HasValue)
-                query = query.Where(p => p.StartTime.Date == filter.Date.Value.Date);
+            if (filter.StartDate.HasValue && filter.EndDate.HasValue)
+            {
+                query = query.Where(p => p.StartTime >= filter.StartDate.Value && 
+                                         p.StartTime < filter.EndDate.Value);
+            }
         }
         return query;
     }
