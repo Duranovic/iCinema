@@ -28,6 +28,7 @@ import '../../features/projections/data/cinema_service.dart' as _i468;
 import '../../features/projections/data/projection_service.dart' as _i963;
 import '../../features/projections/presentation/bloc/projections_bloc.dart'
     as _i850;
+import '../../features/reports/data/reports_service.dart' as _i653;
 import 'network_module.dart' as _i567;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -45,14 +46,16 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio);
     gh.lazySingleton<_i161.AuthRemoteDataSource>(
         () => _i161.AuthRemoteDataSourceImpl(gh<_i361.Dio>()));
-    gh.lazySingleton<_i963.ProjectionService>(
-        () => _i963.ProjectionService(gh<_i361.Dio>()));
-    gh.lazySingleton<_i1055.MovieService>(
-        () => _i1055.MovieService(gh<_i361.Dio>()));
     gh.lazySingleton<_i468.CinemaService>(
         () => _i468.CinemaService(gh<_i361.Dio>()));
+    gh.lazySingleton<_i963.ProjectionService>(
+        () => _i963.ProjectionService(gh<_i361.Dio>()));
     gh.lazySingleton<_i1012.CityService>(
         () => _i1012.CityService(gh<_i361.Dio>()));
+    gh.lazySingleton<_i1055.MovieService>(
+        () => _i1055.MovieService(gh<_i361.Dio>()));
+    gh.lazySingleton<_i653.ReportsService>(
+        () => _i653.ReportsService(gh<_i361.Dio>()));
     gh.lazySingleton<_i787.AuthRepository>(
         () => _i153.AuthRepositoryImpl(gh<_i161.AuthRemoteDataSource>()));
     gh.factory<_i415.CinemasBloc>(() => _i415.CinemasBloc(

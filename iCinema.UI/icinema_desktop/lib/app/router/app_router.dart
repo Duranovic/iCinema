@@ -13,7 +13,7 @@ import 'package:icinema_desktop/features/cinemas/presentation/pages/cinemas_page
 import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/pages/home_page.dart';
 import 'package:icinema_desktop/pages/profile_page.dart';
-import 'package:icinema_desktop/pages/reports_page.dart';
+import 'package:icinema_desktop/features/reports/presentation/pages/reports_page.dart';
 import 'package:icinema_desktop/pages/users_page.dart';
 
 // Helper function for simple fade transition

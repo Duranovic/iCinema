@@ -6,6 +6,7 @@ using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
+using iCinema.Domain.Entities;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
@@ -60,4 +61,5 @@ public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IPro
         await _context.SaveChangesAsync(cancellationToken);
         return mapper.Map<ProjectionDto>(entity);
     }
+
 }

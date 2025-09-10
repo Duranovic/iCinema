@@ -51,6 +51,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IGenreRulesService, GenreRulesService>();
         services.AddScoped<ICityRulesService, CityRulesService>();
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
+        services.AddScoped<IReportsService, ReportsService>();
         
         // Identity Server
         services.AddScoped<JwtTokenService>();

@@ -8,7 +8,7 @@ abstract class NetworkModule {
   @lazySingleton
   Dio get dio => Dio(
     BaseOptions(
-      baseUrl: 'https://localhost:7026', // adjust to your API
+      baseUrl: 'https://localhost:7026',
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 3),
     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app/di/injection.dart';
 import 'app/router/app_router.dart';
 
@@ -19,7 +20,18 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
-        )
+        ),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('bs'),
+          Locale('hr'),
+          Locale('sr'),
+        ],
     );
   }
 }
