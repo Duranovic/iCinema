@@ -28,6 +28,7 @@ import '../../features/projections/data/cinema_service.dart' as _i468;
 import '../../features/projections/data/projection_service.dart' as _i963;
 import '../../features/projections/presentation/bloc/projections_bloc.dart'
     as _i850;
+import '../../features/reports/data/pdf_service.dart' as _i795;
 import '../../features/reports/data/reports_service.dart' as _i653;
 import 'network_module.dart' as _i567;
 
@@ -43,6 +44,7 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final networkModule = _$NetworkModule();
+    gh.factory<_i795.PdfService>(() => _i795.PdfService());
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio);
     gh.lazySingleton<_i161.AuthRemoteDataSource>(
         () => _i161.AuthRemoteDataSourceImpl(gh<_i361.Dio>()));

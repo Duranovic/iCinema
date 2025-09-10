@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/report_type.dart';
 import '../../data/reports_service.dart';
+import '../../data/pdf_service.dart';
 import '../../../../app/di/injection.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class ReportsPage extends StatefulWidget {
 class _ReportsPageState extends State<ReportsPage> {
   final _formKey = GlobalKey<FormState>();
   final _reportsService = getIt<ReportsService>();
+  final _pdfService = getIt<PdfService>();
 
   final List<ReportType> _reportTypes = ReportType.values;
 
@@ -86,6 +88,30 @@ class _ReportsPageState extends State<ReportsPage> {
         _errorMessage = 'Greška pri generiranju izvještaja: ${e.toString()}';
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _downloadPdf() async {
+    if (_currentReportType == null || _rows.isEmpty || _from == null || _to == null) {
+      return;
+    }
+
+    try {
+      await _pdfService.generateAndDownloadReport(
+        reportType: _currentReportType!,
+        data: _rows,
+        dateFrom: _from!,
+        dateTo: _to!,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Greška pri generiranju PDF-a: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -322,7 +348,7 @@ class _ReportsPageState extends State<ReportsPage> {
                         const SizedBox(width: 12),
                         // PDF button (aligned to the right)
                         OutlinedButton.icon(
-                          onPressed: _rows.isEmpty ? null : () {/* TODO: export to PDF */},
+                          onPressed: _rows.isEmpty ? null : _downloadPdf,
                           icon: const Icon(Icons.picture_as_pdf_outlined),
                           label: const Text('Preuzmi PDF'),
                         ),
