@@ -22,6 +22,8 @@ import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
 import '../../features/auth/presentation/blocs/login/login_bloc.dart' as _i1018;
 import '../../features/cinemas/data/city_service.dart' as _i1012;
 import '../../features/cinemas/presentation/bloc/cinemas_bloc.dart' as _i415;
+import '../../features/home/data/home_service.dart' as _i216;
+import '../../features/home/presentation/bloc/home_kpis_cubit.dart' as _i856;
 import '../../features/movies/data/movie_service.dart' as _i1055;
 import '../../features/movies/presentation/bloc/movies_bloc.dart' as _i169;
 import '../../features/projections/data/cinema_service.dart' as _i468;
@@ -48,6 +50,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio);
     gh.lazySingleton<_i161.AuthRemoteDataSource>(
         () => _i161.AuthRemoteDataSourceImpl(gh<_i361.Dio>()));
+    gh.lazySingleton<_i216.HomeService>(
+        () => _i216.HomeService(gh<_i361.Dio>()));
     gh.lazySingleton<_i468.CinemaService>(
         () => _i468.CinemaService(gh<_i361.Dio>()));
     gh.lazySingleton<_i963.ProjectionService>(
@@ -64,6 +68,8 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i468.CinemaService>(),
           gh<_i1012.CityService>(),
         ));
+    gh.factory<_i856.HomeKpisCubit>(
+        () => _i856.HomeKpisCubit(gh<_i216.HomeService>()));
     gh.factory<_i188.LoginUseCase>(
         () => _i188.LoginUseCase(gh<_i787.AuthRepository>()));
     gh.factory<_i169.MoviesBloc>(

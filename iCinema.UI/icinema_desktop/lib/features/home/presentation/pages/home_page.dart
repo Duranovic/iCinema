@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:icinema_desktop/app/di/injection.dart';
-import 'package:icinema_desktop/features/home/data/home_service.dart';
-import 'package:icinema_desktop/features/home/data/home_kpis_dto.dart';
+import 'package:icinema_desktop/features/home/presentation/bloc/home_kpis_cubit.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  late Future<HomeKpisDto> _kpisFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _kpisFuture = getIt<HomeService>().getKpis();
-  }
-
-  void _retryKpis() {
-    setState(() {
-      _kpisFuture = getIt<HomeService>().getKpis();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +32,16 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
 
-            // Simple KPI cards (live from backend)
-            FutureBuilder<HomeKpisDto>(
-              future: _kpisFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            // Simple KPI cards (live from backend via Cubit)
+            BlocBuilder<HomeKpisCubit, HomeKpisState>(
+              builder: (context, state) {
+                if (state is HomeKpisLoading) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                if (snapshot.hasError) {
+                if (state is HomeKpisError) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Row(
@@ -74,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: _retryKpis,
+                          onPressed: () => context.read<HomeKpisCubit>().load(),
                           icon: const Icon(Icons.refresh),
                           label: const Text('Pokušaj ponovo'),
                         ),
@@ -83,7 +62,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 }
 
-                final k = snapshot.data!;
+                final k = (state as HomeKpisLoaded).data;
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     final isNarrow = constraints.maxWidth < 700;
@@ -159,10 +138,4 @@ class _KpiCard extends StatelessWidget {
       ),
     );
   }
-}
-
-void _soon(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Uskoro dostupno')),
-  );
 }
