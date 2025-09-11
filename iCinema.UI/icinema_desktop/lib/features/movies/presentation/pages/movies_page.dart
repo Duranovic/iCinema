@@ -34,16 +34,44 @@ class _MoviesPageState extends State<MoviesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Upravljanje filmovima'),
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+      ),
       body: BlocBuilder<MoviesBloc, MoviesState>(
         builder: (context, state) {
           if (state is MoviesLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is MoviesError) {
             return Center(
-              child: Text(
-                state.message,
-                style: const TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Greška pri učitavanju filmova',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.message,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             );
           } else if (state is MoviesLoaded) {
@@ -73,10 +101,20 @@ class _MoviesPageState extends State<MoviesPage> {
                 // Sidebar - appears/disappears instantly
                 if (showSidebar)
                   Material(
-                    color: Colors.white,
-                    elevation: 8,
-                    child: SizedBox(
+                    color: colorScheme.surface,
+                    elevation: 0,
+                    shadowColor: colorScheme.shadow,
+                    child: Container(
                       width: sidebarWidth,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        border: Border(
+                          left: BorderSide(
+                            color: colorScheme.outlineVariant,
+                            width: 1,
+                          ),
+                        ),
+                      ),
                       child: MovieEditForm(
                         key: ValueKey('form_${editingIndex}_${isAdding}'),
                         movie: editingIndex != null ? movies[editingIndex!] : null,

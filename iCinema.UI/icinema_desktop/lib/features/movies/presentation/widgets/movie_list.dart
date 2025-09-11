@@ -55,90 +55,180 @@ class _MovieListState extends State<MovieList> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header and Add button
         Row(
           children: [
-            const Expanded(child: Heading("Filmovi")),
+            Expanded(
+              child: Text(
+                'Filmovi',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
             ElevatedButton.icon(
               onPressed: widget.onAdd,
               icon: const Icon(Icons.add),
-              label: const Text('Dodaj'),
+              label: const Text('Dodaj film'),
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.2, // 30% of screen width
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: filterMovies,
-              decoration: const InputDecoration(
-                hintText: 'Pretraga',
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+        const SizedBox(height: 16),
+        Text(
+          'Pretraži filmove',
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 400,
+          child: TextField(
+            controller: _searchCtrl,
+            onChanged: filterMovies,
+            decoration: InputDecoration(
+              hintText: 'Pretraži po nazivu, opisu ili žanru...',
+              prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
+              isDense: true,
+              filled: true,
+              fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             ),
           ),
         ),
-        const SizedBox(height: 12,),
-        // Movie table
+        const SizedBox(height: 20),
+        // Movie list
         Expanded(
           child: filteredMovies.isEmpty
-              ? const Center(child: Text('Nema filmova.'))
-              :
-          ListView.separated(
-            itemCount: filteredMovies.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12), // space between items
-            itemBuilder: (context, idx) => Container(
-              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
-              decoration: BoxDecoration(
-                color: Colors.white, // Card background
-                borderRadius: BorderRadius.circular(12), // Rounded corners
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.07),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.movie_outlined,
+                        size: 64,
+                        color: colorScheme.onSurface.withOpacity(0.4),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nema filmova',
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Dodajte prvi film klikom na dugme "Dodaj film"',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ListTile(
-                title: Text(filteredMovies[idx].title),
-                subtitle: Text('Godina: ${filteredMovies[idx].releaseDate?.year ?? "Nepoznato"}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined),
-                      onPressed: () => widget.onEdit(idx),
-                      tooltip: 'Uredi',
+                )
+              : ListView.separated(
+                  itemCount: filteredMovies.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, idx) => Card(
+                    elevation: 0,
+                    color: colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: colorScheme.outlineVariant),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => widget.onDelete(idx),
-                      tooltip: 'Obriši',
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      title: Text(
+                        filteredMovies[idx].title,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            'Godina: ${filteredMovies[idx].releaseDate?.year ?? "Nepoznato"}',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                          ),
+                          if (filteredMovies[idx].genres.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 6,
+                              children: filteredMovies[idx].genres.take(3).map((genre) => 
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    genre,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onPrimaryContainer,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ).toList(),
+                            ),
+                          ],
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined, color: colorScheme.primary),
+                            onPressed: () => widget.onEdit(idx),
+                            tooltip: 'Uredi film',
+                            style: IconButton.styleFrom(
+                              backgroundColor: colorScheme.primaryContainer.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: colorScheme.error),
+                            onPressed: () => widget.onDelete(idx),
+                            tooltip: 'Obriši film',
+                            style: IconButton.styleFrom(
+                              backgroundColor: colorScheme.errorContainer.withOpacity(0.3),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
         ),
       ],
     );
