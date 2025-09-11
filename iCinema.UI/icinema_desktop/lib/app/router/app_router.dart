@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icinema_desktop/app/di/injection.dart';
+import 'package:icinema_desktop/app/services/auth_service.dart';
 import 'package:icinema_desktop/app/layout/app_shell.dart';
 import 'package:icinema_desktop/features/auth/presentation/blocs/login/login_bloc.dart';
 import 'package:icinema_desktop/features/auth/presentation/pages/login_page.dart';
@@ -26,62 +27,82 @@ Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
   );
 }
 
-final GoRouter router = GoRouter(
-  initialLocation: '/home',
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => BlocProvider<LoginBloc>(
-        create: (_) => getIt<LoginBloc>(),
-        child: const LoginPage(),
+GoRouter buildRouter() {
+  return GoRouter(
+    initialLocation: '/home',
+    refreshListenable: getIt<AuthService>().authState,
+    redirect: (context, state) {
+      final loggedIn = getIt<AuthService>().authState.value;
+      final loggingIn = state.matchedLocation == '/login';
+      
+      print('Router redirect: loggedIn=$loggedIn, location=${state.matchedLocation}');
+
+      if (!loggedIn && !loggingIn) {
+        print('Redirecting to /login (not logged in)');
+        return '/login';
+      }
+      if (loggedIn && loggingIn) {
+        print('Redirecting to /home (logged in at login page)');
+        return '/home';
+      }
+      print('No redirect needed');
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => BlocProvider<LoginBloc>(
+          create: (_) => getIt<LoginBloc>(),
+          child: const LoginPage(),
+        ),
       ),
-    ),
-    ShellRoute(
-      builder: (context, state, child) =>
-          AppShell(currentLocation: state.uri.toString(), child: child),
-      routes: [
-        GoRoute(
-          path: '/home',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            BlocProvider<HomeKpisCubit>(
-              create: (_) => getIt<HomeKpisCubit>()..load(),
-              child: const HomePage(),
+      ShellRoute(
+        builder: (context, state, child) =>
+            AppShell(currentLocation: state.uri.toString(), child: child),
+        routes: [
+          GoRoute(
+            path: '/home',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              BlocProvider<HomeKpisCubit>(
+                create: (_) => getIt<HomeKpisCubit>()..load(),
+                child: const HomePage(),
+              ),
+              state,
             ),
-            state,
           ),
-        ),
-        GoRoute(
-          path: '/movies',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            BlocProvider<MoviesBloc>(
-              create: (_) => getIt<MoviesBloc>()..add(LoadMovies()),
-              child: const MoviesPage(),
+          GoRoute(
+            path: '/movies',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              BlocProvider<MoviesBloc>(
+                create: (_) => getIt<MoviesBloc>()..add(LoadMovies()),
+                child: const MoviesPage(),
+              ),
+              state,
             ),
-            state,
           ),
-        ),
-        GoRoute(
-          path: '/projections',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const ProjectionsPage(),
-            state,
+          GoRoute(
+            path: '/projections',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const ProjectionsPage(),
+              state,
+            ),
           ),
-        ),
-        GoRoute(
-          path: '/cinemas',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const CinemasPage(),
-            state,
+          GoRoute(
+            path: '/cinemas',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const CinemasPage(),
+              state,
+            ),
           ),
-        ),
-        GoRoute(
-          path: '/reports',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const ReportsPage(),
-            state,
+          GoRoute(
+            path: '/reports',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const ReportsPage(),
+              state,
+            ),
           ),
-        ),
-      ],
-    ),
-  ],
-);
+        ],
+      ),
+    ],
+  );
+}

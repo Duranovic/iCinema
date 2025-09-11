@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:icinema_desktop/app/di/injection.dart';
+import 'package:icinema_desktop/app/services/auth_service.dart';
 import '../blocs/login/login_bloc.dart';
 import '../blocs/login/login_event.dart';
 import '../blocs/login/login_state.dart';
@@ -44,10 +46,17 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
                 child: BlocConsumer<LoginBloc, LoginState>(
-                  listener: (context, state) {
+                  listener: (context, state) async {
                     if (state is LoginSuccess) {
-                      context.go('/home');
+                      // Save session and let router redirect to /home
+                      print('Login success, setting session...');
+                      await getIt<AuthService>().setSession(
+                        token: state.loginResponse.token,
+                        expiresAt: state.loginResponse.expiresAt,
+                      );
+                      print('Session set, auth state: ${getIt<AuthService>().authState.value}');
                     } else if (state is LoginFailure) {
+                      print('Login failure: ${state.message}');
                       final media = MediaQuery.of(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

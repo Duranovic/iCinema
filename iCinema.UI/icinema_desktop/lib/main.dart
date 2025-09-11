@@ -3,8 +3,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app/di/injection.dart';
 import 'app/router/app_router.dart';
 
-void main() {
-  configureDependencies();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await configureDependencies();
   runApp(const MyApp());
 }
 
@@ -14,6 +15,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final router = buildRouter();
     return MaterialApp.router(
         title: 'Flutter Demo',
         routerConfig: router,

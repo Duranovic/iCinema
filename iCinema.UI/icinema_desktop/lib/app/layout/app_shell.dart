@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:icinema_desktop/app/constants/navigation.dart';
 import 'package:icinema_desktop/app/constants/route_paths.dart';
 import 'package:icinema_desktop/app/enums/user_actions.dart';
+import 'package:icinema_desktop/app/di/injection.dart';
+import 'package:icinema_desktop/app/services/auth_service.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -59,8 +61,8 @@ class AppShell extends StatelessWidget {
                         if (action == UserAction.profile) {
                           context.go('/profile');
                         } else {
-                          // TODO: Implement logout functionality
-                          context.go('/login');
+                          // Clear session and let router redirect to /login
+                          getIt<AuthService>().logout();
                         }
                       },
                       itemBuilder: (_) => const [
