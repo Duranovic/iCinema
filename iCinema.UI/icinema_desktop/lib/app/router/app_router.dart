@@ -10,12 +10,9 @@ import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.d
 import 'package:icinema_desktop/features/movies/presentation/pages/movies_page.dart';
 import 'package:icinema_desktop/features/projections/presentation/pages/projections_page.dart';
 import 'package:icinema_desktop/features/cinemas/presentation/pages/cinemas_page.dart';
-import 'package:icinema_desktop/pages/halls_page.dart';
 import 'package:icinema_desktop/features/home/presentation/pages/home_page.dart';
 import 'package:icinema_desktop/features/home/presentation/bloc/home_kpis_cubit.dart';
-import 'package:icinema_desktop/pages/profile_page.dart';
 import 'package:icinema_desktop/features/reports/presentation/pages/reports_page.dart';
-import 'package:icinema_desktop/pages/users_page.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -78,30 +75,9 @@ final GoRouter router = GoRouter(
           ),
         ),
         GoRoute(
-          path: '/halls',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const HallsPage(),
-            state,
-          ),
-        ),
-        GoRoute(
-          path: '/users',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const UsersPage(),
-            state,
-          ),
-        ),
-        GoRoute(
           path: '/reports',
           pageBuilder: (context, state) => _fadeTransitionPage(
             const ReportsPage(),
-            state,
-          ),
-        ),
-        GoRoute(
-          path: '/profile',
-          pageBuilder: (context, state) => _fadeTransitionPage(
-            const ProfilePage(),
             state,
           ),
         ),

@@ -4,7 +4,6 @@ const routePaths = [
   '/movies',
   '/projections',
   '/cinemas',
-  '/users',
   '/reports',
   '/profile',
   '/login',

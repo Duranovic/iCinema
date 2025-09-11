@@ -51,7 +51,7 @@ class AppShell extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: PopupMenuButton<UserAction>(
-                      tooltip: 'Open user menu',
+                      tooltip: 'Otvori korisnički meni',
                       child: const CircleAvatar(
                         radius: 25,
                       ),
@@ -65,11 +65,11 @@ class AppShell extends StatelessWidget {
                       },
                       itemBuilder: (_) => const [
                         PopupMenuItem(
-                            value: UserAction.profile, child: Text('Profile')),
+                            value: UserAction.profile, enabled: false, child: Text('Korisnički profil')),
                         PopupMenuItem(
                             value: UserAction.logout,
                             child: Text(
-                              'Log out',
+                              'Odjavi se',
                               style: TextStyle(color: Colors.red),
                             )),
                       ],

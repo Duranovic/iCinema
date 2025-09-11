@@ -26,12 +26,6 @@ const mainNavigationItems = [
     padding: EdgeInsets.all(10),
   ),
   NavigationRailDestination(
-    icon: Icon(Icons.people_outline),
-    selectedIcon: Icon(Icons.people),
-    label: Text('Korisnici'),
-    padding: EdgeInsets.all(10),
-  ),
-  NavigationRailDestination(
     icon: Icon(Icons.bar_chart_outlined),
     selectedIcon: Icon(Icons.bar_chart),
     label: Text('Izvještaji'),
