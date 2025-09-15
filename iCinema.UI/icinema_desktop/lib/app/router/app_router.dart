@@ -34,18 +34,13 @@ GoRouter buildRouter() {
     redirect: (context, state) {
       final loggedIn = getIt<AuthService>().authState.value;
       final loggingIn = state.matchedLocation == '/login';
-      
-      print('Router redirect: loggedIn=$loggedIn, location=${state.matchedLocation}');
 
       if (!loggedIn && !loggingIn) {
-        print('Redirecting to /login (not logged in)');
         return '/login';
       }
       if (loggedIn && loggingIn) {
-        print('Redirecting to /home (logged in at login page)');
         return '/home';
       }
-      print('No redirect needed');
       return null;
     },
     routes: [
