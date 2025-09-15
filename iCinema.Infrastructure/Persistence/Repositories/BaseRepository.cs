@@ -26,10 +26,13 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
             var sortBy = string.IsNullOrWhiteSpace(filter.SortBy) ? "CreatedAt" : filter.SortBy!;
             var desc   = filter.Descending;
 
+            // Map the sort property to the actual entity property if needed
+            var actualSortProperty = GetActualSortProperty(sortBy);
+
             // Dynamic order using EF.Property so it translates to SQL
             query = desc
-                ? query.OrderByDescending(e => EF.Property<object?>(e, sortBy))
-                : query.OrderBy(e => EF.Property<object?>(e, sortBy));    
+                ? query.OrderByDescending(e => EF.Property<object?>(e, actualSortProperty))
+                : query.OrderBy(e => EF.Property<object?>(e, actualSortProperty));    
         }
        
         return query;
@@ -38,6 +41,12 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
     protected virtual IQueryable<TEntity> AddInclude(IQueryable<TEntity> query)
     {
         return query; // Override in child repositories for eager loading
+    }
+
+    protected virtual string GetActualSortProperty(string requestedProperty)
+    {
+        // Override in child repositories for entity-specific property mappings
+        return requestedProperty;
     }
 
     protected virtual Task BeforeInsert(TEntity entity, TCreateDto dto)
@@ -122,13 +131,7 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        // Sorting
-        if (!string.IsNullOrEmpty(filter.SortBy))
-        {
-            query = filter.Descending
-                ? query.OrderByDescending(e => EF.Property<object>(e, filter.SortBy))
-                : query.OrderBy(e => EF.Property<object>(e, filter.SortBy));
-        }
+        // Sorting is handled in AddFilter method
 
         // Pagination
         if (!filter.DisablePaging)

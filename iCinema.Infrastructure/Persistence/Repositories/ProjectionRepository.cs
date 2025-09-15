@@ -41,6 +41,16 @@ public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IPro
         return query.Include(p => p.Hall).ThenInclude(h => h.Cinema);
     }
 
+    protected override string GetActualSortProperty(string requestedProperty)
+    {
+        // Map filter property names to actual entity property names
+        return requestedProperty switch
+        {
+            "StartDate" => "StartTime", // ProjectionFilter uses StartDate, but entity has StartTime
+            _ => base.GetActualSortProperty(requestedProperty)
+        };
+    }
+
     protected override async Task BeforeInsert(Projection entity, ProjectionCreateDto dto)
     {
         await projectionRules.EnsureNoOverlap(entity.HallId, entity.MovieId, entity.StartTime);

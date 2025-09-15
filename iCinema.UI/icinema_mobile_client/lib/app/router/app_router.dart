@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../layout/app_shell.dart';
+import '../di/injection.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/movies/presentation/pages/movies_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 
@@ -28,7 +31,10 @@ GoRouter buildRouter() {
           GoRoute(
             path: '/home',
             pageBuilder: (context, state) => _fadeTransitionPage(
-              const HomePage(),
+              BlocProvider<HomeCubit>(
+                create: (_) => getIt<HomeCubit>()..loadHomeData(),
+                child: const HomePage(),
+              ),
               state,
             ),
           ),
