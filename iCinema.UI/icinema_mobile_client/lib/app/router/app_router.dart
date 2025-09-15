@@ -6,7 +6,10 @@ import '../di/injection.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/movies/presentation/pages/movies_page.dart';
+import '../../features/movies/presentation/pages/movie_details_page.dart';
+import '../../features/movies/presentation/bloc/movie_details_cubit.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
+import '../../features/home/data/models/projection_model.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -16,6 +19,25 @@ Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
     transitionDuration: const Duration(milliseconds: 200),
     transitionsBuilder: (context, animation, _, child) {
       return FadeTransition(opacity: animation, child: child);
+    },
+  );
+}
+
+// Helper function for slide transition (for movie details)
+Page<void> _slideTransitionPage(Widget child, GoRouterState state) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, _, child) {
+      return SlideTransition(
+        position: animation.drive(
+          Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
+            CurveTween(curve: Curves.easeInOut),
+          ),
+        ),
+        child: child,
+      );
     },
   );
 }
@@ -53,6 +75,25 @@ GoRouter buildRouter() {
             ),
           ),
         ],
+      ),
+      // Movie details route (outside shell - full screen)
+      GoRoute(
+        path: '/movie-details/:movieId',
+        pageBuilder: (context, state) {
+          final movieId = state.pathParameters['movieId'] ?? '';
+          final projections = state.extra as List<ProjectionModel>? ?? [];
+          
+          return _slideTransitionPage(
+            BlocProvider<MovieDetailsCubit>(
+              create: (_) => getIt<MovieDetailsCubit>(),
+              child: MovieDetailsPage(
+                movieId: Uri.decodeComponent(movieId),
+                projections: projections,
+              ),
+            ),
+            state,
+          );
+        },
       ),
     ],
   );

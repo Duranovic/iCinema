@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/home_cubit.dart';
 import '../../data/models/projection_model.dart';
 
@@ -318,12 +319,14 @@ class _HomePageState extends State<HomePage> {
                 final movieTitle = groupedByMovie.keys.elementAt(index);
                 final projections = groupedByMovie[movieTitle]!;
                 final firstProjection = projections.first;
-                return Container(
-                  width: 140,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                return GestureDetector(
+                  onTap: () => _navigateToMovieDetails(movieTitle, projections),
+                  child: Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
@@ -394,6 +397,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                     ],
+                    ),
                   ),
                 );
               },
@@ -463,20 +467,22 @@ class _HomePageState extends State<HomePage> {
               final movieTitle = groupedByMovie.keys.elementAt(index);
               final projections = groupedByMovie[movieTitle]!;
               final firstProjection = projections.first;
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Column(
+              return GestureDetector(
+                onTap: () => _navigateToMovieDetails(movieTitle, projections),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
@@ -535,6 +541,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               );
@@ -637,6 +644,18 @@ class _HomePageState extends State<HomePage> {
       return 'Sutra';
     } else {
       return '${dateTime.day}.${dateTime.month}.${dateTime.year}';
+    }
+  }
+
+  // Navigation methods
+  void _navigateToMovieDetails(String movieTitle, List<ProjectionModel> projections) {
+    // Get the movieId from the first projection
+    if (projections.isNotEmpty) {
+      final movieId = projections.first.movieId;
+      context.push(
+        '/movie-details/${Uri.encodeComponent(movieId)}',
+        extra: projections,
+      );
     }
   }
 

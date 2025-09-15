@@ -10,11 +10,15 @@ public class MovieProfile : Profile
     public MovieProfile()
     {
         CreateMap<Movie, MovieDto>()
+            .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.DurationMin))
             .ForMember(dest => dest.Genres, opt => opt.MapFrom(src => src.MovieGenres.Select(mg => mg.Genre.Name)));
-        CreateMap<MovieDto, Movie>();
+        CreateMap<MovieDto, Movie>()
+            .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration));
         CreateMap<MovieCreateDto, Movie>()
+            .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration))
             .ForMember(dest => dest.MovieGenres, opt => opt.Ignore()); // handled in repository
         CreateMap<MovieUpdateDto, Movie>()
+            .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration))
             .ForMember(dest => dest.MovieGenres, opt => opt.Ignore());
     }
 }

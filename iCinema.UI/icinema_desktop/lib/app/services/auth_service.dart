@@ -13,12 +13,15 @@ class AuthService {
   // SharedPreferences for persistence (optional)
   SharedPreferences? _prefs;
   bool _initialized = false;
+  bool _initializing = false;
 
   AuthService() {
     _init();
   }
 
   Future<void> _init() async {
+    if (_initializing || _initialized) return;
+    _initializing = true;
     try {
       print('AuthService: Initializing SharedPreferences...');
       _prefs = await SharedPreferences.getInstance();
@@ -28,14 +31,21 @@ class AuthService {
       print('AuthService: SharedPreferences initialization failed: $e');
       print('AuthService: Using in-memory storage as fallback');
       _loggedIn.value = false;
+    } finally {
+      _initializing = false;
+      _initialized = true;
+      print('AuthService: Initialization complete');
     }
-    _initialized = true;
-    print('AuthService: Initialization complete');
   }
 
   Future<void> _ensureInitialized() async {
-    if (!_initialized) {
+    if (!_initialized && !_initializing) {
       await _init();
+    } else if (_initializing) {
+      // Wait for ongoing initialization to finish
+      while (_initializing) {
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
     }
   }
 
@@ -64,7 +74,18 @@ class AuthService {
     final valid = hasToken && (exp == null || exp.isAfter(DateTime.now()));
     _loggedIn.value = valid;
     if (!valid) {
-      await logout();
+      // Avoid calling logout() here to prevent circular initialization.
+      // Clear invalid tokens inline.
+      _token = null;
+      _expiresAt = null;
+      try {
+        await _prefs!.remove('auth_token');
+        await _prefs!.remove('auth_expiry');
+        print('AuthService: Cleared invalid token from SharedPreferences');
+      } catch (e) {
+        print('AuthService: Failed clearing invalid token: $e');
+      }
+      _loggedIn.value = false;
     }
   }
 
