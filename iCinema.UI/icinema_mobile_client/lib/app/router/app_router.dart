@@ -8,6 +8,8 @@ import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/movies/presentation/pages/movies_page.dart';
 import '../../features/movies/presentation/pages/movie_details_page.dart';
 import '../../features/movies/presentation/bloc/movie_details_cubit.dart';
+import '../../features/movies/presentation/pages/search_page.dart';
+import '../../features/movies/presentation/bloc/search_cubit.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/home/data/models/projection_model.dart';
 
@@ -64,6 +66,16 @@ GoRouter buildRouter() {
             path: '/movies',
             pageBuilder: (context, state) => _fadeTransitionPage(
               const MoviesPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/search',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              BlocProvider<SearchCubit>(
+                create: (_) => getIt<SearchCubit>(),
+                child: const SearchPage(),
+              ),
               state,
             ),
           ),

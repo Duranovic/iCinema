@@ -113,20 +113,37 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
             var parameter = Expression.Parameter(typeof(TEntity), "e");
             Expression? combined = null;
 
+            // Prepare EF.Functions.Like(DbFunctions, string, string)
+            var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
+                name: "Like",
+                types: new[] { typeof(DbFunctions), typeof(string), typeof(string) }
+            );
+            var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
+            var pattern = Expression.Constant($"%{filter.Search}%", typeof(string));
+
             foreach (var field in SearchableFields)
             {
                 var property = Expression.Property(parameter, field);
-                var toStringMethod = typeof(object).GetMethod("ToString");
-                var propertyString = Expression.Call(property, toStringMethod!);
-                var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string), typeof(StringComparison) });
-                var searchExpression = Expression.Call(propertyString, containsMethod!,
-                    Expression.Constant(filter.Search, typeof(string)),
-                    Expression.Constant(StringComparison.OrdinalIgnoreCase));
-                combined = combined == null ? searchExpression : Expression.OrElse(combined, searchExpression);
+
+                // Only apply to string properties; skip others to keep the query translatable
+                if (property.Type != typeof(string))
+                {
+                    continue;
+                }
+
+                // Build: property != null && EF.Functions.Like(property, "%search%")
+                var notNull = Expression.NotEqual(property, Expression.Constant(null, typeof(string)));
+                var likeCall = Expression.Call(likeMethod!, efFunctions, property, pattern);
+                var thisFieldExpr = Expression.AndAlso(notNull, likeCall);
+
+                combined = combined == null ? thisFieldExpr : Expression.OrElse(combined, thisFieldExpr);
             }
 
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(combined!, parameter);
-            query = query.Where(lambda);
+            if (combined != null)
+            {
+                var lambda = Expression.Lambda<Func<TEntity, bool>>(combined, parameter);
+                query = query.Where(lambda);
+            }
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

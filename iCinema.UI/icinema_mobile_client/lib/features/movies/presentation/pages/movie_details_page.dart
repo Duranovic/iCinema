@@ -20,36 +20,34 @@ class MovieDetailsPage extends StatefulWidget {
 
 class _MovieDetailsPageState extends State<MovieDetailsPage> {
   DateTime? selectedDate;
-  List<ProjectionModel> selectedDateProjections = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeSelectedDate();
+    _initializeSelectedDate(widget.projections);
     // Load movie details when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MovieDetailsCubit>().loadMovieDetails(widget.movieId, widget.projections);
     });
   }
 
-  void _initializeSelectedDate() {
-    if (widget.projections.isNotEmpty) {
+  void _initializeSelectedDate(List<ProjectionModel> projections) {
+    if (projections.isNotEmpty) {
       // Group projections by date
-      final dateGroups = _groupProjectionsByDate();
+      final dateGroups = _groupProjectionsByDate(projections);
       final sortedDates = dateGroups.keys.toList()..sort();
       
       // Select the first available date
       if (sortedDates.isNotEmpty) {
         selectedDate = sortedDates.first;
-        selectedDateProjections = dateGroups[selectedDate] ?? [];
       }
     }
   }
 
-  Map<DateTime, List<ProjectionModel>> _groupProjectionsByDate() {
+  Map<DateTime, List<ProjectionModel>> _groupProjectionsByDate(List<ProjectionModel> projections) {
     final Map<DateTime, List<ProjectionModel>> groups = {};
     
-    for (final projection in widget.projections) {
+    for (final projection in projections) {
       final date = DateTime(
         projection.startTime.year,
         projection.startTime.month,
@@ -74,8 +72,6 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   void _onDateSelected(DateTime date) {
     setState(() {
       selectedDate = date;
-      final dateGroups = _groupProjectionsByDate();
-      selectedDateProjections = dateGroups[date] ?? [];
     });
   }
 
@@ -90,6 +86,13 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
             } else if (state is MovieDetailsError) {
               return _buildErrorState(state.message);
             } else if (state is MovieDetailsLoaded) {
+              final projections = state.projections;
+              // Ensure selected date is initialized when data arrives (e.g., from Search)
+              if (selectedDate == null && projections.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _initializeSelectedDate(projections));
+                });
+              }
               return Column(
                 children: [
                   // Header with back button and title
@@ -99,7 +102,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                   _buildMovieInfoSection(state.movie),
                   
                   // Available dates horizontal slider
-                  _buildDateSlider(),
+                  _buildDateSlider(projections),
                   
                   // Projection times for selected date
                   Expanded(
@@ -232,8 +235,10 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   }
 
   Widget _buildMovieStats(MovieModel movie) {
-    final totalProjections = widget.projections.length;
-    final uniqueCinemas = widget.projections
+    final cubitState = context.read<MovieDetailsCubit>().state;
+    final projections = cubitState is MovieDetailsLoaded ? cubitState.projections : <ProjectionModel>[];
+    final totalProjections = projections.length;
+    final uniqueCinemas = projections
         .map((p) => p.cinemaName)
         .toSet()
         .length;
@@ -251,10 +256,10 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         const SizedBox(height: 4),
         _buildStatRow(Icons.location_on, '$uniqueCinemas kina'),
         const SizedBox(height: 4),
-        if (widget.projections.isNotEmpty)
+        if (projections.isNotEmpty)
           _buildStatRow(
             Icons.attach_money,
-            '${widget.projections.first.price.toStringAsFixed(0)} KM',
+            '${projections.first.price.toStringAsFixed(0)} KM',
           ),
       ],
     );
@@ -280,8 +285,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     );
   }
 
-  Widget _buildDateSlider() {
-    final dateGroups = _groupProjectionsByDate();
+  Widget _buildDateSlider(List<ProjectionModel> projections) {
+    final dateGroups = _groupProjectionsByDate(projections);
     final availableDates = dateGroups.keys.toList()..sort();
     
     if (availableDates.isEmpty) {
@@ -404,7 +409,16 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   }
 
   Widget _buildProjectionTimes() {
-    if (selectedDateProjections.isEmpty) {
+    return BlocBuilder<MovieDetailsCubit, MovieDetailsState>(
+      builder: (context, state) {
+        if (state is! MovieDetailsLoaded) {
+          return const SizedBox.shrink();
+        }
+        final projections = state.projections;
+        final dateGroups = _groupProjectionsByDate(projections);
+        final currentDate = selectedDate;
+        final list = currentDate != null ? (dateGroups[currentDate] ?? []) : <ProjectionModel>[];
+        if (list.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -425,9 +439,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           ],
         ),
       );
-    }
+        }
 
-    return Column(
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -444,14 +458,16 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: selectedDateProjections.length,
+            itemCount: list.length,
             itemBuilder: (context, index) {
-              final projection = selectedDateProjections[index];
+              final projection = list[index];
               return _buildProjectionCard(projection);
             },
           ),
         ),
       ],
+    );
+      },
     );
   }
 

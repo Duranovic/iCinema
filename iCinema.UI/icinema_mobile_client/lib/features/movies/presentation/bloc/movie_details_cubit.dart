@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../data/models/movie_model.dart';
 import '../../data/services/movies_api_service.dart';
 import '../../../home/data/models/projection_model.dart';
+import '../../../home/data/services/projections_api_service.dart';
 
 // States
 abstract class MovieDetailsState {}
@@ -30,8 +31,10 @@ class MovieDetailsError extends MovieDetailsState {
 @injectable
 class MovieDetailsCubit extends Cubit<MovieDetailsState> {
   final MoviesApiService _moviesApiService;
+  final ProjectionsApiService _projectionsApiService;
 
-  MovieDetailsCubit(this._moviesApiService) : super(MovieDetailsInitial());
+  MovieDetailsCubit(this._moviesApiService, this._projectionsApiService)
+      : super(MovieDetailsInitial());
 
   /// Load movie details and projections
   Future<void> loadMovieDetails(String movieId, List<ProjectionModel> projections) async {
@@ -39,7 +42,13 @@ class MovieDetailsCubit extends Cubit<MovieDetailsState> {
 
     try {
       final movie = await _moviesApiService.getMovieById(movieId);
-      emit(MovieDetailsLoaded(movie: movie, projections: projections));
+      List<ProjectionModel> finalProjections = projections;
+      if (finalProjections.isEmpty) {
+        // Fetch projections for this movie if not provided (e.g., when opened from search)
+        final resp = await _projectionsApiService.getProjectionsForMovie(movieId: movieId);
+        finalProjections = resp.items;
+      }
+      emit(MovieDetailsLoaded(movie: movie, projections: finalProjections));
     } on MovieNotFoundException {
       emit(MovieDetailsError('Film nije pronađen'));
     } on MoviesNetworkException catch (e) {

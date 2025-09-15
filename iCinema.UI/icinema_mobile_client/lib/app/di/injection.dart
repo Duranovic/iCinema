@@ -5,6 +5,8 @@ import '../../features/home/data/services/projections_api_service.dart';
 import '../../features/home/presentation/bloc/home_cubit.dart';
 import '../../features/movies/data/services/movies_api_service.dart';
 import '../../features/movies/presentation/bloc/movie_details_cubit.dart';
+import '../../features/movies/data/services/search_api_service.dart';
+import '../../features/movies/presentation/bloc/search_cubit.dart';
 
 import 'injection.config.dart';
 
@@ -27,6 +29,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<MoviesApiService>(
     () => MoviesApiService(getIt()),
   );
+  getIt.registerLazySingleton<SearchApiService>(
+    () => SearchApiService(getIt()),
+  );
 
   // Repositories
   getIt.registerLazySingleton<HomeRepository>(
@@ -38,6 +43,12 @@ Future<void> configureDependencies() async {
     () => HomeCubit(getIt<HomeRepository>()),
   );
   getIt.registerFactory<MovieDetailsCubit>(
-    () => MovieDetailsCubit(getIt<MoviesApiService>()),
+    () => MovieDetailsCubit(
+      getIt<MoviesApiService>(),
+      getIt<ProjectionsApiService>(),
+    ),
+  );
+  getIt.registerFactory<SearchCubit>(
+    () => SearchCubit(getIt<SearchApiService>()),
   );
 }

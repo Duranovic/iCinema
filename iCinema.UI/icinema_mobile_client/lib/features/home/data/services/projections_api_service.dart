@@ -12,6 +12,7 @@ class ProjectionsApiService {
     DateTime? endDate,
     String? sortBy,
     bool? descending,
+    String? movieId,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -35,6 +36,10 @@ class ProjectionsApiService {
       
       if (descending != null) {
         queryParams['Descending'] = descending;
+      }
+
+      if (movieId != null && movieId.isNotEmpty) {
+        queryParams['MovieId'] = movieId;
       }
 
       final response = await _dio.get(
@@ -95,6 +100,21 @@ class ProjectionsApiService {
   }) async {
     // Now we can use both startDate and endDate in the API call
     return getProjections(startDate: startDate, endDate: endDate);
+  }
+
+  /// Get projections for a specific movie (optionally within a date range)
+  Future<ProjectionsResponse> getProjectionsForMovie({
+    required String movieId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    return getProjections(
+      movieId: movieId,
+      startDate: startDate,
+      endDate: endDate,
+      sortBy: 'StartDate',
+      descending: false,
+    );
   }
 }
 

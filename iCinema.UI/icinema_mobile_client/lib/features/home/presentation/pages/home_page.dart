@@ -83,30 +83,34 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
           
-          // Search bar
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          // Search bar (tappable -> navigate to /search)
+          GestureDetector(
+            onTap: () => context.push('/search'),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                ),
               ),
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Pretraži filmove i termine',
-                hintStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Pretraži filmove i termine',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
