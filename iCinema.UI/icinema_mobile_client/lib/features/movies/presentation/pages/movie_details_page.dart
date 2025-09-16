@@ -78,155 +78,136 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<MovieDetailsCubit, MovieDetailsState>(
-          builder: (context, state) {
-            if (state is MovieDetailsLoading) {
-              return _buildLoadingState();
-            } else if (state is MovieDetailsError) {
-              return _buildErrorState(state.message);
-            } else if (state is MovieDetailsLoaded) {
-              final projections = state.projections;
-              // Ensure selected date is initialized when data arrives (e.g., from Search)
-              if (selectedDate == null && projections.isNotEmpty) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _initializeSelectedDate(projections));
-                });
-              }
-              return Column(
-                children: [
-                  // Header with back button and title
-                  _buildHeader(state.movie),
-                  
-                  // Movie poster and info section
-                  _buildMovieInfoSection(state.movie),
-                  
-                  // Available dates horizontal slider
-                  _buildDateSlider(projections),
-                  
-                  // Projection times for selected date
-                  Expanded(
-                    child: _buildProjectionTimes(),
-                  ),
-                ],
-              );
-            } else {
-              return _buildLoadingState();
+      body: BlocBuilder<MovieDetailsCubit, MovieDetailsState>(
+        builder: (context, state) {
+          if (state is MovieDetailsLoading) {
+            return _buildLoadingState();
+          } else if (state is MovieDetailsError) {
+            return _buildErrorState(state.message);
+          } else if (state is MovieDetailsLoaded) {
+            final projections = state.projections;
+            // Ensure selected date is initialized when data arrives (e.g., from Search)
+            if (selectedDate == null && projections.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) setState(() => _initializeSelectedDate(projections));
+              });
             }
-          },
-        ),
+
+            return SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Full-width hero image with overlay back button
+                    _buildHeroImageSection(state.movie),
+
+                    // Movie details (title, stats, description)
+                    const SizedBox(height: 16),
+                    _buildDetailsSection(state.movie),
+
+                    // Available dates horizontal slider
+                    _buildDateSlider(projections),
+
+                    // Projection times for selected date (non-scrollable list inside page scroll)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: _buildProjectionTimes(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            return _buildLoadingState();
+          }
+        },
       ),
     );
   }
 
-  Widget _buildHeader(MovieModel movie) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(
-              Icons.arrow_back,
-              color: Theme.of(context).colorScheme.onSurface,
+  Widget _buildHeroImageSection(MovieModel movie) {
+    // Since MovieModel currently doesn't have an image URL, we use a beautiful
+    // gradient placeholder that spans full width. If/when an image URL is added,
+    // replace the Container child with an Image.network.
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 260,
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                Theme.of(context).colorScheme.primary,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                movie.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+        // Back button overlay
+        Positioned(
+          top: 12,
+          left: 12,
+          child: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+            color: Colors.white,
             style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+              backgroundColor: Colors.black.withOpacity(0.25),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              movie.title,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildMovieInfoSection(MovieModel movie) {
-    return Container(
+  Widget _buildDetailsSection(MovieModel movie) {
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Movie poster placeholder
-          Container(
-            width: 120,
-            height: 180,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                  Theme.of(context).colorScheme.primary,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                movie.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
+          Text(
+            movie.title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 16),
-          
-          // Movie information
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  movie.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                
-                // Movie stats with real data
-                _buildMovieStats(movie),
-                
-                const SizedBox(height: 16),
-                
-                // Real movie description
-                Text(
-                  movie.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                    height: 1.5,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+          const SizedBox(height: 8),
+          _buildMovieStats(movie),
+          const SizedBox(height: 16),
+          Text(
+            movie.description,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+              height: 1.5,
             ),
           ),
         ],
@@ -419,54 +400,57 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         final currentDate = selectedDate;
         final list = currentDate != null ? (dateGroups[currentDate] ?? []) : <ProjectionModel>[];
         if (list.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.movie_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Nema dostupnih projekcija za odabrani datum',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.movie_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nema dostupnih projekcija za odabrani datum',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      );
+          );
         }
 
         return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'Termini za ${_formatSelectedDate()}',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Termini za ${_formatSelectedDate()}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final projection = list[index];
-              return _buildProjectionCard(projection);
-            },
-          ),
-        ),
-      ],
-    );
+            const SizedBox(height: 16),
+            ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: list.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                final projection = list[index];
+                return _buildProjectionCard(projection);
+              },
+            ),
+          ],
+        );
       },
     );
   }
