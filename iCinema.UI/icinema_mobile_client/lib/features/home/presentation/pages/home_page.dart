@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage> {
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to full repertoire
+                  context.push('/movies');
                 },
                 child: Text(
                   'Pogledaj više',

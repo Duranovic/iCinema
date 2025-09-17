@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import '../../features/home/data/repositories/home_repository.dart';
@@ -7,6 +8,7 @@ import '../../features/movies/data/services/movies_api_service.dart';
 import '../../features/movies/presentation/bloc/movie_details_cubit.dart';
 import '../../features/movies/data/services/search_api_service.dart';
 import '../../features/movies/presentation/bloc/search_cubit.dart';
+import '../../features/movies/presentation/bloc/movies_cubit.dart';
 
 import 'injection.config.dart';
 
@@ -24,13 +26,13 @@ Future<void> configureDependencies() async {
   // Register additional dependencies that are not auto-generated
   // API Services
   getIt.registerLazySingleton<ProjectionsApiService>(
-    () => ProjectionsApiService(getIt()),
+    () => ProjectionsApiService(getIt<Dio>()),
   );
   getIt.registerLazySingleton<MoviesApiService>(
-    () => MoviesApiService(getIt()),
+    () => MoviesApiService(getIt<Dio>()),
   );
   getIt.registerLazySingleton<SearchApiService>(
-    () => SearchApiService(getIt()),
+    () => SearchApiService(getIt<Dio>()),
   );
 
   // Repositories
@@ -50,5 +52,11 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<SearchCubit>(
     () => SearchCubit(getIt<SearchApiService>()),
+  );
+  getIt.registerFactory<MoviesCubit>(
+    () => MoviesCubit(
+      getIt<ProjectionsApiService>(),
+      getIt<MoviesApiService>(),
+    ),
   );
 }

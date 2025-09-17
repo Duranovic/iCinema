@@ -12,6 +12,7 @@ import '../../features/movies/presentation/pages/search_page.dart';
 import '../../features/movies/presentation/bloc/search_cubit.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/home/data/models/projection_model.dart';
+import '../../features/movies/presentation/bloc/movies_cubit.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -65,7 +66,10 @@ GoRouter buildRouter() {
           GoRoute(
             path: '/movies',
             pageBuilder: (context, state) => _fadeTransitionPage(
-              const MoviesPage(),
+              BlocProvider<MoviesCubit>(
+                create: (_) => getIt<MoviesCubit>()..loadRepertoire(),
+                child: const MoviesPage(),
+              ),
               state,
             ),
           ),

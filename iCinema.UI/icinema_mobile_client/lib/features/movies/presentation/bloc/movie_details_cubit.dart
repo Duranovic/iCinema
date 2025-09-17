@@ -42,11 +42,19 @@ class MovieDetailsCubit extends Cubit<MovieDetailsState> {
 
     try {
       final movie = await _moviesApiService.getMovieById(movieId);
-      List<ProjectionModel> finalProjections = projections;
-      if (finalProjections.isEmpty) {
-        // Fetch projections for this movie if not provided (e.g., when opened from search)
-        final resp = await _projectionsApiService.getProjectionsForMovie(movieId: movieId);
-        finalProjections = resp.items;
+      final now = DateTime.now();
+      // Always fetch complete (future) projections for this movie,
+      // regardless of what was passed in via navigation extras. The extras
+      // may represent only a single day and would hide other available days.
+      List<ProjectionModel> finalProjections;
+      final resp = await _projectionsApiService.getProjectionsForMovie(
+        movieId: movieId,
+        startDate: now,
+      );
+      finalProjections = resp.items.where((p) => p.startTime.isAfter(now)).toList();
+      // In rare case backend returns empty, fallback to filtered provided list
+      if (finalProjections.isEmpty && projections.isNotEmpty) {
+        finalProjections = projections.where((p) => p.startTime.isAfter(now)).toList();
       }
       emit(MovieDetailsLoaded(movie: movie, projections: finalProjections));
     } on MovieNotFoundException {

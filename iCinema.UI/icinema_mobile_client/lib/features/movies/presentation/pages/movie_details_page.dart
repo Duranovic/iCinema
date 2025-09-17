@@ -20,11 +20,14 @@ class MovieDetailsPage extends StatefulWidget {
 
 class _MovieDetailsPageState extends State<MovieDetailsPage> {
   DateTime? selectedDate;
+  late final PageController _datesController;
+  int _windowIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _initializeSelectedDate(widget.projections);
+    _datesController = PageController();
     // Load movie details when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MovieDetailsCubit>().loadMovieDetails(widget.movieId, widget.projections);
@@ -269,13 +272,21 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   Widget _buildDateSlider(List<ProjectionModel> projections) {
     final dateGroups = _groupProjectionsByDate(projections);
     final availableDates = dateGroups.keys.toList()..sort();
-    
+
     if (availableDates.isEmpty) {
       return const SizedBox.shrink();
     }
 
+    // Ensure selected date is one of available and visible
+    selectedDate ??= availableDates.first;
+
+    // Build snapping windows of up to 5 dates each
+    const cardsPerWindow = 5;
+    final maxWindows = (availableDates.length / cardsPerWindow).ceil();
+    _windowIndex = _windowIndex.clamp(0, maxWindows - 1);
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
+      margin: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -290,21 +301,76 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 80,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: availableDates.length,
-              itemBuilder: (context, index) {
-                final date = availableDates[index];
-                final isSelected = selectedDate != null && 
-                    date.year == selectedDate!.year &&
-                    date.month == selectedDate!.month &&
-                    date.day == selectedDate!.day;
-                
-                return _buildDateCard(date, isSelected, dateGroups[date]?.length ?? 0);
-              },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                _navButton(context, Icons.chevron_left, () {
+                  final target = (_windowIndex - 1).clamp(0, maxWindows - 1);
+                  if (target != _windowIndex) {
+                    setState(() => _windowIndex = target);
+                    _datesController.animateToPage(
+                      _windowIndex,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                }),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: SizedBox(
+                      height: 64,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final contentWidth = constraints.maxWidth;
+                          const double spacing = 6.0;
+                          const int cardsPerWindow = 5;
+                          final totalSpacing = spacing * (cardsPerWindow - 1);
+                          final cardWidth = (contentWidth - totalSpacing) / cardsPerWindow;
+
+                          return PageView.builder(
+                            controller: _datesController,
+                            itemCount: maxWindows,
+                            onPageChanged: (i) => setState(() => _windowIndex = i),
+                            pageSnapping: true,
+                            physics: const PageScrollPhysics(),
+                            itemBuilder: (context, pageIndex) {
+                              final start = pageIndex * cardsPerWindow;
+                              final dates = availableDates.skip(start).take(cardsPerWindow).toList();
+                              return Row(
+                                children: [
+                                  for (int i = 0; i < dates.length; i++) ...[
+                                    _buildDateCard(
+                                      dates[i],
+                                      _isSameDay(dates[i], selectedDate),
+                                      width: cardWidth,
+                                    ),
+                                    if (i < dates.length - 1) const SizedBox(width: spacing),
+                                  ],
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _navButton(context, Icons.chevron_right, () {
+                  final target = (_windowIndex + 1).clamp(0, maxWindows - 1);
+                  if (target != _windowIndex) {
+                    setState(() => _windowIndex = target);
+                    _datesController.animateToPage(
+                      _windowIndex,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                }),
+              ],
             ),
           ),
         ],
@@ -312,7 +378,12 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     );
   }
 
-  Widget _buildDateCard(DateTime date, bool isSelected, int projectionsCount) {
+  bool _isSameDay(DateTime a, DateTime? b) {
+    if (b == null) return false;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  Widget _buildDateCard(DateTime date, bool isSelected, {double? width}) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
@@ -323,67 +394,75 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     } else if (date == tomorrow) {
       dayLabel = 'Sutra';
     } else {
-      dayLabel = _getDayName(date.weekday);
+      const names = ['Pon.', 'Uto.', 'Sri.', 'Čet.', 'Pet.', 'Sub.', 'Ned.'];
+      dayLabel = names[date.weekday - 1];
     }
 
     return GestureDetector(
       onTap: () => _onDateSelected(date),
-      child: Container(
-        width: 80,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected 
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        scale: isSelected ? 1.06 : 1.0,
+        child: Container(
+          width: width ?? 64,
+          margin: width != null
+              ? const EdgeInsets.symmetric(vertical: 2)
+              : const EdgeInsets.only(right: 12, top: 2, bottom: 2),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.transparent
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
+            boxShadow: null,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ] : null,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                dayLabel,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${date.day}.${date.month}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              dayLabel,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected 
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${date.day}.${date.month}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isSelected 
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '$projectionsCount term.',
-              style: TextStyle(
-                fontSize: 10,
-                color: isSelected 
-                    ? Colors.white.withOpacity(0.8)
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              ),
-            ),
-          ],
+      ),
+    );
+  }
+
+  Widget _navButton(BuildContext context, IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: SizedBox(
+          width: 28,
+          height: 64,
+          child: Icon(icon),
         ),
       ),
     );
@@ -400,8 +479,10 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         final currentDate = selectedDate;
         final list = currentDate != null ? (dateGroups[currentDate] ?? []) : <ProjectionModel>[];
         if (list.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          final d = selectedDate ?? DateTime.now();
+          final label = _getDayName(d.weekday);
+          return SafeArea(
+            minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -413,12 +494,14 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Nema dostupnih projekcija za odabrani datum',
+                    'Nema dostupnih projekcija za $label ${d.day}.${d.month}',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -439,15 +522,18 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               ),
             ),
             const SizedBox(height: 16),
-            ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: list.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final projection = list[index];
-                return _buildProjectionCard(projection);
-              },
+            SafeArea(
+              minimum: const EdgeInsets.only(bottom: 16),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: list.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final projection = list[index];
+                  return _buildProjectionCard(projection);
+                },
+              ),
             ),
           ],
         );
@@ -456,6 +542,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   }
 
   Widget _buildProjectionCard(ProjectionModel projection) {
+    final now = DateTime.now();
+    final canReserve = projection.startTime.isAfter(now.add(const Duration(minutes: 10)));
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -530,18 +618,20 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                 ),
               ),
               const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(20),
+              FilledButton(
+                onPressed: canReserve ? () {
+                  // TODO: Hook reservation flow here
+                } : null,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  backgroundColor: canReserve ? null : Theme.of(context).disabledColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 child: const Text(
                   'Rezerviši',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
                   ),
                 ),
               ),
