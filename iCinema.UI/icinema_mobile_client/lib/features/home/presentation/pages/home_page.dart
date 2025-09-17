@@ -40,8 +40,11 @@ class _HomePageState extends State<HomePage> {
                       // Featured movies slider
                       _buildFeaturedSlider(state.featuredProjections),
                       
-                      // Current repertoire section
-                      _buildCurrentRepertoire(state.todayProjections),
+                      // Current repertoire section (show movies that have any future projections)
+                      _buildCurrentRepertoire([
+                        ...state.todayProjections,
+                        ...state.upcomingProjections,
+                      ]),
                       
                       // Upcoming movies section
                       _buildUpcomingMovies(state.upcomingProjections),
@@ -269,20 +272,39 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCurrentRepertoire(List<ProjectionModel> todayProjections) {
-    if (todayProjections.isEmpty) {
+  Widget _buildCurrentRepertoire(List<ProjectionModel> futureProjections) {
+    final now = DateTime.now();
+    // Keep only future projections
+    final filtered = futureProjections
+        .where((p) => p.startTime.isAfter(now))
+        .toList();
+
+    if (filtered.isEmpty) {
       return const SizedBox.shrink();
     }
 
     // Group projections by movie for better display
     final Map<String, List<ProjectionModel>> groupedByMovie = {};
-    for (final projection in todayProjections) {
+    for (final projection in filtered) {
       if (groupedByMovie.containsKey(projection.movieTitle)) {
         groupedByMovie[projection.movieTitle]!.add(projection);
       } else {
         groupedByMovie[projection.movieTitle] = [projection];
       }
     }
+
+    // Sort each movie's projections by start time (earliest first)
+    for (final list in groupedByMovie.values) {
+      list.sort((a, b) => a.startTime.compareTo(b.startTime));
+    }
+
+    // Sort movies by earliest upcoming projection and cap to max 3
+    final maxCards = 3;
+    final titlesSorted = groupedByMovie.entries
+        .map((e) => MapEntry(e.key, e.value.first.startTime))
+        .toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+    final visibleTitles = titlesSorted.take(maxCards).map((e) => e.key).toList();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -316,94 +338,112 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 12),
           SizedBox(
             height: 240,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: groupedByMovie.length,
-              itemBuilder: (context, index) {
-                final movieTitle = groupedByMovie.keys.elementAt(index);
-                final projections = groupedByMovie[movieTitle]!;
-                final firstProjection = projections.first;
-                return GestureDetector(
-                  onTap: () => _navigateToMovieDetails(movieTitle, projections),
-                  child: Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                      SizedBox(
-                        height: 160,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                              child: Center(
-                                child: Text(
-                                  movieTitle,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const double spacing = 12;
+                const double horizontalPadding = 16;
+                // Space for 3 cards + 2 gaps + side paddings
+                final availableWidth = constraints.maxWidth - (horizontalPadding * 2);
+                final cardWidth = (availableWidth - (2 * spacing)) / 3;
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: visibleTitles.length,
+                  itemBuilder: (context, index) {
+                    final movieTitle = visibleTitles[index];
+                    final projections = groupedByMovie[movieTitle]!;
+                    final firstProjection = projections.first;
+                    return GestureDetector(
+                      onTap: () => _navigateToMovieDetails(movieTitle, projections),
+                      child: Container(
+                        width: cardWidth,
+                        margin: EdgeInsets.only(
+                          right: index == visibleTitles.length - 1 ? 0 : spacing,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 160,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.8),
+                                    child: Center(
+                                      child: Text(
+                                        movieTitle,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        movieTitle,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              _formatTime(firstProjection.startTime),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(height: 8),
+                            Text(
+                              movieTitle,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                      if (projections.length > 1)
-                        Text(
-                          '+${projections.length - 1} više',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    _formatTime(firstProjection.startTime),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (projections.length > 1)
+                              Text(
+                                '+${projections.length - 1} više',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.6),
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -412,7 +452,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+  
   Widget _buildUpcomingMovies(List<ProjectionModel> upcomingProjections) {
     if (upcomingProjections.isEmpty) {
       return const SizedBox.shrink();
