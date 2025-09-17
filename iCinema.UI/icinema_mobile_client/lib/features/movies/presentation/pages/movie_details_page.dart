@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../app/di/injection.dart';
+import '../bloc/similar_movies_cubit.dart';
+import '../../data/services/recommendations_api_service.dart';
+import '../../data/models/movie_score_dto.dart';
 import '../../../home/data/models/projection_model.dart';
 import '../../data/models/movie_model.dart';
 import '../bloc/movie_details_cubit.dart';
@@ -22,6 +27,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   DateTime? selectedDate;
   late final PageController _datesController;
   int _windowIndex = 0;
+  // Similar movies slider
+  final PageController _similarController = PageController();
+  int _similarPage = 0;
 
   @override
   void initState() {
@@ -32,6 +40,282 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MovieDetailsCubit>().loadMovieDetails(widget.movieId, widget.projections);
     });
+  }
+
+  Widget _buildSimilarCard(MovieScoreDto item, {required double width}) {
+    return GestureDetector(
+      onTap: () {
+        final id = Uri.encodeComponent(item.movieId);
+        context.push('/movie-details/$id');
+      },
+      child: Container(
+        width: width,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 180,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: item.posterUrl != null && item.posterUrl!.isNotEmpty
+                    ? Image.network(
+                        item.posterUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => _similarPosterPlaceholder(),
+                      )
+                    : _similarPosterPlaceholder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              item.title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _secondarySimilarText(item.genres, item.director),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<SimilarMoviesCubit>(
+      create: (_) => SimilarMoviesCubit(getIt<RecommendationsApiService>())
+        ..loadSimilar(widget.movieId, top: 10),
+      child: Scaffold(
+        body: BlocBuilder<MovieDetailsCubit, MovieDetailsState>(
+          builder: (context, state) {
+            if (state is MovieDetailsLoading) {
+              return _buildLoadingState();
+            } else if (state is MovieDetailsError) {
+              return _buildErrorState(state.message);
+            } else if (state is MovieDetailsLoaded) {
+              final projections = state.projections;
+              // Ensure selected date is initialized when data arrives (e.g., from Search)
+              if (selectedDate == null && projections.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _initializeSelectedDate(projections));
+                });
+              }
+
+              return SafeArea(
+                bottom: false,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Full-width hero image with overlay back button
+                      _buildHeroImageSection(state.movie),
+
+                      // Movie details (title, stats, description)
+                      const SizedBox(height: 16),
+                      _buildDetailsSection(state.movie),
+
+                      // Available dates horizontal slider
+                      _buildDateSlider(projections),
+
+                      // Projection times for selected date (non-scrollable list inside page scroll)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        child: _buildProjectionTimes(),
+                      ),
+
+                      // Similar movies section
+                      const SizedBox(height: 8),
+                      _buildSimilarMoviesSection(),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return _buildLoadingState();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // ========================
+  // Slični filmovi section
+  // ========================
+  Widget _buildSimilarMoviesSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Slični filmovi',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          BlocBuilder<SimilarMoviesCubit, SimilarMoviesState>(
+            builder: (context, state) {
+              if (state is SimilarMoviesLoading || state is SimilarMoviesInitial) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (state is SimilarMoviesError) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Greška pri dohvaćanju sličnih filmova. Pokušajte ponovo.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: () => context.read<SimilarMoviesCubit>().loadSimilar(widget.movieId, top: 10),
+                      child: const Text('Pokušaj ponovo'),
+                    ),
+                  ],
+                );
+              }
+              if (state is SimilarMoviesLoaded) {
+                final items = state.items;
+                if (items.isEmpty) {
+                  return const Text(
+                    'Trenutno nema sličnih naslova.',
+                    style: TextStyle(fontSize: 14),
+                  );
+                }
+
+                const cardsPerPage = 2;
+                final pageCount = (items.length / cardsPerPage).ceil();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _navButton(context, Icons.chevron_left, () {
+                          final target = (_similarPage - 1).clamp(0, pageCount - 1);
+                          if (target != _similarPage) {
+                            setState(() => _similarPage = target);
+                            _similarController.animateToPage(
+                              _similarPage,
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        }),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: SizedBox(
+                            height: 240,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                const spacing = 10.0;
+                                const horizontalPadding = 0.0; // already padded outside
+                                final availableWidth = constraints.maxWidth - (horizontalPadding * 2);
+                                final cardWidth = (availableWidth - (spacing * (cardsPerPage - 1))) / cardsPerPage;
+
+                                return PageView.builder(
+                                  controller: _similarController,
+                                  itemCount: pageCount,
+                                  onPageChanged: (i) => setState(() => _similarPage = i),
+                                  itemBuilder: (context, pageIndex) {
+                                    final start = pageIndex * cardsPerPage;
+                                    final pageItems = items.skip(start).take(cardsPerPage).toList();
+                                    return Row(
+                                      children: [
+                                        for (int i = 0; i < pageItems.length; i++) ...[
+                                          _buildSimilarCard(pageItems[i], width: cardWidth),
+                                          if (i < pageItems.length - 1) const SizedBox(width: spacing),
+                                        ],
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _navButton(context, Icons.chevron_right, () {
+                          final target = (_similarPage + 1).clamp(0, pageCount - 1);
+                          if (target != _similarPage) {
+                            setState(() => _similarPage = target);
+                            _similarController.animateToPage(
+                              _similarPage,
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        }),
+                      ],
+                    ),
+                    if (pageCount > 1) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(pageCount, (i) {
+                          final selected = i == _similarPage;
+                          return Container(
+                            width: selected ? 20 : 8,
+                            height: 6,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _similarPosterPlaceholder() {
+    return Container(
+      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+      child: Center(
+        child: Icon(
+          Icons.movie,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  String _secondarySimilarText(List<String> genres, String? director) {
+    if (genres.isNotEmpty) {
+      return genres.join(' • ');
+    }
+    return director == null || director.isEmpty ? 'Nepoznat' : director;
   }
 
   void _initializeSelectedDate(List<ProjectionModel> projections) {
@@ -78,58 +362,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<MovieDetailsCubit, MovieDetailsState>(
-        builder: (context, state) {
-          if (state is MovieDetailsLoading) {
-            return _buildLoadingState();
-          } else if (state is MovieDetailsError) {
-            return _buildErrorState(state.message);
-          } else if (state is MovieDetailsLoaded) {
-            final projections = state.projections;
-            // Ensure selected date is initialized when data arrives (e.g., from Search)
-            if (selectedDate == null && projections.isNotEmpty) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() => _initializeSelectedDate(projections));
-              });
-            }
-
-            return SafeArea(
-              bottom: false,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Full-width hero image with overlay back button
-                    _buildHeroImageSection(state.movie),
-
-                    // Movie details (title, stats, description)
-                    const SizedBox(height: 16),
-                    _buildDetailsSection(state.movie),
-
-                    // Available dates horizontal slider
-                    _buildDateSlider(projections),
-
-                    // Projection times for selected date (non-scrollable list inside page scroll)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: _buildProjectionTimes(),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            return _buildLoadingState();
-          }
-        },
-      ),
-    );
-  }
-
   Widget _buildHeroImageSection(MovieModel movie) {
+    // ... rest of your code ...
     // Since MovieModel currently doesn't have an image URL, we use a beautiful
     // gradient placeholder that spans full width. If/when an image URL is added,
     // replace the Container child with an Image.network.
