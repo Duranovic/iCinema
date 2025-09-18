@@ -14,6 +14,7 @@ import '../../features/movies/presentation/bloc/search_cubit.dart';
 import '../../features/movies/presentation/bloc/movies_cubit.dart';
 import '../../features/auth/data/services/auth_api_service.dart';
 import '../../features/auth/presentation/bloc/auth_cubit.dart';
+import '../../features/auth/presentation/bloc/reservations_cubit.dart';
 
 import 'injection.config.dart';
 
@@ -80,5 +81,10 @@ Future<void> configureDependencies() async {
   // Auth Cubit (singleton)
   getIt.registerLazySingleton<AuthCubit>(
     () => AuthCubit(getIt<AuthApiService>(), getIt<AuthService>()),
+  );
+
+  // Reservations cubit (factory with param: status 'Active' | 'Past')
+  getIt.registerFactoryParam<ReservationsCubit, String, void>(
+    (status, _) => ReservationsCubit(getIt<AuthApiService>(), status: status),
   );
 }

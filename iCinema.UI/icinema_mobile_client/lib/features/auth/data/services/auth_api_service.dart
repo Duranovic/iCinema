@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/user_me.dart';
+import '../models/reservation.dart';
+import '../models/ticket.dart';
+import '../../../../app/models/paged_result.dart';
 
 class AuthApiService {
   final Dio _dio;
@@ -128,5 +131,51 @@ class AuthApiService {
       }
       throw Exception('Greška pri registraciji (${status ?? 'nepoznata'}).');
     }
+  }
+
+  Future<PagedResult<ReservationModel>> getMyReservationsPaged({
+    required String status,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final resp = await _dio.get(
+      '/users/me/reservations',
+      queryParameters: {
+        'status': status,
+        'page': page,
+        'pageSize': pageSize,
+      },
+    );
+    final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
+    if (data is Map<String, dynamic>) {
+      final items = ((data['items'] as List?) ?? const [])
+          .map((e) => ReservationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final total = (data['totalCount'] ?? items.length) as int;
+      final pg = (data['page'] ?? page) as int;
+      final ps = (data['pageSize'] ?? pageSize) as int;
+      return PagedResult(items: items, totalCount: total, page: pg, pageSize: ps);
+    }
+    // Fallback: API returned a plain list
+    final list = (data as List)
+        .map((e) => ReservationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return PagedResult(items: list, totalCount: list.length, page: page, pageSize: pageSize);
+  }
+
+  Future<List<ReservationModel>> getMyReservations({
+    required String status,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final paged = await getMyReservationsPaged(status: status, page: page, pageSize: pageSize);
+    return paged.items;
+  }
+
+  Future<List<TicketModel>> getReservationTickets(String reservationId) async {
+    final resp = await _dio.get('/users/me/reservations/$reservationId/tickets');
+    final data = resp.data;
+    final list = data is String ? (json.decode(data) as List) : (data as List);
+    return list.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

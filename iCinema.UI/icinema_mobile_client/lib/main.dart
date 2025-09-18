@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/router/app_router.dart';
 import 'app/di/injection.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
+import 'features/auth/presentation/bloc/reservations_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,13 @@ class MyApp extends StatelessWidget {
     if (!getIt.isRegistered<AuthCubit>()) {
       getIt.registerLazySingleton<AuthCubit>(
         () => AuthCubit(getIt(), getIt()),
+      );
+    }
+    // Defensive: ensure ReservationsCubit factory is registered (hot reload safety)
+    if (!getIt.isRegistered<ReservationsCubit>(instanceName: null)) {
+      // Register the factory with param if missing
+      getIt.registerFactoryParam<ReservationsCubit, String, void>(
+        (status, _) => ReservationsCubit(getIt(), status: status),
       );
     }
     final authCubit = getIt<AuthCubit>();
