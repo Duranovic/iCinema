@@ -853,9 +853,12 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               ),
               const SizedBox(height: 4),
               FilledButton(
-                onPressed: canReserve ? () {
-                  // TODO: Hook reservation flow here
-                } : null,
+                onPressed: canReserve
+                    ? () {
+                        final id = Uri.encodeComponent(projection.id);
+                        context.push('/projections/$id/reserve');
+                      }
+                    : null,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   backgroundColor: canReserve ? null : Theme.of(context).disabledColor,

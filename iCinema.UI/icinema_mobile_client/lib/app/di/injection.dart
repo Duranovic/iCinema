@@ -15,6 +15,8 @@ import '../../features/movies/presentation/bloc/movies_cubit.dart';
 import '../../features/auth/data/services/auth_api_service.dart';
 import '../../features/auth/presentation/bloc/auth_cubit.dart';
 import '../../features/auth/presentation/bloc/reservations_cubit.dart';
+import '../../features/reservations/data/services/reservation_api_service.dart';
+import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
 
 import 'injection.config.dart';
 
@@ -48,6 +50,10 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<RecommendationsApiService>(
     () => RecommendationsApiService(getIt<Dio>()),
+  );
+  // Reservations API
+  getIt.registerLazySingleton<ReservationApiService>(
+    () => ReservationApiService(getIt<Dio>()),
   );
 
   // Repositories
@@ -86,5 +92,10 @@ Future<void> configureDependencies() async {
   // Reservations cubit (factory with param: status 'Active' | 'Past')
   getIt.registerFactoryParam<ReservationsCubit, String, void>(
     (status, _) => ReservationsCubit(getIt<AuthApiService>(), status: status),
+  );
+
+  // Seat map cubit (factory with param: projectionId)
+  getIt.registerFactoryParam<SeatMapCubit, String, void>(
+    (projectionId, _) => SeatMapCubit(getIt<ReservationApiService>(), projectionId: projectionId),
   );
 }

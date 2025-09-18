@@ -33,10 +33,11 @@ class _LoginSheetLauncherPageState extends State<LoginSheetLauncherPage> {
         // If user logged in or confirmed, go to profile; otherwise pop back.
         final loggedIn = getIt<AuthService>().authState.isAuthenticated;
         if (mounted) {
+          // Stay on the previous page; just close the launcher route
           if (loggedIn || result == true) {
-            context.go('/profile');
+            context.pop(true);
           } else {
-            context.pop();
+            context.pop(false);
           }
         }
       });

@@ -2,6 +2,7 @@ using iCinema.Application.Common.Models;
 using iCinema.Application.DTOs.Reservations;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence;
+using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
@@ -9,6 +10,145 @@ namespace iCinema.Infrastructure.Persistence.Repositories;
 public class ReservationRepository(iCinemaDbContext context) : IReservationRepository
 {
     private readonly iCinemaDbContext _context = context;
+
+    public async Task<SeatMapDto?> GetSeatMapAsync(Guid projectionId, CancellationToken cancellationToken = default)
+    {
+        var proj = await _context.Projections
+            .Include(p => p.Hall).ThenInclude(h => h.Cinema)
+            .Include(p => p.Movie)
+            .FirstOrDefaultAsync(p => p.Id == projectionId, cancellationToken);
+        if (proj == null) return null;
+
+        var hall = proj.Hall;
+
+        var seats = await _context.Seats
+            .Where(s => s.HallId == hall.Id)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var takenSeatIds = await _context.Tickets
+            .Include(t => t.Reservation)
+            .Where(t => t.Reservation.ProjectionId == projectionId
+                        && (t.Reservation.IsCanceled == null || t.Reservation.IsCanceled == false)
+                        && (t.Reservation.ExpiresAt == null || t.Reservation.ExpiresAt > now))
+            .Select(t => t.SeatId)
+            .ToListAsync(cancellationToken);
+        var takenSet = takenSeatIds.ToHashSet();
+
+        return new SeatMapDto
+        {
+            Projection = new SeatMapProjectionInfo
+            {
+                Id = proj.Id,
+                StartTime = proj.StartTime,
+                Price = proj.Price,
+                HallName = hall.Name,
+                CinemaName = hall.Cinema.Name,
+                MovieId = proj.MovieId,
+                MovieTitle = proj.Movie.Title,
+                PosterUrl = proj.Movie.PosterUrl
+            },
+            Hall = new SeatMapHallInfo
+            {
+                Id = hall.Id,
+                RowsCount = hall.RowsCount,
+                SeatsPerRow = hall.SeatsPerRow,
+                Capacity = hall.RowsCount * hall.SeatsPerRow
+            },
+            Seats = seats.Select(s => new SeatMapSeatInfo
+            {
+                SeatId = s.Id,
+                RowNumber = s.RowNumber,
+                SeatNumber = s.SeatNumber,
+                IsTaken = takenSet.Contains(s.Id)
+            }).OrderBy(s => s.RowNumber).ThenBy(s => s.SeatNumber).ToList()
+        };
+    }
+
+    public async Task<ReservationCreatedDto> CreateAsync(Guid userId, ReservationCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        if (dto.SeatIds == null || dto.SeatIds.Count == 0)
+            throw new ArgumentException("SeatIds cannot be empty");
+
+        await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        var proj = await _context.Projections
+            .Include(p => p.Hall)
+            .FirstOrDefaultAsync(p => p.Id == dto.ProjectionId, cancellationToken);
+        if (proj == null) throw new InvalidOperationException("Projection not found");
+        if (proj.StartTime <= DateTime.UtcNow) throw new InvalidOperationException("Projection already started");
+
+        // validate seats belong to hall
+        var hallSeatIds = await _context.Seats
+            .Where(s => s.HallId == proj.HallId && dto.SeatIds.Contains(s.Id))
+            .Select(s => s.Id)
+            .ToListAsync(cancellationToken);
+        if (hallSeatIds.Count != dto.SeatIds.Count)
+            throw new InvalidOperationException("One or more seats are invalid for this hall");
+
+        // check availability
+        var now = DateTime.UtcNow;
+        var conflicting = await _context.Tickets
+            .Include(t => t.Reservation)
+            .Where(t => t.Reservation.ProjectionId == dto.ProjectionId
+                        && dto.SeatIds.Contains(t.SeatId)
+                        && (t.Reservation.IsCanceled == null || t.Reservation.IsCanceled == false)
+                        && (t.Reservation.ExpiresAt == null || t.Reservation.ExpiresAt > now))
+            .Select(t => t.SeatId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        if (conflicting.Count > 0)
+            throw new InvalidOperationException("Seats already taken");
+
+        var reservation = new Reservation
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ProjectionId = dto.ProjectionId,
+            ReservedAt = now,
+            ExpiresAt = null,
+            IsCanceled = false
+        };
+        await _context.Reservations.AddAsync(reservation, cancellationToken);
+
+        foreach (var seatId in dto.SeatIds)
+        {
+            var ticket = new Ticket
+            {
+                Id = Guid.NewGuid(),
+                ReservationId = reservation.Id,
+                SeatId = seatId,
+                TicketStatus = "Active",
+                TicketType = null,
+                QRCode = null
+            };
+            await _context.Tickets.AddAsync(ticket, cancellationToken);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+
+        return new ReservationCreatedDto
+        {
+            ReservationId = reservation.Id,
+            TicketsCount = dto.SeatIds.Count,
+            ExpiresAt = reservation.ExpiresAt,
+            TotalPrice = proj.Price * dto.SeatIds.Count
+        };
+    }
+
+    public async Task<bool> CancelAsync(Guid userId, Guid reservationId, CancellationToken cancellationToken = default)
+    {
+        var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userId, cancellationToken);
+        if (reservation == null) return false;
+        if (reservation.IsCanceled == true) return true;
+        if (reservation.ExpiresAt.HasValue && reservation.ExpiresAt.Value <= DateTime.UtcNow) return true; // already expired effect
+
+        reservation.IsCanceled = true;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 
     public async Task<PagedResult<ReservationListItemDto>> GetMyReservations(
         Guid userId,

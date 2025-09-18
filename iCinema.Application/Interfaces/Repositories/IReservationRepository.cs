@@ -5,6 +5,20 @@ namespace iCinema.Application.Interfaces.Repositories;
 
 public interface IReservationRepository
 {
+    Task<SeatMapDto?> GetSeatMapAsync(
+        Guid projectionId,
+        CancellationToken cancellationToken = default);
+
+    Task<ReservationCreatedDto> CreateAsync(
+        Guid userId,
+        ReservationCreateDto dto,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> CancelAsync(
+        Guid userId,
+        Guid reservationId,
+        CancellationToken cancellationToken = default);
+
     Task<PagedResult<ReservationListItemDto>> GetMyReservations(
         Guid userId,
         string status, // "Active" | "Past"

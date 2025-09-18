@@ -16,6 +16,8 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/login_sheet_launcher_page.dart';
 import '../../features/home/data/models/projection_model.dart';
 import '../../features/movies/presentation/bloc/movies_cubit.dart';
+import '../../features/reservations/presentation/pages/reservation_page.dart';
+import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -63,9 +65,8 @@ GoRouter buildRouter() {
     redirect: (context, state) {
       final loggedIn = auth.authState.isAuthenticated;
       final loggingIn = state.matchedLocation == '/login';
-      if (loggedIn && loggingIn) {
-        return '/profile';
-      }
+      // Do not force redirect to /profile after login; allow flow to return to the origin page
+      // If user is already logged in and navigates to /login manually, just stay (or login page can pop itself)
       return null;
     },
     routes: [
@@ -124,8 +125,17 @@ GoRouter buildRouter() {
         path: '/movie-details/:movieId',
         pageBuilder: (context, state) {
           final movieId = state.pathParameters['movieId'] ?? '';
-          final projections = state.extra as List<ProjectionModel>? ?? [];
-          
+          // Be defensive: extra may be null or a loosely-typed List after redirects
+          final extra = state.extra;
+          List<ProjectionModel> projections;
+          if (extra is List<ProjectionModel>) {
+            projections = extra;
+          } else if (extra is List) {
+            projections = extra.whereType<ProjectionModel>().toList();
+          } else {
+            projections = const [];
+          }
+
           return _slideTransitionPage(
             BlocProvider<MovieDetailsCubit>(
               create: (_) => getIt<MovieDetailsCubit>(),
@@ -133,6 +143,20 @@ GoRouter buildRouter() {
                 movieId: Uri.decodeComponent(movieId),
                 projections: projections,
               ),
+            ),
+            state,
+          );
+        },
+      ),
+      // Reservation route (outside shell - full screen)
+      GoRoute(
+        path: '/projections/:id/reserve',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return _slideTransitionPage(
+            BlocProvider<SeatMapCubit>(
+              create: (_) => getIt<SeatMapCubit>(param1: id)..loadMap(),
+              child: ReservationPage(projectionId: id),
             ),
             state,
           );

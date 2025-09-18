@@ -31,6 +31,38 @@ public class HallRepository(iCinemaDbContext context, IMapper mapper, IProjectio
         return query;
     }
     
+    protected override Task BeforeInsert(Hall entity, HallCreateDto dto)
+    {
+        // Ensure the Hall has an ID so we can set FK on seats
+        if (entity.Id == Guid.Empty)
+            entity.Id = Guid.NewGuid();
+
+        // Generate seats rows × seatsPerRow
+        if (dto.RowsCount > 0 && dto.SeatsPerRow > 0)
+        {
+            var seats = new List<Seat>(dto.RowsCount * dto.SeatsPerRow);
+            for (var r = 1; r <= dto.RowsCount; r++)
+            {
+                for (var s = 1; s <= dto.SeatsPerRow; s++)
+                {
+                    seats.Add(new Seat
+                    {
+                        Id = Guid.NewGuid(),
+                        HallId = entity.Id,
+                        RowNumber = r,
+                        SeatNumber = s
+                    });
+                }
+            }
+
+            // Attach to entity so EF saves in same transaction
+            foreach (var seat in seats)
+                entity.Seats.Add(seat);
+        }
+
+        return Task.CompletedTask;
+    }
+    
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var hall = await DbSet

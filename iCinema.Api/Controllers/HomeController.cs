@@ -1,4 +1,4 @@
-using iCinema.Api.Contracts.Home;
+using iCinema.Application.DTOs.Home;
 using iCinema.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
