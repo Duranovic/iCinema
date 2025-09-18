@@ -19,7 +19,8 @@ public class AuthController(
         var user = new ApplicationUser
         {
             UserName = dto.Email,
-            Email = dto.Email
+            Email = dto.Email,
+            FullName = dto.FullName
         };
 
         var result = await userManager.CreateAsync(user, dto.Password);
@@ -29,7 +30,9 @@ public class AuthController(
 
         await userManager.AddToRoleAsync(user, "Customer"); // default role
 
-        return Ok(new { message = "User registered successfully." });
+        // Auto-login: issue JWT immediately
+        var token = await tokenService.GenerateToken(user);
+        return Ok(new AuthDto { Token = token, ExpiresAt = DateTime.UtcNow.AddHours(2) });
     }
 
     [HttpPost("login")]

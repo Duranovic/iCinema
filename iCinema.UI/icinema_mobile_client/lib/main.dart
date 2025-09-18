@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/router/app_router.dart';
 import 'app/di/injection.dart';
+import 'features/auth/presentation/bloc/auth_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,9 +16,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Defensive: ensure AuthCubit is registered (hot reload/init order safety)
+    if (!getIt.isRegistered<AuthCubit>()) {
+      getIt.registerLazySingleton<AuthCubit>(
+        () => AuthCubit(getIt(), getIt()),
+      );
+    }
+    final authCubit = getIt<AuthCubit>();
+    authCubit.init();
     final router = buildRouter();
     
-    return MaterialApp.router(
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>.value(value: authCubit),
+      ],
+      child: MaterialApp.router(
       title: 'iCinema',
       routerConfig: router,
       theme: ThemeData(
@@ -63,6 +77,7 @@ class MyApp extends StatelessWidget {
         Locale('hr'),
         Locale('sr'),
       ],
+    ),
     );
   }
 }

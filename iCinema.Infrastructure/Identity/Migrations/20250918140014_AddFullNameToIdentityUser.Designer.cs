@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iCinema.Infrastructure.Identity;
 
@@ -11,9 +12,11 @@ using iCinema.Infrastructure.Identity;
 namespace iCinema.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(iCinemaIdentityContext))]
-    partial class iCinemaIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20250918140014_AddFullNameToIdentityUser")]
+    partial class AddFullNameToIdentityUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

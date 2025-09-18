@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
+import '../services/auth_service.dart';
+import '../../features/auth/presentation/widgets/login_sheet.dart';
 import '../constants/navigation.dart';
 import '../constants/route_paths.dart';
 
@@ -27,6 +30,32 @@ class AppShell extends StatelessWidget {
   }
 
   void _onItemTapped(BuildContext context, int index) {
+    // If tapping Profile and not authenticated, show login sheet without leaving current page
+    final profileIndex = routePaths.indexOf('/profile');
+    if (index == profileIndex) {
+      final auth = GetIt.I<AuthService>();
+      if (!auth.authState.isAuthenticated) {
+        showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (ctx) => const LoginSheet(),
+        ).then((result) {
+          if (GetIt.I<AuthService>().authState.isAuthenticated || result == true) {
+            context.go('/profile');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Niste prijavljeni.')),
+            );
+          }
+        });
+        return; // stay on current page until login success
+      }
+    }
     context.go(routePaths[index]);
   }
 

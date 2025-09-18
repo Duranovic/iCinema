@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:injectable/injectable.dart';
+import 'package:get_it/get_it.dart';
+import '../services/auth_service.dart';
 
 // Allows injectable to register third-party types.
 @module
@@ -45,20 +47,18 @@ abstract class NetworkModule {
     // Attach interceptor to inject Authorization header and handle 401
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        // TODO: Add auth service integration when authentication is implemented
-        // final auth = GetIt.I<AuthService>();
-        // final token = auth.token;
-        // if (token != null && token.isNotEmpty) {
-        //   options.headers['Authorization'] = 'Bearer $token';
-        // }
+        final auth = GetIt.I<AuthService>();
+        final token = auth.authState.token;
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
         handler.next(options);
       },
       onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
           // Unauthorized - clear session
-          // TODO: Add auth service integration when authentication is implemented
-          // final auth = GetIt.I<AuthService>();
-          // await auth.logout();
+          final auth = GetIt.I<AuthService>();
+          await auth.logout();
         }
         handler.next(e);
       },
