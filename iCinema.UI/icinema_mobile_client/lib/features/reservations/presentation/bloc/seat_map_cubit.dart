@@ -1,10 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/services/reservation_api_service.dart';
 import 'seat_map_state.dart';
+import '../../data/seat_map_refresh_bus.dart';
+import '../../../../app/di/injection.dart';
+import 'dart:async';
 
 class SeatMapCubit extends Cubit<SeatMapState> {
   final ReservationApiService _api;
   final String projectionId;
+  StreamSubscription<void>? _refreshSub;
 
   SeatMapCubit(this._api, {required this.projectionId}) : super(SeatMapState.initial());
 
@@ -53,5 +57,23 @@ class SeatMapCubit extends Cubit<SeatMapState> {
 
   void acknowledgeNavigationHandled() {
     emit(state.copyWith(clearReservationId: true));
+  }
+
+  // Wire up bus subscription when first used
+  void ensureRefreshSubscription() {
+    if (_refreshSub != null) return;
+    if (getIt.isRegistered<SeatMapRefreshBus>()) {
+      _refreshSub = getIt<SeatMapRefreshBus>().stream.listen((_) {
+        // If this seat map is shown for the same projection, refresh
+        // We don't carry projectionId in the event for now; refresh anyway
+        loadMap();
+      });
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _refreshSub?.cancel();
+    return super.close();
   }
 }

@@ -2,10 +2,12 @@ using System.Text;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Common.Mappings;
+using MassTransit;
 using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Repositories;
 using iCinema.Infrastructure.Services;
+using iCinema.Infrastructure.Messaging.Consumers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -48,6 +50,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IHomeKpisRepository, HomeKpisRepository>();
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<INotificationsRepository, NotificationsRepository>();
         
         // Services
         services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
@@ -57,6 +60,23 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
         services.AddScoped<IReportsService, ReportsService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
+
+        // MassTransit + RabbitMQ
+        services.AddMassTransit(cfg =>
+        {
+            cfg.AddConsumer<NotificationsConsumer>();
+
+            cfg.UsingRabbitMq((context, busCfg) =>
+            {
+                var host = configuration["RabbitMQ:Host"] ?? "amqp://guest:guest@localhost:5672";
+                busCfg.Host(new Uri(host));
+
+                busCfg.ReceiveEndpoint("notifications.queue", e =>
+                {
+                    e.ConfigureConsumer<NotificationsConsumer>(context);
+                });
+            });
+        });
         
         // Identity Server
         services.AddScoped<JwtTokenService>();

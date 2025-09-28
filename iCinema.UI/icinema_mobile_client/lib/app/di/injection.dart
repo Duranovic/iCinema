@@ -17,6 +17,10 @@ import '../../features/auth/presentation/bloc/auth_cubit.dart';
 import '../../features/auth/presentation/bloc/reservations_cubit.dart';
 import '../../features/reservations/data/services/reservation_api_service.dart';
 import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
+import '../../features/reservations/data/seat_map_refresh_bus.dart';
+import '../../features/auth/data/reservations_refresh_bus.dart';
+import '../../features/notifications/data/services/notifications_api_service.dart';
+import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
 
 import 'injection.config.dart';
 
@@ -54,6 +58,14 @@ Future<void> configureDependencies() async {
   // Reservations API
   getIt.registerLazySingleton<ReservationApiService>(
     () => ReservationApiService(getIt<Dio>()),
+  );
+  // Seat map refresh bus
+  getIt.registerLazySingleton<SeatMapRefreshBus>(() => SeatMapRefreshBus());
+  // Reservations refresh bus (profile lists)
+  getIt.registerLazySingleton<ReservationsRefreshBus>(() => ReservationsRefreshBus());
+  // Notifications API
+  getIt.registerLazySingleton<NotificationsApiService>(
+    () => NotificationsApiService(getIt<Dio>()),
   );
 
   // Repositories
@@ -100,5 +112,10 @@ Future<void> configureDependencies() async {
   // Seat map cubit (factory with param: projectionId)
   getIt.registerFactoryParam<SeatMapCubit, String, void>(
     (projectionId, _) => SeatMapCubit(getIt<ReservationApiService>(), projectionId: projectionId),
+  );
+
+  // Notifications Cubit
+  getIt.registerFactory<NotificationsCubit>(
+    () => NotificationsCubit(getIt<NotificationsApiService>()),
   );
 }

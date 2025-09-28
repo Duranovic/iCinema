@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async' show unawaited;
 import '../../../../app/di/injection.dart';
 import '../../../../app/services/auth_service.dart';
+import '../../../../app/router/app_router.dart' show routeObserver; // for RouteAware refresh
+import '../../data/reservations_refresh_bus.dart';
 import '../../data/services/auth_api_service.dart';
 import '../../data/models/user_me.dart';
 import '../../data/models/reservation.dart';
@@ -126,7 +129,7 @@ class _ReservationsTab extends StatefulWidget {
   State<_ReservationsTab> createState() => _ReservationsTabState();
 }
 
-class _ReservationsTabState extends State<_ReservationsTab> {
+class _ReservationsTabState extends State<_ReservationsTab> with RouteAware {
   late final ReservationsCubit _cubit;
   final _scroll = ScrollController();
 
@@ -145,6 +148,24 @@ class _ReservationsTabState extends State<_ReservationsTab> {
     }
     _cubit.loadInitial();
     _scroll.addListener(_onScroll);
+    // Subscribe to reservations refresh events (e.g., cancel elsewhere)
+    if (getIt.isRegistered<ReservationsRefreshBus>()) {
+      getIt<ReservationsRefreshBus>().stream.listen((_) {
+        if (mounted) {
+          _cubit.loadInitial(pageSize: _cubit.state.pageSize);
+        }
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route changes to refresh when returning to this page
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
   }
 
   void _onScroll() {
@@ -161,8 +182,16 @@ class _ReservationsTabState extends State<_ReservationsTab> {
   void dispose() {
     _scroll.removeListener(_onScroll);
     _scroll.dispose();
+    // Unsubscribe from route observer
+    routeObserver.unsubscribe(this);
     _cubit.close();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when coming back to this tab from another page
+    unawaited(_cubit.loadInitial(pageSize: _cubit.state.pageSize));
   }
 
   Future<void> _refresh() async {
@@ -211,7 +240,7 @@ class _ReservationsTabState extends State<_ReservationsTab> {
                 return Card(
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    onTap: () {
+                    onTap: () async {
                       final idEnc = Uri.encodeComponent(r.reservationId);
                       final header = ReservationHeader(
                         reservationId: r.reservationId,
@@ -224,7 +253,12 @@ class _ReservationsTabState extends State<_ReservationsTab> {
                         movieTitle: r.movieTitle,
                         posterUrl: r.posterUrl,
                       );
-                      context.push('/reservations/$idEnc', extra: header);
+                      final result = await context.push('/reservations/$idEnc', extra: header);
+                      if (result == true && context.mounted) {
+                        // Use this tab's cubit instance for optimistic move and silent refresh
+                        _cubit.markCanceledAndMove(r.reservationId);
+                        unawaited(_cubit.loadInitial(pageSize: _cubit.state.pageSize));
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),

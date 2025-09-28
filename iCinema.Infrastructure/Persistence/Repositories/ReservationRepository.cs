@@ -5,13 +5,16 @@ using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Models;
 using iCinema.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using iCinema.Application.Events.Reservations;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCodeService) : IReservationRepository
+public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCodeService, IPublishEndpoint publishEndpoint) : IReservationRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IQrCodeService _qr = qrCodeService;
+    private readonly IPublishEndpoint _bus = publishEndpoint;
 
     public async Task<SeatMapDto?> GetSeatMapAsync(Guid projectionId, CancellationToken cancellationToken = default)
     {
@@ -77,6 +80,7 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
 
         var proj = await _context.Projections
             .Include(p => p.Hall)
+            .Include(p => p.Movie)
             .FirstOrDefaultAsync(p => p.Id == dto.ProjectionId, cancellationToken);
         if (proj == null) throw new InvalidOperationException("Projection not found");
         if (proj.StartTime <= DateTime.UtcNow) throw new InvalidOperationException("Projection already started");
@@ -134,6 +138,17 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // publish ReservationCreated event
+        await _bus.Publish(new ReservationCreated(
+            reservation.Id,
+            userId,
+            reservation.ProjectionId,
+            proj.Movie.Title,
+            proj.StartTime,
+            dto.SeatIds.Count
+        ), cancellationToken);
+
         await tx.CommitAsync(cancellationToken);
 
         return new ReservationCreatedDto
@@ -154,6 +169,14 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
 
         reservation.IsCanceled = true;
         await _context.SaveChangesAsync(cancellationToken);
+
+        // publish ReservationCanceled event
+        await _bus.Publish(new ReservationCanceled(
+            reservation.Id,
+            reservation.UserId,
+            reservation.ProjectionId,
+            DateTime.UtcNow
+        ), cancellationToken);
         return true;
     }
 

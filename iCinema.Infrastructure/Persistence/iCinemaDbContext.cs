@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +57,7 @@ public partial class iCinemaDbContext : DbContext
     public virtual DbSet<Seat> Seats { get; set; }
 
     public virtual DbSet<Ticket> Tickets { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -46,7 +46,12 @@ class ReservationDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 if (canCancel)
-                  _CancelCard(onCancel: () => context.read<ReservationDetailsCubit>().cancel()),
+                  _CancelCard(
+                    onCancel: () async {
+                      // Perform cancel; remain on this page. The header/tickets update in-place.
+                      await context.read<ReservationDetailsCubit>().cancel();
+                    },
+                  ),
               ],
             ),
           );

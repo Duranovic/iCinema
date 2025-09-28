@@ -1,6 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/services/reservation_api_service.dart';
 import 'reservation_details_state.dart';
+import '../../data/seat_map_refresh_bus.dart';
+import '../../../../app/di/injection.dart';
+import '../../../auth/data/reservations_refresh_bus.dart';
 
 class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
   final ReservationApiService _api;
@@ -52,6 +55,14 @@ class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
               );
         final tickets = await _api.getTickets(reservationId);
         emit(state.copyWith(loading: false, header: updated, tickets: tickets));
+        // Notify any active seat maps to reload
+        if (getIt.isRegistered<SeatMapRefreshBus>()) {
+          getIt<SeatMapRefreshBus>().notify();
+        }
+        // Notify profile reservations lists to refresh
+        if (getIt.isRegistered<ReservationsRefreshBus>()) {
+          getIt<ReservationsRefreshBus>().notify();
+        }
       } else {
         emit(state.copyWith(loading: false, error: 'Otkazivanje nije uspjelo.'));
       }

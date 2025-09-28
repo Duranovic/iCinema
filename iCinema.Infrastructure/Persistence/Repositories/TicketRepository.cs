@@ -3,13 +3,16 @@ using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using iCinema.Application.Events.Tickets;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class TicketRepository(iCinemaDbContext context, IQrCodeService qr) : ITicketRepository
+public class TicketRepository(iCinemaDbContext context, IQrCodeService qr, IPublishEndpoint bus) : ITicketRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IQrCodeService _qr = qr;
+    private readonly IPublishEndpoint _bus = bus;
 
     public async Task<TicketQrDto?> GetQrAsync(Guid ticketId, Guid userId, CancellationToken cancellationToken = default)
     {
@@ -64,6 +67,15 @@ public class TicketRepository(iCinemaDbContext context, IQrCodeService qr) : ITi
         // Mark as used
         ticket.TicketStatus = "Used";
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Publish TicketUsed event
+        await _bus.Publish(new TicketUsed(
+            ticket.Id,
+            ticket.ReservationId,
+            ticket.Reservation.UserId,
+            ticket.Reservation.ProjectionId,
+            DateTime.UtcNow
+        ), cancellationToken);
         return (true, "OK");
     }
 }

@@ -6,10 +6,44 @@ import 'package:go_router/go_router.dart';
 import '../../data/models/seat_map.dart';
 import '../bloc/seat_map_cubit.dart';
 import '../bloc/seat_map_state.dart';
+import '../details/reservation_details_state.dart';
+import '../../../../app/router/app_router.dart' show routeObserver; // for RouteAware reload
 
-class ReservationPage extends StatelessWidget {
+class ReservationPage extends StatefulWidget {
   const ReservationPage({super.key, required this.projectionId});
   final String projectionId;
+
+  @override
+  State<ReservationPage> createState() => _ReservationPageState();
+}
+
+class _ReservationPageState extends State<ReservationPage> with RouteAware {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    // Reload seat map when page is first shown
+    if (mounted) context.read<SeatMapCubit>().loadMap();
+  }
+
+  @override
+  void didPopNext() {
+    // Reload when returning to this page
+    if (mounted) context.read<SeatMapCubit>().loadMap();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +54,8 @@ class ReservationPage extends StatelessWidget {
       body: BlocConsumer<SeatMapCubit, SeatMapState>(
         listenWhen: (p, c) => p.successMessage != c.successMessage || p.error != c.error,
         listener: (context, state) {
+          // Ensure bus subscription is active so this map reloads on external cancel events
+          context.read<SeatMapCubit>().ensureRefreshSubscription();
           if (state.successMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.successMessage!)),
@@ -32,7 +68,22 @@ class ReservationPage extends StatelessWidget {
           }
           final navId = state.lastReservationId;
           if (navId != null && navId.isNotEmpty) {
-            context.push('/reservations/${Uri.encodeComponent(navId)}');
+            // Build a header so the details page can show full info and cancel button
+            final m = state.map?.projection;
+            final header = m == null
+                ? null
+                : ReservationHeader(
+                    reservationId: navId,
+                    isCanceled: false,
+                    totalPrice: null,
+                    ticketsCount: null,
+                    startTime: m.startTime,
+                    hallName: m.hallName,
+                    cinemaName: m.cinemaName,
+                    movieTitle: m.movieTitle,
+                    posterUrl: m.posterUrl,
+                  );
+            context.push('/reservations/${Uri.encodeComponent(navId)}', extra: header);
             context.read<SeatMapCubit>().acknowledgeNavigationHandled();
           }
         },

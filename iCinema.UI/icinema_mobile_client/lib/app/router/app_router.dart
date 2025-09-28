@@ -11,17 +11,22 @@ import '../../features/movies/presentation/pages/movie_details_page.dart';
 import '../../features/movies/presentation/bloc/movie_details_cubit.dart';
 import '../../features/movies/presentation/pages/search_page.dart';
 import '../../features/movies/presentation/bloc/search_cubit.dart';
+import '../../features/movies/presentation/bloc/movies_cubit.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/login_sheet_launcher_page.dart';
 import '../../features/home/data/models/projection_model.dart';
-import '../../features/movies/presentation/bloc/movies_cubit.dart';
 import '../../features/reservations/presentation/pages/reservation_page.dart';
 import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
 import '../../features/reservations/presentation/details/reservation_details_cubit.dart';
 import '../../features/reservations/presentation/details/reservation_details_page.dart';
 import '../../features/reservations/data/services/reservation_api_service.dart';
 import '../../features/reservations/presentation/details/reservation_details_state.dart';
+import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
+
+// Global route observer for RouteAware widgets
+final RouteObserver<ModalRoute<dynamic>> routeObserver = RouteObserver<ModalRoute<dynamic>>();
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -66,6 +71,7 @@ GoRouter buildRouter() {
   return GoRouter(
     initialLocation: '/home',
     refreshListenable: auth.authState,
+    observers: [routeObserver],
     redirect: (context, state) {
       final loggedIn = auth.authState.isAuthenticated;
       final loggingIn = state.matchedLocation == '/login';
@@ -185,6 +191,17 @@ GoRouter buildRouter() {
             state,
           );
         },
+      ),
+      // Notifications route
+      GoRoute(
+        path: '/notifications',
+        pageBuilder: (context, state) => _fadeTransitionPage(
+          BlocProvider<NotificationsCubit>(
+            create: (_) => getIt<NotificationsCubit>()..load(),
+            child: const NotificationsPage(),
+          ),
+          state,
+        ),
       ),
     ],
   );

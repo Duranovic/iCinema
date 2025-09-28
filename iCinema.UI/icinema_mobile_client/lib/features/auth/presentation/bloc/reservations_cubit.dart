@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/services/auth_api_service.dart';
 import 'reservations_state.dart';
+import '../../data/models/reservation.dart';
 
 class ReservationsCubit extends Cubit<ReservationsState> {
   final AuthApiService _api;
@@ -44,6 +45,42 @@ class ReservationsCubit extends Cubit<ReservationsState> {
       ));
     } catch (e) {
       emit(state.copyWith(loadingMore: false, error: e.toString()));
+    }
+  }
+
+  // Optimistic move of a canceled reservation.
+  // If this cubit is for 'Active', remove it from the list.
+  // If this cubit is for 'Past', prepend/update it as canceled.
+  void markCanceledAndMove(String reservationId) {
+    final items = List<ReservationModel>.from(state.items);
+    final idx = items.indexWhere((r) => r.reservationId == reservationId);
+    if (idx == -1) return;
+    final r = items[idx];
+    final updated = ReservationModel(
+      reservationId: r.reservationId,
+      reservedAt: r.reservedAt,
+      isCanceled: true,
+      ticketsCount: r.ticketsCount,
+      projectionId: r.projectionId,
+      startTime: r.startTime,
+      hallName: r.hallName,
+      cinemaName: r.cinemaName,
+      movieId: r.movieId,
+      movieTitle: r.movieTitle,
+      posterUrl: r.posterUrl,
+    );
+
+    if (status == 'Active') {
+      // Remove from active list
+      items.removeAt(idx);
+      // Keep counts consistent: reduce totalCount if needed
+      final newTotal = state.totalCount > 0 ? state.totalCount - 1 : 0;
+      emit(state.copyWith(items: items, totalCount: newTotal));
+    } else {
+      // Update in-place or insert at top for 'Past'
+      items.removeAt(idx);
+      items.insert(0, updated);
+      emit(state.copyWith(items: items));
     }
   }
 }
