@@ -7,6 +7,7 @@ class SeatMapState {
   final Set<String> selectedSeatIds;
   final bool reserving;
   final String? successMessage;
+  final String? lastReservationId;
 
   const SeatMapState({
     required this.loading,
@@ -15,6 +16,7 @@ class SeatMapState {
     required this.selectedSeatIds,
     required this.reserving,
     required this.successMessage,
+    required this.lastReservationId,
   });
 
   factory SeatMapState.initial() => const SeatMapState(
@@ -24,6 +26,7 @@ class SeatMapState {
         selectedSeatIds: {},
         reserving: false,
         successMessage: null,
+        lastReservationId: null,
       );
 
   double get totalPrice {
@@ -41,6 +44,8 @@ class SeatMapState {
     bool? reserving,
     String? successMessage,
     bool clearSuccess = false,
+    String? lastReservationId,
+    bool clearReservationId = false,
   }) {
     return SeatMapState(
       loading: loading ?? this.loading,
@@ -49,6 +54,7 @@ class SeatMapState {
       selectedSeatIds: selectedSeatIds ?? this.selectedSeatIds,
       reserving: reserving ?? this.reserving,
       successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+      lastReservationId: clearReservationId ? null : (lastReservationId ?? this.lastReservationId),
     );
   }
 }

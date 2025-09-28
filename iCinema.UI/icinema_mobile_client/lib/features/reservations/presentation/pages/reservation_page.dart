@@ -30,6 +30,11 @@ class ReservationPage extends StatelessWidget {
               SnackBar(content: Text(state.error!.replaceFirst('Exception: ', ''))),
             );
           }
+          final navId = state.lastReservationId;
+          if (navId != null && navId.isNotEmpty) {
+            context.push('/reservations/${Uri.encodeComponent(navId)}');
+            context.read<SeatMapCubit>().acknowledgeNavigationHandled();
+          }
         },
         builder: (context, state) {
           final isAuthed = getIt<AuthService>().authState.isAuthenticated;

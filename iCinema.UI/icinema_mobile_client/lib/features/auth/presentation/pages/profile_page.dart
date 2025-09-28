@@ -8,6 +8,7 @@ import '../../data/models/user_me.dart';
 import '../../data/models/reservation.dart';
 import '../bloc/reservations_cubit.dart';
 import '../bloc/reservations_state.dart';
+import '../../../reservations/presentation/details/reservation_details_state.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -211,7 +212,19 @@ class _ReservationsTabState extends State<_ReservationsTab> {
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () {
-                      // TODO: open reservation details with tickets
+                      final idEnc = Uri.encodeComponent(r.reservationId);
+                      final header = ReservationHeader(
+                        reservationId: r.reservationId,
+                        isCanceled: r.isCanceled,
+                        totalPrice: null,
+                        ticketsCount: r.ticketsCount,
+                        startTime: r.startTime,
+                        hallName: r.hallName,
+                        cinemaName: r.cinemaName,
+                        movieTitle: r.movieTitle,
+                        posterUrl: r.posterUrl,
+                      );
+                      context.push('/reservations/$idEnc', extra: header);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),

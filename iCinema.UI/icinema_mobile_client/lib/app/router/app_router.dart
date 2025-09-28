@@ -18,6 +18,10 @@ import '../../features/home/data/models/projection_model.dart';
 import '../../features/movies/presentation/bloc/movies_cubit.dart';
 import '../../features/reservations/presentation/pages/reservation_page.dart';
 import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
+import '../../features/reservations/presentation/details/reservation_details_cubit.dart';
+import '../../features/reservations/presentation/details/reservation_details_page.dart';
+import '../../features/reservations/data/services/reservation_api_service.dart';
+import '../../features/reservations/presentation/details/reservation_details_state.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -156,7 +160,27 @@ GoRouter buildRouter() {
           return _slideTransitionPage(
             BlocProvider<SeatMapCubit>(
               create: (_) => getIt<SeatMapCubit>(param1: id)..loadMap(),
-              child: ReservationPage(projectionId: id),
+              child: ReservationPage(projectionId: Uri.decodeComponent(id)),
+            ),
+            state,
+          );
+        },
+      ),
+      // Reservation details route
+      GoRoute(
+        path: '/reservations/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final extra = state.extra;
+          final header = extra is ReservationHeader ? extra : null;
+          return _slideTransitionPage(
+            BlocProvider<ReservationDetailsCubit>(
+              create: (_) => ReservationDetailsCubit(
+                getIt<ReservationApiService>(),
+                reservationId: id,
+                initialHeader: header,
+              )..load(),
+              child: ReservationDetailsPage(reservationId: Uri.decodeComponent(id)),
             ),
             state,
           );

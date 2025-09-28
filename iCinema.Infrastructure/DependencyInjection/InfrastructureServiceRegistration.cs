@@ -47,6 +47,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IHomeKpisRepository, HomeKpisRepository>();
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
         
         // Services
         services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
@@ -55,6 +56,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICityRulesService, CityRulesService>();
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
         services.AddScoped<IReportsService, ReportsService>();
+        services.AddSingleton<IQrCodeService, QrCodeService>();
         
         // Identity Server
         services.AddScoped<JwtTokenService>();

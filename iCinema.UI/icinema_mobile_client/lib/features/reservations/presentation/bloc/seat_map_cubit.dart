@@ -31,7 +31,7 @@ class SeatMapCubit extends Cubit<SeatMapState> {
     if (state.selectedSeatIds.isEmpty) return;
     emit(state.copyWith(reserving: true, clearError: true, clearSuccess: true));
     try {
-      await _api.createReservation(
+      final created = await _api.createReservation(
         projectionId: projectionId,
         seatIds: state.selectedSeatIds.toList(),
       );
@@ -42,11 +42,16 @@ class SeatMapCubit extends Cubit<SeatMapState> {
         map: map,
         selectedSeatIds: <String>{},
         successMessage: 'Rezervacija uspješna',
+        lastReservationId: created.reservationId,
       ));
     } catch (e) {
       emit(state.copyWith(reserving: false, error: e.toString()));
       // On conflict, also refresh map to reflect latest status
       await loadMap();
     }
+  }
+
+  void acknowledgeNavigationHandled() {
+    emit(state.copyWith(clearReservationId: true));
   }
 }

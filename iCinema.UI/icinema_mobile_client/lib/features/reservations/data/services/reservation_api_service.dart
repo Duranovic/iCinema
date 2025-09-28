@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/seat_map.dart';
 import '../models/reservation_created.dart';
+import '../models/ticket_dto.dart';
+import '../models/reservation_details_dto.dart';
+import '../models/ticket_qr_dto.dart';
 
 class ReservationApiService {
   final Dio _dio;
@@ -52,6 +55,46 @@ class ReservationApiService {
       if (status == 401) throw Exception('Morate biti prijavljeni.');
       if (status == 404) throw Exception('Rezervacija nije pronađena.');
       throw Exception('Greška pri otkazivanju (${status ?? 'nepoznato'}).');
+    }
+  }
+
+  Future<ReservationDetailsDto> getReservationDetails(String reservationId) async {
+    try {
+      final resp = await _dio.get('/reservations/$reservationId');
+      final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
+      return ReservationDetailsDto.fromJson(data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401) throw Exception('Morate biti prijavljeni.');
+      if (status == 404) throw Exception('Rezervacija nije pronađena.');
+      throw Exception('Ne mogu učitati detalje rezervacije (${status ?? 'nepoznato'}).');
+    }
+  }
+
+  Future<List<TicketDto>> getTickets(String reservationId) async {
+    try {
+      final resp = await _dio.get('/users/me/reservations/$reservationId/tickets');
+      final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
+      final list = (data as List).cast<dynamic>();
+      return list.map((e) => TicketDto.fromJson(e as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401) throw Exception('Morate biti prijavljeni.');
+      if (status == 404) throw Exception('Karte nisu pronađene.');
+      throw Exception('Ne mogu učitati karte (${status ?? 'nepoznato'}).');
+    }
+  }
+
+  Future<TicketQrDto> getTicketQr(String ticketId) async {
+    try {
+      final resp = await _dio.get('/tickets/$ticketId/qr');
+      final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
+      return TicketQrDto.fromJson(data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401) throw Exception('Morate biti prijavljeni.');
+      if (status == 404) throw Exception('Karta nije pronađena.');
+      throw Exception('Ne mogu učitati QR informacije (${status ?? 'nepoznato'}).');
     }
   }
 }

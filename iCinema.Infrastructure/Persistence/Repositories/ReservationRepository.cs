@@ -3,13 +3,15 @@ using iCinema.Application.DTOs.Reservations;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Models;
+using iCinema.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ReservationRepository(iCinemaDbContext context) : IReservationRepository
+public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCodeService) : IReservationRepository
 {
     private readonly iCinemaDbContext _context = context;
+    private readonly IQrCodeService _qr = qrCodeService;
 
     public async Task<SeatMapDto?> GetSeatMapAsync(Guid projectionId, CancellationToken cancellationToken = default)
     {
@@ -112,6 +114,9 @@ public class ReservationRepository(iCinemaDbContext context) : IReservationRepos
         };
         await _context.Reservations.AddAsync(reservation, cancellationToken);
 
+        // decide QR expiry: end of projection window (start + 6h)
+        var qrExpires = proj.StartTime.AddHours(6);
+
         foreach (var seatId in dto.SeatIds)
         {
             var ticket = new Ticket
@@ -121,8 +126,10 @@ public class ReservationRepository(iCinemaDbContext context) : IReservationRepos
                 SeatId = seatId,
                 TicketStatus = "Active",
                 TicketType = null,
-                QRCode = null
+                QRCode = string.Empty
             };
+            // assign QR token
+            ticket.QRCode = _qr.GenerateToken(ticket.Id, reservation.ProjectionId, qrExpires);
             await _context.Tickets.AddAsync(ticket, cancellationToken);
         }
 

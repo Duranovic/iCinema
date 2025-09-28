@@ -32,17 +32,24 @@ dependencies:
     sdk: flutter
   
   # Navigation
-  go_router: ^14.2.7
+  go_router: any
   
   # State Management
-  flutter_bloc: ^8.1.6
+  flutter_bloc: any
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  
+  # Screen Brightness
+  screen_brightness: ^2.1.7
+  
+  # HTTP Client
+  dio: any
   
   # Dependency Injection
   get_it: ^7.7.0
   injectable: ^2.4.4
   
-  # HTTP Client
-  dio: ^5.7.0
   
   # Local Storage
   shared_preferences: ^2.3.2
