@@ -114,8 +114,8 @@ Future<void> configureDependencies() async {
     (projectionId, _) => SeatMapCubit(getIt<ReservationApiService>(), projectionId: projectionId),
   );
 
-  // Notifications Cubit
-  getIt.registerFactory<NotificationsCubit>(
+  // Notifications Cubit as singleton so badge and page share the same state
+  getIt.registerLazySingleton<NotificationsCubit>(
     () => NotificationsCubit(getIt<NotificationsApiService>()),
   );
 }

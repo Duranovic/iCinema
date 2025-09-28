@@ -196,8 +196,8 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/notifications',
         pageBuilder: (context, state) => _fadeTransitionPage(
-          BlocProvider<NotificationsCubit>(
-            create: (_) => getIt<NotificationsCubit>()..load(),
+          BlocProvider<NotificationsCubit>.value(
+            value: getIt<NotificationsCubit>(),
             child: const NotificationsPage(),
           ),
           state,

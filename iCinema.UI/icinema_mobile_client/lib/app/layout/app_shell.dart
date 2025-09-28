@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/auth_service.dart';
 import '../../features/auth/presentation/widgets/login_sheet.dart';
 import '../constants/navigation.dart';
 import '../constants/route_paths.dart';
+import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
+import '../../features/notifications/presentation/bloc/notifications_state.dart';
 
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   final Widget child;
   final String currentLocation;
 
@@ -16,9 +19,16 @@ class AppShell extends StatelessWidget {
     super.key,
   });
 
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
+  late final NotificationsCubit _notificationsCubit;
+
   int get _selectedIndex {
     return routePaths
-        .indexWhere((p) => currentLocation.startsWith(p))
+        .indexWhere((p) => widget.currentLocation.startsWith(p))
         .clamp(0, routePaths.length - 1);
   }
 
@@ -27,6 +37,29 @@ class AppShell extends StatelessWidget {
       return null;
     }
     return _selectedIndex;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Create notifications cubit once and load items
+    _notificationsCubit = GetIt.I<NotificationsCubit>();
+    _notificationsCubit.load(top: 50);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh badge when app returns to foreground
+      _notificationsCubit.refresh();
+    }
   }
 
   void _onItemTapped(BuildContext context, int index) {
@@ -59,11 +92,53 @@ class AppShell extends StatelessWidget {
     context.go(routePaths[index]);
   }
 
+  Widget _bellWithBadge() {
+    return BlocBuilder<NotificationsCubit, NotificationsState>(
+      bloc: _notificationsCubit,
+      builder: (context, state) {
+        int unread = 0;
+        if (state is NotificationsLoaded) unread = state.unreadCount;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              tooltip: 'Obavijesti',
+              icon: const Icon(Icons.notifications_none),
+              onPressed: () => context.push('/notifications'),
+            ),
+            if (unread > 0)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    unread > 9 ? '9+' : unread.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('iCinema'),
+        actions: [
+          _bellWithBadge(),
+        ],
+      ),
       body: SafeArea(
-        child: child,
+        child: widget.child,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndexOrNull ?? 0,
