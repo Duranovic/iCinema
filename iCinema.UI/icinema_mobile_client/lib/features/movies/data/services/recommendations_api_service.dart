@@ -25,4 +25,34 @@ class RecommendationsApiService {
       throw Exception(e.toString());
     }
   }
+
+  Future<List<MovieScoreDto>> getMyRecommendations() async {
+    try {
+      final resp = await _dio.get('/recommendations/my');
+      if (resp.statusCode == 200) {
+        final body = resp.data;
+        if (body is List) {
+          // Support legacy/unpaged shape
+          return body
+              .map((e) => MovieScoreDto.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+        if (body is Map<String, dynamic>) {
+          final list = (body['items'] as List?) ?? const [];
+          return list
+              .map((e) => MovieScoreDto.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      return const <MovieScoreDto>[];
+    } on DioException catch (e) {
+      // If unauthorized or any client error, do not break home – return empty list
+      if (e.response?.statusCode == 401) {
+        return const <MovieScoreDto>[];
+      }
+      return const <MovieScoreDto>[];
+    } catch (e) {
+      return const <MovieScoreDto>[];
+    }
+  }
 }

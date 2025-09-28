@@ -58,7 +58,10 @@ Future<void> configureDependencies() async {
 
   // Repositories
   getIt.registerLazySingleton<HomeRepository>(
-    () => HomeRepositoryImpl(getIt<ProjectionsApiService>()),
+    () => HomeRepositoryImpl(
+      getIt<ProjectionsApiService>(),
+      getIt<RecommendationsApiService>(),
+    ),
   );
 
   // Blocs/Cubits

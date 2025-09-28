@@ -1,16 +1,20 @@
 import '../models/projection_model.dart';
 import '../services/projections_api_service.dart';
+import '../../../movies/data/services/recommendations_api_service.dart';
+import '../../../movies/data/models/movie_score_dto.dart';
 
 abstract class HomeRepository {
   Future<List<ProjectionModel>> getTodayProjections();
   Future<List<ProjectionModel>> getUpcomingProjections();
   Future<Map<String, List<ProjectionModel>>> getGroupedProjections();
+  Future<List<MovieScoreDto>> getMyRecommendations();
 }
 
 class HomeRepositoryImpl implements HomeRepository {
   final ProjectionsApiService _apiService;
+  final RecommendationsApiService _recsService;
 
-  HomeRepositoryImpl(this._apiService);
+  HomeRepositoryImpl(this._apiService, this._recsService);
 
   @override
   Future<List<ProjectionModel>> getTodayProjections() async {
@@ -62,6 +66,15 @@ class HomeRepositoryImpl implements HomeRepository {
       }
 
       return groupedProjections;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<MovieScoreDto>> getMyRecommendations() async {
+    try {
+      return await _recsService.getMyRecommendations();
     } catch (e) {
       rethrow;
     }

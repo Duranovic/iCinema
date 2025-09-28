@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/projection_model.dart';
 import '../../data/repositories/home_repository.dart';
 import '../../data/services/projections_api_service.dart';
+import '../../../movies/data/models/movie_score_dto.dart';
 
 // Home State
 abstract class HomeState {
@@ -21,12 +22,14 @@ class HomeLoaded extends HomeState {
   final List<ProjectionModel> todayProjections;
   final List<ProjectionModel> upcomingProjections;
   final Map<String, List<ProjectionModel>> groupedByMovie;
+  final List<MovieScoreDto> recommendations;
 
   const HomeLoaded({
     required this.featuredProjections,
     required this.todayProjections,
     required this.upcomingProjections,
     required this.groupedByMovie,
+    required this.recommendations,
   });
 
   HomeLoaded copyWith({
@@ -34,12 +37,14 @@ class HomeLoaded extends HomeState {
     List<ProjectionModel>? todayProjections,
     List<ProjectionModel>? upcomingProjections,
     Map<String, List<ProjectionModel>>? groupedByMovie,
+    List<MovieScoreDto>? recommendations,
   }) {
     return HomeLoaded(
       featuredProjections: featuredProjections ?? this.featuredProjections,
       todayProjections: todayProjections ?? this.todayProjections,
       upcomingProjections: upcomingProjections ?? this.upcomingProjections,
       groupedByMovie: groupedByMovie ?? this.groupedByMovie,
+      recommendations: recommendations ?? this.recommendations,
     );
   }
 }
@@ -69,11 +74,13 @@ class HomeCubit extends Cubit<HomeState> {
         _repository.getTodayProjections(),
         _repository.getUpcomingProjections(),
         _repository.getGroupedProjections(),
+        _repository.getMyRecommendations(),
       ]);
 
       final todayProjections = results[0] as List<ProjectionModel>;
       final upcomingProjections = results[1] as List<ProjectionModel>;
       final groupedProjections = results[2] as Map<String, List<ProjectionModel>>;
+      final recommendations = results[3] as List<MovieScoreDto>;
 
       // Create featured projections from today's projections
       // Take the first 3 unique movies for the slider
@@ -84,6 +91,7 @@ class HomeCubit extends Cubit<HomeState> {
         todayProjections: todayProjections,
         upcomingProjections: upcomingProjections,
         groupedByMovie: groupedProjections,
+        recommendations: recommendations,
       ));
     } on ProjectionsNotFoundException {
       emit(const HomeError(
@@ -115,11 +123,13 @@ class HomeCubit extends Cubit<HomeState> {
         _repository.getTodayProjections(),
         _repository.getUpcomingProjections(),
         _repository.getGroupedProjections(),
+        _repository.getMyRecommendations(),
       ]);
 
       final todayProjections = results[0] as List<ProjectionModel>;
       final upcomingProjections = results[1] as List<ProjectionModel>;
       final groupedProjections = results[2] as Map<String, List<ProjectionModel>>;
+      final recommendations = results[3] as List<MovieScoreDto>;
 
       final featuredProjections = _createFeaturedProjections(todayProjections, upcomingProjections);
 
@@ -128,6 +138,7 @@ class HomeCubit extends Cubit<HomeState> {
         todayProjections: todayProjections,
         upcomingProjections: upcomingProjections,
         groupedByMovie: groupedProjections,
+        recommendations: recommendations,
       ));
     } catch (e) {
       // If refresh fails, keep the current state and show a snackbar or toast

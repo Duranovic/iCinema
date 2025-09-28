@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/home_cubit.dart';
 import '../../data/models/projection_model.dart';
+import '../../../movies/data/models/movie_score_dto.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,8 +47,8 @@ class _HomePageState extends State<HomePage> {
                         ...state.upcomingProjections,
                       ]),
                       
-                      // Upcoming movies section
-                      _buildUpcomingMovies(state.upcomingProjections),
+                      // Recommended movies section
+                      _buildRecommendations(state.recommendations),
                     ] else
                       _buildEmptyState(),
                   ],
@@ -453,20 +454,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
   
-  Widget _buildUpcomingMovies(List<ProjectionModel> upcomingProjections) {
-    if (upcomingProjections.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Group upcoming projections by movie
-    final Map<String, List<ProjectionModel>> groupedByMovie = {};
-    for (final projection in upcomingProjections) {
-      if (groupedByMovie.containsKey(projection.movieTitle)) {
-        groupedByMovie[projection.movieTitle]!.add(projection);
-      } else {
-        groupedByMovie[projection.movieTitle] = [projection];
-      }
-    }
+  Widget _buildRecommendations(List<MovieScoreDto> items) {
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -477,24 +466,13 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Uskoro u kinu',
+                'Preporučeni filmovi',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to upcoming movies
-                },
-                child: Text(
-                  'Pogledaj više',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              // Optional: link to full recommendations screen in future
             ],
           ),
           const SizedBox(height: 12),
@@ -507,13 +485,14 @@ class _HomePageState extends State<HomePage> {
               mainAxisSpacing: 12,
               childAspectRatio: 0.7,
             ),
-            itemCount: groupedByMovie.length > 4 ? 4 : groupedByMovie.length,
+            itemCount: items.length > 4 ? 4 : items.length,
             itemBuilder: (context, index) {
-              final movieTitle = groupedByMovie.keys.elementAt(index);
-              final projections = groupedByMovie[movieTitle]!;
-              final firstProjection = projections.first;
+              final item = items[index];
               return GestureDetector(
-                onTap: () => _navigateToMovieDetails(movieTitle, projections),
+                onTap: () {
+                  final id = Uri.encodeComponent(item.movieId);
+                  context.push('/movie-details/$id');
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
@@ -528,65 +507,74 @@ class _HomePageState extends State<HomePage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
-                          child: Center(
-                            child: Text(
-                              movieTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        color: Theme.of(context).colorScheme.surface,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              movieTitle,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.calendar_today,
-                                  size: 14,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    _formatDate(firstProjection.startTime),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w500,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: item.posterUrl != null && item.posterUrl!.isNotEmpty
+                                ? Image.network(
+                                    item.posterUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, s) => Container(
+                                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                                      child: Center(
+                                        child: Text(
+                                          item.title,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                                    child: Center(
+                                      child: Text(
+                                        item.title,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          color: Theme.of(context).colorScheme.surface,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _secondaryText(item.genres, item.director),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -690,6 +678,16 @@ class _HomePageState extends State<HomePage> {
     } else {
       return '${dateTime.day}.${dateTime.month}.${dateTime.year}';
     }
+  }
+
+  String _secondaryText(List<String> genres, String? director) {
+    final genre = genres.isNotEmpty ? genres.first : '';
+    final hasDirector = director != null && director.isNotEmpty;
+    if (genre.isNotEmpty && hasDirector) {
+      return '$genre • $director';
+    }
+    if (genre.isNotEmpty) return genre;
+    return hasDirector ? director! : '';
   }
 
   // Navigation methods
