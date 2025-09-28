@@ -42,6 +42,17 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     });
   }
 
+  @override
+  void didUpdateWidget(covariant MovieDetailsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If movieId or incoming projections changed, reset selection
+    if (oldWidget.movieId != widget.movieId || oldWidget.projections != widget.projections) {
+      selectedDate = null;
+      _windowIndex = 0;
+      _initializeSelectedDate(widget.projections);
+    }
+  }
+
   Widget _buildSimilarCard(MovieScoreDto item, {required double width}) {
     return GestureDetector(
       onTap: () {
@@ -106,11 +117,34 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               return _buildErrorState(state.message);
             } else if (state is MovieDetailsLoaded) {
               final projections = state.projections;
-              // Ensure selected date is initialized when data arrives (e.g., from Search)
-              if (selectedDate == null && projections.isNotEmpty) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _initializeSelectedDate(projections));
-                });
+              // Ensure selected date is valid: prefer earliest future date; fallback to earliest overall
+              if (projections.isNotEmpty) {
+                final groups = _groupProjectionsByDate(projections);
+                final sortedDates = groups.keys.toList()..sort();
+                DateTime? earliestFuture;
+                final today = DateTime.now();
+                for (final d in sortedDates) {
+                  if (!d.isBefore(DateTime(today.year, today.month, today.day))) {
+                    earliestFuture = d;
+                    break;
+                  }
+                }
+                final preferred = earliestFuture ?? sortedDates.first;
+                final selectedKey = selectedDate == null
+                    ? null
+                    : DateTime(selectedDate!.year, selectedDate!.month, selectedDate!.day);
+                if (selectedKey == null || !groups.containsKey(selectedKey)) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) setState(() => selectedDate = preferred);
+                  });
+                }
+              } else {
+                // No projections at all for this movie
+                if (selectedDate != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) setState(() => selectedDate = null);
+                  });
+                }
               }
 
               return SafeArea(
@@ -323,11 +357,20 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
       // Group projections by date
       final dateGroups = _groupProjectionsByDate(projections);
       final sortedDates = dateGroups.keys.toList()..sort();
-      
-      // Select the first available date
-      if (sortedDates.isNotEmpty) {
-        selectedDate = sortedDates.first;
+      if (sortedDates.isEmpty) return;
+      // Prefer earliest future date, else earliest overall
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      DateTime? pick;
+      for (final d in sortedDates) {
+        if (!d.isBefore(today)) {
+          pick = d;
+          break;
+        }
       }
+      selectedDate = pick ?? sortedDates.first;
+    } else {
+      selectedDate = null;
     }
   }
 
@@ -512,7 +555,16 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     }
 
     // Ensure selected date is one of available and visible
-    selectedDate ??= availableDates.first;
+    if (selectedDate == null) {
+      // Prefer earliest future, fallback to first
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      DateTime? future;
+      for (final d in availableDates) {
+        if (!d.isBefore(today)) { future = d; break; }
+      }
+      selectedDate = future ?? availableDates.first;
+    }
 
     // Build snapping windows of up to 5 dates each
     const cardsPerWindow = 5;
@@ -709,6 +761,34 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           return const SizedBox.shrink();
         }
         final projections = state.projections;
+        if (projections.isEmpty) {
+          // No projections at all for this movie
+          return SafeArea(
+            minimum: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.movie_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Trenutno nema dostupnih projekcija za ovaj film.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          );
+        }
         final dateGroups = _groupProjectionsByDate(projections);
         final currentDate = selectedDate;
         final list = currentDate != null ? (dateGroups[currentDate] ?? []) : <ProjectionModel>[];
