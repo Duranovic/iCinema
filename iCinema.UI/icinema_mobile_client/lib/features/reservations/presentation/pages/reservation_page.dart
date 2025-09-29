@@ -8,6 +8,7 @@ import '../bloc/seat_map_cubit.dart';
 import '../bloc/seat_map_state.dart';
 import '../details/reservation_details_state.dart';
 import '../../../../app/router/app_router.dart' show routeObserver; // for RouteAware reload
+import '../../../../app/config/url_utils.dart';
 
 class ReservationPage extends StatefulWidget {
   const ReservationPage({super.key, required this.projectionId});
@@ -172,7 +173,7 @@ class _Header extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              projection.posterUrl!,
+              resolveImageUrl(projection.posterUrl)!,
               width: 72,
               height: 100,
               fit: BoxFit.cover,

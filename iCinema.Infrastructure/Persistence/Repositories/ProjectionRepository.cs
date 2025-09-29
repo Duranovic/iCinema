@@ -38,7 +38,12 @@ public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IPro
 
     protected override IQueryable<Projection> AddInclude(IQueryable<Projection> query)
     {
-        return query.Include(p => p.Hall).ThenInclude(h => h.Cinema);
+        return query
+            .Include(p => p.Hall)
+                .ThenInclude(h => h.Cinema)
+            .Include(p => p.Movie)
+                .ThenInclude(m => m.MovieGenres)
+                .ThenInclude(mg => mg.Genre);
     }
 
     protected override string GetActualSortProperty(string requestedProperty)

@@ -1,13 +1,31 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/router/app_router.dart';
 import 'app/di/injection.dart';
+import 'app/config/app_config.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/auth/presentation/bloc/reservations_cubit.dart';
 
+class DevHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final client = super.createHttpClient(context);
+    client.badCertificateCallback = (cert, host, port) {
+      // Trust local dev servers
+      if (host == 'localhost' || host == '127.0.0.1') return true;
+      return false;
+    };
+    return client;
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (AppConfig.allowInsecureCertificates) {
+    HttpOverrides.global = DevHttpOverrides();
+  }
   await configureDependencies();
   runApp(const MyApp());
 }

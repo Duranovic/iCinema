@@ -5,6 +5,7 @@ class MovieModel {
   final int? duration; // in minutes
   final String description;
   final List<String> genres;
+  final String? posterUrl;
 
   const MovieModel({
     required this.id,
@@ -13,6 +14,7 @@ class MovieModel {
     this.duration,
     required this.description,
     required this.genres,
+    this.posterUrl,
   });
 
   factory MovieModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,7 @@ class MovieModel {
       genres: json['genres'] != null 
           ? (json['genres'] as List<dynamic>).cast<String>()
           : <String>[],
+      posterUrl: json['posterUrl'] as String?,
     );
   }
 
@@ -38,6 +41,7 @@ class MovieModel {
       'duration': duration,
       'description': description,
       'genres': genres,
+      'posterUrl': posterUrl,
     };
   }
 
@@ -51,7 +55,8 @@ class MovieModel {
         other.duration == duration &&
         other.description == description &&
         other.genres.length == genres.length &&
-        other.genres.every((genre) => genres.contains(genre));
+        other.genres.every((genre) => genres.contains(genre)) &&
+        other.posterUrl == posterUrl;
   }
 
   @override
@@ -63,12 +68,13 @@ class MovieModel {
       duration,
       description,
       Object.hashAll(genres),
+      posterUrl,
     );
   }
 
   @override
   String toString() {
-    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres)';
+    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres, posterUrl: $posterUrl)';
   }
 
   /// Get formatted duration string (e.g., "2h 30min")

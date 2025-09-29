@@ -5,6 +5,7 @@ import 'dart:async' show unawaited;
 import '../../../../app/di/injection.dart';
 import '../../../../app/services/auth_service.dart';
 import '../../../../app/router/app_router.dart' show routeObserver; // for RouteAware refresh
+import '../../../../app/config/url_utils.dart';
 import '../../data/reservations_refresh_bus.dart';
 import '../../data/services/auth_api_service.dart';
 import '../../data/models/user_me.dart';
@@ -269,7 +270,7 @@ class _ReservationsTabState extends State<_ReservationsTab> with RouteAware {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.network(
-                                r.posterUrl!,
+                                resolveImageUrl(r.posterUrl)!,
                                 width: 56,
                                 height: 80,
                                 fit: BoxFit.cover,

@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:get_it/get_it.dart';
 import 'dart:async';
+import '../../../../app/config/url_utils.dart';
 import '../../data/models/ticket_dto.dart';
 import '../../data/services/reservation_api_service.dart';
 import 'reservation_details_cubit.dart';
@@ -77,7 +78,7 @@ class _Header extends StatelessWidget {
         if (h.posterUrl != null && h.posterUrl!.isNotEmpty)
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(h.posterUrl!, width: 80, height: 110, fit: BoxFit.cover),
+            child: Image.network(resolveImageUrl(h.posterUrl)!, width: 80, height: 110, fit: BoxFit.cover),
           )
         else
           Container(

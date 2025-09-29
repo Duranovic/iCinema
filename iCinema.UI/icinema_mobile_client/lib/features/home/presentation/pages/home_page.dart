@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/home_cubit.dart';
 import '../../data/models/projection_model.dart';
 import '../../../movies/data/models/movie_score_dto.dart';
+import '../../../../app/config/url_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -171,16 +172,72 @@ class _HomePageState extends State<HomePage> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Movie poster background
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                                Theme.of(context).colorScheme.primary,
-                              ],
+                        // Movie poster background (with fallback gradient)
+                        Builder(builder: (context) {
+                          final poster = projection.movie?.posterUrl;
+                          if (poster != null && poster.isNotEmpty) {
+                            return Image.network(
+                              resolveImageUrl(poster)!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                                      Theme.of(context).colorScheme.primary,
+                                    ],
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    projection.movieTitle,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                                  Theme.of(context).colorScheme.primary,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                projection.movieTitle,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        // Readability overlay
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.55),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -392,22 +449,37 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.8),
-                                    child: Center(
-                                      child: Text(
-                                        movieTitle,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
+                                  child: Builder(builder: (context) {
+                                    final poster = firstProjection.movie?.posterUrl;
+                                    if (poster != null && poster.isNotEmpty) {
+                                      return Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          Image.network(
+                                            resolveImageUrl(poster)!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (c, e, s) => _repertoireFallback(context, movieTitle),
+                                          ),
+                                          // subtle overlay for text readability if needed in future
+                                          Positioned.fill(
+                                            child: DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                  colors: [
+                                                    Colors.transparent,
+                                                    Colors.black.withOpacity(0.20),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }
+                                    return _repertoireFallback(context, movieTitle);
+                                  }),
                                 ),
                               ),
                             ),
@@ -527,7 +599,7 @@ class _HomePageState extends State<HomePage> {
                             width: double.infinity,
                             child: item.posterUrl != null && item.posterUrl!.isNotEmpty
                                 ? Image.network(
-                                    item.posterUrl!,
+                                    resolveImageUrl(item.posterUrl)!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (c, e, s) => Container(
                                       color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
@@ -701,6 +773,31 @@ class _HomePageState extends State<HomePage> {
     }
     if (genre.isNotEmpty) return genre;
     return hasDirector ? director! : '';
+  }
+
+  Widget _repertoireFallback(BuildContext context, String title) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
   }
 
   // Navigation methods

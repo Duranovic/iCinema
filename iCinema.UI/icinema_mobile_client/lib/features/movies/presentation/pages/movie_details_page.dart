@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/di/injection.dart';
+import '../../../../app/config/url_utils.dart';
 import '../bloc/similar_movies_cubit.dart';
 import '../../data/services/recommendations_api_service.dart';
 import '../../data/models/movie_score_dto.dart';
@@ -70,7 +71,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                 borderRadius: BorderRadius.circular(12),
                 child: item.posterUrl != null && item.posterUrl!.isNotEmpty
                     ? Image.network(
-                        item.posterUrl!,
+                        resolveImageUrl(item.posterUrl)!,
                         fit: BoxFit.cover,
                         errorBuilder: (c, e, s) => _similarPosterPlaceholder(),
                       )
@@ -406,42 +407,32 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   }
 
   Widget _buildHeroImageSection(MovieModel movie) {
-    // ... rest of your code ...
-    // Since MovieModel currently doesn't have an image URL, we use a beautiful
-    // gradient placeholder that spans full width. If/when an image URL is added,
-    // replace the Container child with an Image.network.
+    final url = movie.posterUrl;
+    final hasPoster = url != null && url.isNotEmpty;
     return Stack(
       children: [
-        Container(
+        SizedBox(
           width: double.infinity,
           height: 260,
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.primary.withOpacity(0.9),
-                Theme.of(context).colorScheme.primary,
-              ],
-            ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
-                movie.title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+          child: hasPoster
+              ? Image.network(
+                  resolveImageUrl(url)!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => _heroGradientTitle(movie.title),
+                )
+              : _heroGradientTitle(movie.title),
+        ),
+        // Gradient overlay for readability
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.0),
+                  Colors.black.withOpacity(0.45),
+                ],
               ),
             ),
           ),
@@ -463,6 +454,37 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _heroGradientTitle(String title) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
     );
   }
 
