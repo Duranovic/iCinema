@@ -6,6 +6,7 @@ using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger(); // Enables Swagger middleware to serve OpenAPI JSON
     app.UseSwaggerUI(); // Enables Swagger UI for interactive documentation
 }
+
+// Static files for uploaded media
+var rootPath = builder.Configuration["FileStorage:RootPath"] ?? "uploads";
+var baseUrlPath = builder.Configuration["FileStorage:BaseUrlPath"] ?? "/media";
+if (!Path.IsPathRooted(rootPath))
+{
+    rootPath = Path.Combine(Directory.GetCurrentDirectory(), rootPath);
+}
+Directory.CreateDirectory(rootPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(rootPath),
+    RequestPath = baseUrlPath
+});
 
 app.UseHttpsRedirection();
 

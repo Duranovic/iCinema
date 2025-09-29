@@ -5,8 +5,10 @@ class Movie {
   final int? duration;
   final DateTime? releaseDate;
   final List<String> genres;
+  final String? posterUrl;
+  final String? posterBase64;
 
-  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id});
+  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id, this.posterUrl, this.posterBase64});
 
   // For easy API conversion:
   factory Movie.fromJson(dynamic json) => Movie(
@@ -15,6 +17,8 @@ class Movie {
     releaseDate: json['releaseDate'] != null ? DateTime.parse(json['releaseDate']) : null,
     description: json['description'] as String,
     duration: json['duration'],
+    posterUrl: json['posterUrl'] as String?,
+    posterBase64: json['posterBase64'] as String?,
     // Normalize genres to a list of IDs. If API returns objects, pick 'id'; if strings, keep as-is.
     genres: ((json['genres'] as List<dynamic>?) ?? const [])
         .map((g) {
@@ -37,6 +41,8 @@ class Movie {
     'releaseDate': releaseDate?.toIso8601String().split('T').first, // Only the date!,
     'description': description,
     'duration': duration,
-    'genreIds': genres
+    'genreIds': genres,
+    if (posterUrl != null) 'posterUrl': posterUrl,
+    if (posterBase64 != null) 'posterBase64': posterBase64,
   };
 }

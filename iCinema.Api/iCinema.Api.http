@@ -2,9 +2,104 @@
 
 GET {{Api_HostAddress}}/Movies/
 Accept: application/json
+
 ###
 GET {{Api_HostAddress}}/Countries
 
 ###
 GET {{Api_HostAddress}}/Genres
- 
+
+###
+# Test 1: Create Movie with JSON only (traditional approach)
+POST {{Api_HostAddress}}/Movies
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "title": "Test Movie JSON",
+  "description": "Test movie created with JSON only",
+  "releaseDate": "2024-01-15T00:00:00Z",
+  "duration": 120,
+  "genreIds": []
+}
+
+###
+# Test 2: Create Movie with Multipart Form (JSON + Poster)
+POST {{Api_HostAddress}}/Movies
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "title": "Test Movie with Poster",
+  "description": "Test movie created with multipart form including poster",
+  "releaseDate": "2024-01-15T00:00:00Z",
+  "duration": 135,
+  "genreIds": []
+}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="poster"; filename="test-poster.jpg"
+Content-Type: image/jpeg
+
+< ./test-poster.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+# Test 3: Update Movie with JSON only
+PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "title": "Updated Test Movie JSON",
+  "description": "Updated movie description via JSON",
+  "releaseDate": "2024-01-20T00:00:00Z",
+  "duration": 125,
+  "genreIds": []
+}
+
+###
+# Test 4: Update Movie with Multipart Form (JSON + New Poster)
+PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "title": "Updated Test Movie with New Poster",
+  "description": "Updated movie with new poster via multipart form",
+  "releaseDate": "2024-01-25T00:00:00Z",
+  "duration": 140,
+  "genreIds": []
+}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="poster"; filename="updated-poster.jpg"
+Content-Type: image/jpeg
+
+< ./updated-poster.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+# Test 5: Update Movie with Multipart Form (JSON only, no poster)
+PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "title": "Updated Movie Data Only",
+  "description": "Updated movie data without changing poster",
+  "releaseDate": "2024-01-30T00:00:00Z",
+  "duration": 115,
+  "genreIds": []
+}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

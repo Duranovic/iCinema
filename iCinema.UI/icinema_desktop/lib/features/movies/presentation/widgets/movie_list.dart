@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:icinema_desktop/widgets/heading.dart';
 import '../../domain/movie.dart';
+import 'package:get_it/get_it.dart';
+import 'package:dio/dio.dart';
 
 class MovieList extends StatefulWidget {
   final List<Movie> movies;
@@ -164,6 +166,7 @@ class _MovieListState extends State<MovieList> {
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      leading: _PosterThumb(url: filteredMovies[idx].posterUrl),
                       title: Text(
                         filteredMovies[idx].title,
                         style: textTheme.titleMedium?.copyWith(
@@ -231,6 +234,73 @@ class _MovieListState extends State<MovieList> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _PosterThumb extends StatelessWidget {
+  final String? url;
+  const _PosterThumb({this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const double w = 56; // compact thumbnail
+    const double h = 80; // ~1.42 ratio
+
+    Widget placeholder = Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: cs.surfaceVariant.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      alignment: Alignment.center,
+      child: Icon(Icons.image_outlined, color: cs.onSurface.withOpacity(0.5)),
+    );
+
+    if (url == null || url!.isEmpty) return placeholder;
+
+    // Build absolute URL using Dio baseUrl if needed
+    String buildAbsoluteUrl(String input) {
+      if (input.startsWith('http://') || input.startsWith('https://')) return input;
+      try {
+        if (GetIt.I.isRegistered<Dio>()) {
+          final base = GetIt.I<Dio>().options.baseUrl;
+          if (base.isNotEmpty) {
+            return Uri.parse(base).resolve(input.startsWith('/') ? input.substring(1) : input).toString();
+          }
+        }
+      } catch (_) {}
+      return input; // fallback
+    }
+
+    final resolvedUrl = buildAbsoluteUrl(url!);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        resolvedUrl,
+        width: w,
+        height: h,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => placeholder,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return Container(
+            width: w,
+            height: h,
+            color: cs.surfaceVariant.withOpacity(0.3),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+      ),
     );
   }
 }

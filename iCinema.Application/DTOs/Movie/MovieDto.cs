@@ -9,4 +9,5 @@ public class MovieDto
     public int? Duration { get; set; }
     public string Description { get; set; } = string.Empty;
     public List<string> Genres { get; set; } = [];
+    public string? PosterUrl { get; set; }
 }

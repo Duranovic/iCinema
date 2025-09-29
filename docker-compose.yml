@@ -16,3 +16,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: iCinema.Api/Dockerfile
+    container_name: icinema-api
+    restart: unless-stopped
+    ports:
+      - "5218:8080"      # API port
+    volumes:
+      - ./uploads:/app/uploads  # Persist uploaded files
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=iCinemaDb;Trusted_Connection=true;
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

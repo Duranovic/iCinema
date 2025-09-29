@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../../domain/movie.dart';
 
 class MovieEditForm extends StatefulWidget {
   final Movie? movie; // null if adding
   final List<dynamic> genres;
   final VoidCallback onClose;
-  final void Function(Movie) onSave;
+  final void Function(Movie, String?, String?) onSave;
 
   const MovieEditForm({
     super.key,
@@ -26,6 +30,9 @@ class _MovieEditFormState extends State<MovieEditForm> {
   late final TextEditingController _dateReleaseCtrl;
   late final TextEditingController _descriptionCtrl;
   late final TextEditingController _durationCtrl;
+  String? _posterPath;
+  String? _posterMime;
+  bool _isDragOver = false;
 
   @override
   void initState() {
@@ -91,7 +98,91 @@ class _MovieEditFormState extends State<MovieEditForm> {
           duration: int.tryParse(_durationCtrl.text) ?? 0,
           genres: selectedIds.toList(),
         ),
+        _posterPath,
+        _posterMime,
       );
+    }
+  }
+
+  void _handleDroppedFiles(List<String> paths) {
+    if (paths.isEmpty) return;
+    
+    final path = paths.first;
+    final mime = lookupMimeType(path);
+    const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+    
+    if (mime == null || !allowed.contains(mime)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nepodržan format slike. Dozvoljeno: JPG, PNG, WEBP.')),
+        );
+      }
+      return;
+    }
+    
+    setState(() {
+      _posterPath = path;
+      _posterMime = mime;
+    });
+    
+    if (mounted) {
+      final fileName = path.split('/').last;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Odabrano: $fileName')),
+      );
+    }
+  }
+
+  Future<void> _pickPosterClick() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+        dialogTitle: 'Odaberite poster',
+      );
+      
+      if (result == null || result.files.isEmpty) return;
+      
+      final file = result.files.first;
+      final path = file.path;
+      
+      if (path == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Greška: Putanja do datoteke nije dostupna')),
+          );
+        }
+        return;
+      }
+
+      final mime = lookupMimeType(path);
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      
+      if (mime == null || !allowed.contains(mime)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nepodržan format slike. Dozvoljeno: JPG, PNG, WEBP.')),
+          );
+        }
+        return;
+      }
+      
+      setState(() {
+        _posterPath = path;
+        _posterMime = mime;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Odabrano: ${file.name}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Greška pri otvaranju dijaloga: $e')),
+        );
+      }
     }
   }
 
@@ -211,6 +302,90 @@ class _MovieEditFormState extends State<MovieEditForm> {
                             ],
                           ),
                           const SizedBox(height: 12),
+
+                          // Poster drag-and-drop UI
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Poster (opcionalno)',
+                                  style: Theme.of(context).textTheme.labelMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                DropTarget(
+                                  onDragDone: (details) {
+                                    _handleDroppedFiles(details.files.map((f) => f.path).toList());
+                                  },
+                                  onDragEntered: (details) {
+                                    setState(() {
+                                      _isDragOver = true;
+                                    });
+                                  },
+                                  onDragExited: (details) {
+                                    setState(() {
+                                      _isDragOver = false;
+                                    });
+                                  },
+                                  child: GestureDetector(
+                                    onTap: _pickPosterClick,
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: _isDragOver 
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).colorScheme.outline,
+                                          width: _isDragOver ? 2 : 1,
+                                          style: BorderStyle.solid,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        color: _isDragOver 
+                                            ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                                            : Theme.of(context).colorScheme.surface,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            _posterPath != null ? Icons.check_circle : Icons.cloud_upload_outlined,
+                                            size: 32,
+                                            color: _posterPath != null 
+                                                ? Theme.of(context).colorScheme.primary
+                                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            _posterPath != null
+                                                ? _posterPath!.split('/').last
+                                                : 'Povucite sliku ovdje ili kliknite',
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              color: _posterPath != null 
+                                                  ? Theme.of(context).colorScheme.primary
+                                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Dozvoljeni formati: JPG, PNG, WEBP',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(color: Theme.of(context).hintColor),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Column(

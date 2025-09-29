@@ -120,11 +120,15 @@ class _MoviesPageState extends State<MoviesPage> {
                         movie: editingIndex != null ? movies[editingIndex!] : null,
                         genres: state.genres,
                         onClose: closePanel,
-                        onSave: (movie) {
+                        onSave: (movie, posterPath, mimeType) {
                           if (isAdding) {
-                            context.read<MoviesBloc>().add(AddMovie(movie));
+                            context
+                                .read<MoviesBloc>()
+                                .add(AddMovie(movie, posterPath: posterPath, mimeType: mimeType));
                           } else {
-                            context.read<MoviesBloc>().add(UpdateMovie(movie));
+                            context
+                                .read<MoviesBloc>()
+                                .add(UpdateMovie(movie, posterPath: posterPath, mimeType: mimeType));
                           }
                           closePanel();
                         },

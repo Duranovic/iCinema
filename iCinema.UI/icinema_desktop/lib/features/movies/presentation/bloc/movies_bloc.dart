@@ -32,7 +32,11 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
       if (state is MoviesLoaded) {
         emit(MoviesLoading());
         try {
-          await movieService.addMovie(event.movie);
+          await movieService.addMovie(
+            event.movie,
+            posterPath: event.posterPath,
+            mimeType: event.mimeType,
+          );
           add(LoadMovies()); // reload after add
         } catch (e) {
           emit(MoviesError('Failed to add movie'));
@@ -44,7 +48,11 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
       if (state is MoviesLoaded) {
         emit(MoviesLoading());
         try {
-          await movieService.updateMovie(event.movie);
+          await movieService.updateMovie(
+            event.movie,
+            posterPath: event.posterPath,
+            mimeType: event.mimeType,
+          );
           add(LoadMovies());
         } catch (e) {
           emit(MoviesError('Failed to update movie'));
