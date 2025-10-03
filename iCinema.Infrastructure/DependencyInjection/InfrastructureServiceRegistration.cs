@@ -59,6 +59,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IGenreRulesService, GenreRulesService>();
         services.AddScoped<ICityRulesService, CityRulesService>();
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
+        services.AddScoped<IMovieRulesService, MovieRulesService>();
         services.AddScoped<IReportsService, ReportsService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();

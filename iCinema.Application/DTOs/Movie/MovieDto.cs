@@ -8,6 +8,7 @@ public class MovieDto
     public DateOnly? ReleaseDate { get; set; }
     public int? Duration { get; set; }
     public string Description { get; set; } = string.Empty;
+    public string? AgeRating { get; set; }
     public List<string> Genres { get; set; } = [];
     public string? PosterUrl { get; set; }
 }

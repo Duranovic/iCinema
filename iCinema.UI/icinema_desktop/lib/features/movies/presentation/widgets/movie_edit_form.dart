@@ -8,6 +8,7 @@ import '../../domain/movie.dart';
 class MovieEditForm extends StatefulWidget {
   final Movie? movie; // null if adding
   final List<dynamic> genres;
+  final List<dynamic> ageRatings; // [{code,label}]
   final VoidCallback onClose;
   final void Function(Movie, String?, String?) onSave;
 
@@ -17,6 +18,7 @@ class MovieEditForm extends StatefulWidget {
     required this.onClose,
     required this.onSave,
     required this.genres,
+    required this.ageRatings,
   });
 
   @override
@@ -33,6 +35,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
   String? _posterPath;
   String? _posterMime;
   bool _isDragOver = false;
+  String? _ageRating;
 
   @override
   void initState() {
@@ -45,6 +48,17 @@ class _MovieEditFormState extends State<MovieEditForm> {
         TextEditingController(text: widget.movie?.description.toString() ?? '');
     _durationCtrl =
         TextEditingController(text: widget.movie?.duration?.toString() ?? '');
+    _ageRating = widget.movie?.ageRating;
+    // Ensure selected ageRating exists in provided options
+    final allowedCodes = widget.ageRatings
+        .whereType<Map>()
+        .map((e) => e.cast<String, dynamic>())
+        .where((e) => e['code'] is String)
+        .map((e) => e['code'] as String)
+        .toSet();
+    if (_ageRating != null && !allowedCodes.contains(_ageRating)) {
+      _ageRating = null;
+    }
     // Initialize a mutable set of selected genre IDs; prefill when editing.
     // Normalize any stored names to their IDs using provided widget.genres.
     final provided = widget.genres
@@ -97,6 +111,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
           description: _descriptionCtrl.text.trim(),
           duration: int.tryParse(_durationCtrl.text) ?? 0,
           genres: selectedIds.toList(),
+          ageRating: _ageRating,
         ),
         _posterPath,
         _posterMime,
@@ -248,6 +263,26 @@ class _MovieEditFormState extends State<MovieEditForm> {
                             validator: (v) => v == null || v.isEmpty
                                 ? 'Unesite naziv filma.'
                                 : null,
+                          ),
+                          const SizedBox(height: 12),
+                          // Age Rating dropdown
+                          DropdownButtonFormField<String>(
+                            value: _ageRating,
+                            items: widget.ageRatings
+                                .whereType<Map>()
+                                .map((e) => e.cast<String, dynamic>())
+                                .where((e) => e['code'] is String && e['label'] is String)
+                                .map((e) => DropdownMenuItem<String>(
+                                      value: e['code'] as String,
+                                      child: Text(e['label'] as String, overflow: TextOverflow.ellipsis),
+                                    ))
+                                .toList(),
+                            onChanged: (val) => setState(() => _ageRating = val),
+                            decoration: const InputDecoration(
+                              labelText: 'Dobna preporuka',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty) ? 'Odaberite dobnu preporuku.' : null,
                           ),
                           const SizedBox(height: 12),
 

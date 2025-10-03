@@ -9,7 +9,8 @@ class MoviesLoading extends MoviesState {}
 class MoviesLoaded extends MoviesState {
   final List<Movie> movies;
   final List<dynamic> genres;
-  MoviesLoaded(this.movies, this.genres);
+  final List<dynamic> ageRatings; // [{code,label}]
+  MoviesLoaded(this.movies, this.genres, this.ageRatings);
 }
 
 class MoviesError extends MoviesState {

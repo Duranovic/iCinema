@@ -17,12 +17,14 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
         final results = await Future.wait([
           movieService.fetchMovies(),
           movieService.fetchGenres(),
+          movieService.fetchAgeRatings(),
         ]);
 
         final movies = results[0] as List<Movie>;
         final genres = results[1];
+        final ageRatings = results[2];
 
-        emit(MoviesLoaded(movies, genres));
+        emit(MoviesLoaded(movies, genres, ageRatings));
       } catch (e) {
         emit(MoviesError('Failed to load movies: $e'));
       }

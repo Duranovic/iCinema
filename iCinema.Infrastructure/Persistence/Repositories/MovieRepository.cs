@@ -11,12 +11,13 @@ using System.IO;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper), IMovieRepository
+public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService, IMovieRulesService movieRulesService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper), IMovieRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IMapper _mapper = mapper;
     private readonly IProjectionRulesService _projectionRulesService = projectionRulesService;
     private readonly IFileStorageService _fileStorageService = fileStorageService;
+    private readonly IMovieRulesService _movieRulesService = movieRulesService;
     protected override string[] SearchableFields => ["Title", "Description"];
     
     protected override IQueryable<Movie> AddInclude(IQueryable<Movie> query)
@@ -51,6 +52,9 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
     {
         // Map basic properties
         var entity = _mapper.Map<Movie>(dto);
+
+        // Validate AgeRating via rules service
+        await _movieRulesService.EnsureValidAgeRating(entity.AgeRating, cancellationToken);
 
         // Update genres
         entity.MovieGenres.Clear();
@@ -88,6 +92,9 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
 
         // Map basic properties
         _mapper.Map(dto, entity);
+
+        // Validate AgeRating via rules service
+        await _movieRulesService.EnsureValidAgeRating(entity.AgeRating, cancellationToken);
 
         // Update genres
         entity.MovieGenres.Clear();

@@ -119,6 +119,7 @@ class _MoviesPageState extends State<MoviesPage> {
                         key: ValueKey('form_${editingIndex}_${isAdding}'),
                         movie: editingIndex != null ? movies[editingIndex!] : null,
                         genres: state.genres,
+                        ageRatings: state.ageRatings,
                         onClose: closePanel,
                         onSave: (movie, posterPath, mimeType) {
                           if (isAdding) {
