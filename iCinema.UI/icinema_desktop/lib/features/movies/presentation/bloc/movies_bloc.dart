@@ -18,13 +18,15 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           movieService.fetchMovies(),
           movieService.fetchGenres(),
           movieService.fetchAgeRatings(),
+          movieService.fetchDirectors(),
         ]);
 
         final movies = results[0] as List<Movie>;
         final genres = results[1];
         final ageRatings = results[2];
+        final directors = results[3];
 
-        emit(MoviesLoaded(movies, genres, ageRatings));
+        emit(MoviesLoaded(movies, genres, ageRatings, directors));
       } catch (e) {
         emit(MoviesError('Failed to load movies: $e'));
       }

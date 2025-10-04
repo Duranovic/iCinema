@@ -50,6 +50,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IHomeKpisRepository, HomeKpisRepository>();
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+        services.AddScoped<IDirectorRepository, DirectorRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
         
@@ -60,6 +61,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICityRulesService, CityRulesService>();
         services.AddScoped<ICinemaRulesService, CinemaRulesService>();
         services.AddScoped<IMovieRulesService, MovieRulesService>();
+        services.AddScoped<IDirectorRulesService, DirectorRulesService>();
         services.AddScoped<IReportsService, ReportsService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();

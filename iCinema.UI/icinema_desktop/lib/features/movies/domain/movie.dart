@@ -8,8 +8,9 @@ class Movie {
   final String? posterUrl;
   final String? posterBase64;
   final String? ageRating; // e.g., G, PG, PG-13, R, NC-17, NR
+  final String? directorId;
 
-  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id, this.posterUrl, this.posterBase64, this.ageRating});
+  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id, this.posterUrl, this.posterBase64, this.ageRating, this.directorId});
 
   // For easy API conversion:
   factory Movie.fromJson(dynamic json) => Movie(
@@ -21,6 +22,7 @@ class Movie {
     posterUrl: json['posterUrl'] as String?,
     posterBase64: json['posterBase64'] as String?,
     ageRating: json['ageRating'] as String?,
+    directorId: json['directorId'] as String?,
     // Normalize genres to a list of IDs. If API returns objects, pick 'id'; if strings, keep as-is.
     genres: ((json['genres'] as List<dynamic>?) ?? const [])
         .map((g) {
@@ -47,5 +49,6 @@ class Movie {
     if (posterUrl != null) 'posterUrl': posterUrl,
     if (posterBase64 != null) 'posterBase64': posterBase64,
     if (ageRating != null) 'ageRating': ageRating,
+    if (directorId != null) 'directorId': directorId,
   };
 }

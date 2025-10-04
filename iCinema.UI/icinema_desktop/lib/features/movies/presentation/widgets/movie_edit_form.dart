@@ -9,6 +9,7 @@ class MovieEditForm extends StatefulWidget {
   final Movie? movie; // null if adding
   final List<dynamic> genres;
   final List<dynamic> ageRatings; // [{code,label}]
+  final List<dynamic> directors; // [{id,fullName}]
   final VoidCallback onClose;
   final void Function(Movie, String?, String?) onSave;
 
@@ -19,6 +20,7 @@ class MovieEditForm extends StatefulWidget {
     required this.onSave,
     required this.genres,
     required this.ageRatings,
+    required this.directors,
   });
 
   @override
@@ -36,6 +38,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
   String? _posterMime;
   bool _isDragOver = false;
   String? _ageRating;
+  String? _directorId;
 
   @override
   void initState() {
@@ -49,6 +52,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
     _durationCtrl =
         TextEditingController(text: widget.movie?.duration?.toString() ?? '');
     _ageRating = widget.movie?.ageRating;
+    _directorId = widget.movie?.directorId;
     // Ensure selected ageRating exists in provided options
     final allowedCodes = widget.ageRatings
         .whereType<Map>()
@@ -112,6 +116,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
           duration: int.tryParse(_durationCtrl.text) ?? 0,
           genres: selectedIds.toList(),
           ageRating: _ageRating,
+          directorId: _directorId,
         ),
         _posterPath,
         _posterMime,
@@ -263,6 +268,88 @@ class _MovieEditFormState extends State<MovieEditForm> {
                             validator: (v) => v == null || v.isEmpty
                                 ? 'Unesite naziv filma.'
                                 : null,
+                          ),
+                          const SizedBox(height: 12),
+                          // Director picker with search
+                          DropdownButtonFormField<String>(
+                            value: _directorId,
+                            isExpanded: true,
+                            items: widget.directors
+                                .whereType<Map>()
+                                .map((e) => e.cast<String, dynamic>())
+                                .where((e) => e['id'] is String && e['fullName'] is String)
+                                .map((e) => DropdownMenuItem<String>(
+                                      value: e['id'] as String,
+                                      child: Text(e['fullName'] as String, overflow: TextOverflow.ellipsis),
+                                    ))
+                                .toList(),
+                            onChanged: (val) => setState(() => _directorId = val),
+                            decoration: InputDecoration(
+                              labelText: 'Režiser',
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                tooltip: 'Pretraga režisera',
+                                icon: const Icon(Icons.search),
+                                onPressed: () async {
+                                  final query = await showDialog<String>(
+                                    context: context,
+                                    builder: (ctx) {
+                                      final ctrl = TextEditingController();
+                                      return AlertDialog(
+                                        title: const Text('Pretraži režisere'),
+                                        content: SizedBox(
+                                          width: 400,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextField(
+                                                controller: ctrl,
+                                                decoration: const InputDecoration(
+                                                  hintText: 'Unesite ime...',
+                                                  prefixIcon: Icon(Icons.search),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              SizedBox(
+                                                height: 300,
+                                                child: StatefulBuilder(
+                                                  builder: (context, setInner) {
+                                                    final q = ctrl.text.toLowerCase();
+                                                    final list = widget.directors
+                                                        .whereType<Map>()
+                                                        .map((e) => e.cast<String, dynamic>())
+                                                        .where((e) => e['id'] is String && e['fullName'] is String)
+                                                        .where((e) => q.isEmpty || (e['fullName'] as String).toLowerCase().contains(q))
+                                                        .toList();
+                                                    ctrl.addListener(() => setInner(() {}));
+                                                    return ListView.builder(
+                                                      itemCount: list.length,
+                                                      itemBuilder: (_, i) => ListTile(
+                                                        title: Text(list[i]['fullName'] as String),
+                                                        onTap: () => Navigator.of(context).pop(list[i]['id'] as String),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(ctx).pop(),
+                                            child: const Text('Zatvori'),
+                                          )
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  if (query != null && query.isNotEmpty) {
+                                    setState(() => _directorId = query);
+                                  }
+                                },
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           // Age Rating dropdown

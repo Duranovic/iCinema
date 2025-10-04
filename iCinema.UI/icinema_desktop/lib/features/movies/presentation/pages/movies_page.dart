@@ -120,6 +120,7 @@ class _MoviesPageState extends State<MoviesPage> {
                         movie: editingIndex != null ? movies[editingIndex!] : null,
                         genres: state.genres,
                         ageRatings: state.ageRatings,
+                        directors: state.directors,
                         onClose: closePanel,
                         onSave: (movie, posterPath, mimeType) {
                           if (isAdding) {

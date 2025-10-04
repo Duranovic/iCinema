@@ -11,7 +11,9 @@ public class MovieProfile : Profile
     {
         CreateMap<Movie, MovieDto>()
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.DurationMin))
-            .ForMember(dest => dest.Genres, opt => opt.MapFrom(src => src.MovieGenres.Select(mg => mg.Genre.Name)));
+            .ForMember(dest => dest.Genres, opt => opt.MapFrom(src => src.MovieGenres.Select(mg => mg.Genre.Name)))
+            .ForMember(dest => dest.DirectorId, opt => opt.MapFrom(src => src.DirectorId))
+            .ForMember(dest => dest.DirectorName, opt => opt.MapFrom(src => src.Director != null ? src.Director.FullName : null));
         CreateMap<MovieDto, Movie>()
             .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration));
         CreateMap<MovieCreateDto, Movie>()

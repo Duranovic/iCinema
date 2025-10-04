@@ -34,6 +34,13 @@ class MovieService {
     return data;
   }
 
+  Future<List<dynamic>> fetchDirectors() async {
+    final res = await _dio.get('/Metadata/directors');
+    // Expecting a plain JSON array: [{"id":"...","fullName":"..."}, ...]
+    final data = res.data as List<dynamic>;
+    return data;
+  }
+
   Future<Movie> addMovie(Movie movie, {String? posterPath, String? mimeType}) async {
     final payload = await _createMovieJsonPayload(movie, posterPath: posterPath, mimeType: mimeType);
     final res = await _dio.post('/movies', data: payload);

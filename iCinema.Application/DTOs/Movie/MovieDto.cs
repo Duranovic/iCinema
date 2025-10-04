@@ -9,6 +9,8 @@ public class MovieDto
     public int? Duration { get; set; }
     public string Description { get; set; } = string.Empty;
     public string? AgeRating { get; set; }
+    public Guid? DirectorId { get; set; }
+    public string? DirectorName { get; set; }
     public List<string> Genres { get; set; } = [];
     public string? PosterUrl { get; set; }
 }
