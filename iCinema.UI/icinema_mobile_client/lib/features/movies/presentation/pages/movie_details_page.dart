@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/di/injection.dart';
 import '../../../../app/config/url_utils.dart';
+import '../../../../app/services/auth_service.dart';
 import '../bloc/similar_movies_cubit.dart';
 import '../../data/services/recommendations_api_service.dart';
 import '../../data/models/movie_score_dto.dart';
@@ -40,6 +41,11 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     // Load movie details when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MovieDetailsCubit>().loadMovieDetails(widget.movieId, widget.projections);
+      // Load my rating if authenticated
+      final auth = getIt<AuthService>().authState;
+      if (auth.isAuthenticated) {
+        context.read<MovieDetailsCubit>().loadMyRating(widget.movieId);
+      }
     });
   }
 
@@ -503,6 +509,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           ),
           const SizedBox(height: 8),
           _buildMovieStats(movie),
+          const SizedBox(height: 12),
+          _buildRatingsSection(movie),
           const SizedBox(height: 16),
           Text(
             movie.description,
@@ -514,6 +522,82 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRatingsSection(MovieModel movie) {
+    final state = context.watch<MovieDetailsCubit>().state;
+    double? myRating;
+    bool canRate = false;
+    if (state is MovieDetailsLoaded) {
+      myRating = state.myRating;
+      canRate = state.canRate;
+    }
+    final avg = movie.averageRating ?? 0.0;
+    final count = movie.ratingsCount ?? 0;
+
+    // If user cannot rate and has no existing rating, hide the whole section
+    if (!canRate && (myRating == null || myRating == 0)) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Average rating row
+        Row(
+          children: [
+            const Icon(Icons.star, color: Colors.amber, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              avg > 0 ? avg.toStringAsFixed(1) : 'N/A',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 8),
+            Text('(${count.toString()} ocjena${count == 1 ? '' : ''})',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // My rating row
+        Text(
+          'Moja ocjena',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: List.generate(5, (i) {
+            final starIndex = i + 1;
+            final filled = (myRating ?? 0).round() >= starIndex;
+            final color = canRate ? Colors.amber : Theme.of(context).disabledColor;
+            return IconButton(
+              tooltip: '$starIndex',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Icon(
+                filled ? Icons.star_rounded : Icons.star_border_rounded,
+                color: color,
+              ),
+              onPressed: () {
+                final auth = getIt<AuthService>().authState;
+                if (!auth.isAuthenticated) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prijavite se da ocijenite film.')));
+                  return;
+                }
+                if (!canRate) return; // read-only when not allowed
+                context.read<MovieDetailsCubit>().saveMyRating(
+                      movieId: movie.id,
+                      rating: starIndex.toDouble(),
+                    );
+              },
+            );
+          }),
+        ),
+      ],
     );
   }
 

@@ -11,6 +11,8 @@ public class MovieDto
     public string? AgeRating { get; set; }
     public Guid? DirectorId { get; set; }
     public string? DirectorName { get; set; }
+    public double? AverageRating { get; set; }
+    public int RatingsCount { get; set; }
     public List<string> Genres { get; set; } = [];
     public string? PosterUrl { get; set; }
 }

@@ -6,6 +6,8 @@ class MovieModel {
   final String description;
   final List<String> genres;
   final String? posterUrl;
+  final double? averageRating; // 0-5
+  final int? ratingsCount;
 
   const MovieModel({
     required this.id,
@@ -15,6 +17,8 @@ class MovieModel {
     required this.description,
     required this.genres,
     this.posterUrl,
+    this.averageRating,
+    this.ratingsCount,
   });
 
   factory MovieModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,18 @@ class MovieModel {
           ? (json['genres'] as List<dynamic>).cast<String>()
           : <String>[],
       posterUrl: json['posterUrl'] as String?,
+      averageRating: () {
+        final v = (json['averageRating']);
+        if (v == null) return null;
+        if (v is num) return v.toDouble();
+        return double.tryParse(v.toString());
+      }(),
+      ratingsCount: () {
+        final v = (json['ratingsCount']);
+        if (v == null) return null;
+        if (v is num) return v.toInt();
+        return int.tryParse(v.toString());
+      }(),
     );
   }
 
@@ -42,6 +58,8 @@ class MovieModel {
       'description': description,
       'genres': genres,
       'posterUrl': posterUrl,
+      'averageRating': averageRating,
+      'ratingsCount': ratingsCount,
     };
   }
 
@@ -56,7 +74,9 @@ class MovieModel {
         other.description == description &&
         other.genres.length == genres.length &&
         other.genres.every((genre) => genres.contains(genre)) &&
-        other.posterUrl == posterUrl;
+        other.posterUrl == posterUrl &&
+        other.averageRating == averageRating &&
+        other.ratingsCount == ratingsCount;
   }
 
   @override
@@ -69,12 +89,38 @@ class MovieModel {
       description,
       Object.hashAll(genres),
       posterUrl,
+      averageRating,
+      ratingsCount,
     );
   }
 
   @override
   String toString() {
-    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres, posterUrl: $posterUrl)';
+    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres, posterUrl: $posterUrl, averageRating: $averageRating, ratingsCount: $ratingsCount)';
+  }
+
+  MovieModel copyWith({
+    String? id,
+    String? title,
+    DateTime? releaseDate,
+    int? duration,
+    String? description,
+    List<String>? genres,
+    String? posterUrl,
+    double? averageRating,
+    int? ratingsCount,
+  }) {
+    return MovieModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      releaseDate: releaseDate ?? this.releaseDate,
+      duration: duration ?? this.duration,
+      description: description ?? this.description,
+      genres: genres ?? this.genres,
+      posterUrl: posterUrl ?? this.posterUrl,
+      averageRating: averageRating ?? this.averageRating,
+      ratingsCount: ratingsCount ?? this.ratingsCount,
+    );
   }
 
   /// Get formatted duration string (e.g., "2h 30min")

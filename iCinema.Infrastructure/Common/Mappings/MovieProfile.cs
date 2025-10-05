@@ -13,7 +13,9 @@ public class MovieProfile : Profile
             .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.DurationMin))
             .ForMember(dest => dest.Genres, opt => opt.MapFrom(src => src.MovieGenres.Select(mg => mg.Genre.Name)))
             .ForMember(dest => dest.DirectorId, opt => opt.MapFrom(src => src.DirectorId))
-            .ForMember(dest => dest.DirectorName, opt => opt.MapFrom(src => src.Director != null ? src.Director.FullName : null));
+            .ForMember(dest => dest.DirectorName, opt => opt.MapFrom(src => src.Director != null ? src.Director.FullName : null))
+            .ForMember(dest => dest.AverageRating, opt => opt.MapFrom(src => src.Ratings.Count == 0 ? (double?)null : Math.Round(src.Ratings.Average(r => r.RatingValue), 2)))
+            .ForMember(dest => dest.RatingsCount, opt => opt.MapFrom(src => src.Ratings.Count));
         CreateMap<MovieDto, Movie>()
             .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration));
         CreateMap<MovieCreateDto, Movie>()

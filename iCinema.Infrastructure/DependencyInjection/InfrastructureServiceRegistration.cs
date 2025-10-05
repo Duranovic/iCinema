@@ -51,6 +51,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IHomeKpisRepository, HomeKpisRepository>();
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
         services.AddScoped<IDirectorRepository, DirectorRepository>();
+        services.AddScoped<IRatingRepository, RatingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
         

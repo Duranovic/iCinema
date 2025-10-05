@@ -26,7 +26,8 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         return query
             .Include(m => m.MovieGenres)
                 .ThenInclude(mg => mg.Genre)
-            .Include(m => m.Director);
+            .Include(m => m.Director)
+            .Include(m => m.Ratings);
     }
     
     protected override IQueryable<Movie> AddFilter(IQueryable<Movie> query, BaseFilter baseFilter)
