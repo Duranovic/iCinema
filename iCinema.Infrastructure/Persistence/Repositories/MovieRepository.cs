@@ -26,6 +26,8 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         return query
             .Include(m => m.MovieGenres)
                 .ThenInclude(mg => mg.Genre)
+            .Include(m => m.MovieActors)
+                .ThenInclude(ma => ma.Actor)
             .Include(m => m.Director)
             .Include(m => m.Ratings);
     }
@@ -52,6 +54,68 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         }
     }
 
+    // ---- Cast management ----
+    public async Task<IEnumerable<CastItemDto>> GetCastAsync(Guid movieId, CancellationToken cancellationToken)
+    {
+        var movie = await DbSet
+            .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == movieId, cancellationToken);
+        if (movie == null) return Enumerable.Empty<CastItemDto>();
+        return movie.MovieActors
+            .Select(ma => new CastItemDto
+            {
+                ActorId = ma.ActorId,
+                ActorName = ma.Actor?.FullName ?? string.Empty,
+                RoleName = ma.RoleName
+            })
+            .ToList();
+    }
+
+    public async Task AddCastAsync(Guid movieId, List<AddCastItem> items, CancellationToken cancellationToken)
+    {
+        var exists = await DbSet.AnyAsync(m => m.Id == movieId, cancellationToken);
+        if (!exists) throw new BusinessRuleException("Film nije pronađen.");
+
+        // Ensure unique by actor and skip existing links
+        var actorIds = items.Select(i => i.ActorId).Distinct().ToList();
+        var existingLinks = await _context.MovieActors
+            .Where(ma => ma.MovieId == movieId && actorIds.Contains(ma.ActorId))
+            .Select(ma => ma.ActorId)
+            .ToListAsync(cancellationToken);
+
+        var toAdd = items
+            .Where(i => !existingLinks.Contains(i.ActorId))
+            .Select(i => new MovieActor
+            {
+                MovieId = movieId,
+                ActorId = i.ActorId,
+                RoleName = i.RoleName
+            })
+            .ToList();
+
+        if (toAdd.Count > 0)
+        {
+            _context.MovieActors.AddRange(toAdd);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task UpdateCastRoleAsync(Guid movieId, Guid actorId, string? roleName, CancellationToken cancellationToken)
+    {
+        var link = await _context.MovieActors.FirstOrDefaultAsync(ma => ma.MovieId == movieId && ma.ActorId == actorId, cancellationToken);
+        if (link == null) throw new BusinessRuleException("Veza filma i glumca nije pronađena.");
+        link.RoleName = roleName;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveCastAsync(Guid movieId, Guid actorId, CancellationToken cancellationToken)
+    {
+        var link = await _context.MovieActors.FirstOrDefaultAsync(ma => ma.MovieId == movieId && ma.ActorId == actorId, cancellationToken);
+        if (link == null) return;
+        _context.MovieActors.Remove(link);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
     public override async Task<MovieDto?> CreateAsync(MovieCreateDto dto, CancellationToken cancellationToken)
     {
         // Map basic properties
@@ -85,15 +149,16 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         }
         
         var createdEntity = await DbSet
-            .Include(m => m.MovieGenres)
-            .ThenInclude(mg => mg.Genre)
+            .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+            .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
             .FirstOrDefaultAsync(m => m.Id == entity.Id, cancellationToken);
         return _mapper.Map<MovieDto>(createdEntity);
     }
 
     public override async Task<MovieDto?> UpdateAsync(Guid id, MovieUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = await DbSet.Include(m => m.MovieGenres)
+        var entity = await DbSet
+            .Include(m => m.MovieGenres)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         if (entity == null) return null;
 
@@ -130,8 +195,8 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         await _context.SaveChangesAsync(cancellationToken);
         
         var updatedEntity = await DbSet
-            .Include(m => m.MovieGenres)
-            .ThenInclude(mg => mg.Genre)
+            .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
+            .Include(m => m.MovieActors).ThenInclude(ma => ma.Actor)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
         return _mapper.Map<MovieDto>(updatedEntity);
@@ -149,7 +214,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         var hasFutureProjections = await _projectionRulesService.HasFutureProjectionsForMovie(movie.Id, cancellationToken);
 
         if (hasFutureProjections)
-            throw new BusinessRuleException("Cannot delete a movie with scheduled future projections.");
+            throw new BusinessRuleException("Ne možete obrisati film koji ima zakazane buduće projekcije.");
 
         // Remove MovieGenres entries
         _context.MovieGenres.RemoveRange(movie.MovieGenres);
@@ -191,7 +256,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
             "image/jpeg" => ".jpg",
             "image/png" => ".png",
             "image/webp" => ".webp",
-            _ => throw new BusinessRuleException("Nepodržan MIME tip posta: " + mimeType)
+            _ => throw new BusinessRuleException("Nepodržan MIME tip postera: " + mimeType)
         };
 
         await using var ms = new MemoryStream(bytes);

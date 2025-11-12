@@ -76,7 +76,7 @@ public class HallRepository(iCinemaDbContext context, IMapper mapper, IProjectio
         
         var hasFutureProjections = await _projectionRulesService.HasFutureProjectionsForHall(hall.Id, cancellationToken);
         if (hasFutureProjections)
-            throw new BusinessRuleException("Cannot delete a hall with scheduled future projections.");
+            throw new BusinessRuleException("Ne možete obrisati salu koja ima zakazane buduće projekcije.");
 
         // Delete past projections
         _context.Projections.RemoveRange(hall.Projections);

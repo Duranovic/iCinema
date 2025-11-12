@@ -41,20 +41,65 @@ class MovieService {
     return data;
   }
 
+  Future<List<dynamic>> fetchActors() async {
+    // Lightweight items list for dropdowns: [{id, fullName}]
+    final res = await _dio.get('/Actors/items');
+    final data = res.data as List<dynamic>;
+    return data;
+  }
+
   Future<Movie> addMovie(Movie movie, {String? posterPath, String? mimeType}) async {
     final payload = await _createMovieJsonPayload(movie, posterPath: posterPath, mimeType: mimeType);
     final res = await _dio.post('/movies', data: payload);
-    return Movie.fromJson(res.data);
+    final created = Movie.fromJson(res.data);
+    if ((movie.actorIds).isNotEmpty && created.id != null && created.id!.isNotEmpty) {
+      await addCast(created.id!, movie.actorIds);
+    }
+    return created;
   }
 
   Future<Movie> updateMovie(Movie movie, {String? posterPath, String? mimeType}) async {
     final payload = await _createMovieJsonPayload(movie, posterPath: posterPath, mimeType: mimeType);
     final res = await _dio.put('/movies/${movie.id}', data: payload);
-    return Movie.fromJson(res.data);
+    final updated = Movie.fromJson(res.data);
+    if ((movie.actorIds).isNotEmpty && updated.id != null && updated.id!.isNotEmpty) {
+      // For simplicity, we replace cast: remove all, then add new set.
+      // Fetch existing and remove differences could be added later if needed.
+      final existing = await getCast(updated.id!);
+      for (final c in existing) {
+        final actorId = (c['actorId'] as String?);
+        if (actorId != null && !movie.actorIds.contains(actorId)) {
+          await removeCast(updated.id!, actorId);
+        }
+      }
+      await addCast(updated.id!, movie.actorIds);
+    }
+    return updated;
   }
 
   Future<void> deleteMovie(String id) async {
     await _dio.delete('/movies/$id');
+  }
+
+  // ---- Cast management helpers ----
+  Future<List<Map<String, dynamic>>> getCast(String movieId) async {
+    final res = await _dio.get('/movies/$movieId/cast');
+    final list = (res.data as List<dynamic>).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
+    return list;
+  }
+
+  Future<void> addCast(String movieId, List<String> actorIds) async {
+    if (actorIds.isEmpty) return;
+    final items = actorIds.map((id) => {'actorId': id}).toList();
+    await _dio.post('/movies/$movieId/cast', data: {'items': items});
+  }
+
+  Future<void> updateCastRole(String movieId, String actorId, {String? roleName}) async {
+    await _dio.put('/movies/$movieId/cast/$actorId', data: {'roleName': roleName});
+  }
+
+  Future<void> removeCast(String movieId, String actorId) async {
+    await _dio.delete('/movies/$movieId/cast/$actorId');
   }
 
   Future<Map<String, dynamic>> _createMovieJsonPayload(

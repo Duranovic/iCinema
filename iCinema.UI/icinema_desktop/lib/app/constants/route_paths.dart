@@ -5,6 +5,7 @@ const routePaths = [
   '/projections',
   '/cinemas',
   '/reports',
+  '/admin',
   '/profile',
   '/login',
 ];

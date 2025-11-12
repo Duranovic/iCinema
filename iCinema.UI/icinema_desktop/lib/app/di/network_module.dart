@@ -17,7 +17,7 @@ abstract class NetworkModule {
       ),
     );
 
-    // Attach interceptor to inject Authorization header and handle 401
+    // Attach interceptor to inject Authorization header and handle errors (401, 400)
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
         final auth = GetIt.I<AuthService>();
@@ -28,11 +28,36 @@ abstract class NetworkModule {
         handler.next(options);
       },
       onError: (DioException e, handler) async {
-        if (e.response?.statusCode == 401) {
+        final status = e.response?.statusCode;
+        if (status == 401) {
           // Unauthorized - clear session
           final auth = GetIt.I<AuthService>();
           await auth.logout();
+          handler.next(e);
+          return;
         }
+
+        // Normalize business rule violations (HTTP 400) to provide a user-friendly message globally
+        if (status == 400) {
+          String message = 'Zahtjev odbijen (400).';
+          final data = e.response?.data;
+          if (data is Map<String, dynamic>) {
+            message = data['message']?.toString() ?? data['error']?.toString() ?? message;
+          } else if (data is String) {
+            message = data;
+          }
+          final normalized = DioException(
+            requestOptions: e.requestOptions,
+            response: e.response,
+            type: e.type,
+            error: e.error,
+            stackTrace: e.stackTrace,
+            message: message,
+          );
+          handler.next(normalized);
+          return;
+        }
+
         handler.next(e);
       },
     ));

@@ -31,4 +31,10 @@ const mainNavigationItems = [
     label: Text('Izvještaji'),
     padding: EdgeInsets.all(10),
   ),
+  NavigationRailDestination(
+    icon: Icon(Icons.admin_panel_settings_outlined),
+    selectedIcon: Icon(Icons.admin_panel_settings),
+    label: Text('Administracija'),
+    padding: EdgeInsets.all(10),
+  ),
 ];

@@ -10,6 +10,7 @@ class MovieEditForm extends StatefulWidget {
   final List<dynamic> genres;
   final List<dynamic> ageRatings; // [{code,label}]
   final List<dynamic> directors; // [{id,fullName}]
+  final List<dynamic> actors; // [{id,fullName}]
   final VoidCallback onClose;
   final void Function(Movie, String?, String?) onSave;
 
@@ -21,6 +22,7 @@ class MovieEditForm extends StatefulWidget {
     required this.genres,
     required this.ageRatings,
     required this.directors,
+    required this.actors,
   });
 
   @override
@@ -29,7 +31,8 @@ class MovieEditForm extends StatefulWidget {
 
 class _MovieEditFormState extends State<MovieEditForm> {
   final _formKey = GlobalKey<FormState>();
-  late Set<String> selectedIds;
+  late Set<String> selectedIds; // genres
+  late Set<String> selectedActorIds; // actors
   late final TextEditingController _titleCtrl;
   late final TextEditingController _dateReleaseCtrl;
   late final TextEditingController _descriptionCtrl;
@@ -85,6 +88,9 @@ class _MovieEditFormState extends State<MovieEditForm> {
       if (idsSet.contains(g)) return g;
       return idByName[g] ?? g; // fallback to original to avoid losing user data
     }).toSet();
+
+    // Initialize actors selection from movie.actorIds
+    selectedActorIds = <String>{...?(widget.movie?.actorIds)};
   }
 
   @override
@@ -94,6 +100,217 @@ class _MovieEditFormState extends State<MovieEditForm> {
     _descriptionCtrl.dispose();
     _durationCtrl.dispose();
     super.dispose();
+  }
+
+  // --- Genres helpers (searchable multi-select) ---
+  String? _genreNameById(String id) {
+    for (final g in widget.genres.whereType<Map>().map((e) => e.cast<String, dynamic>())) {
+      if (g['id'] == id) return g['name'] as String?;
+    }
+    return null;
+  }
+
+  Future<void> _openGenresMultiSelect() async {
+    final allGenres = widget.genres
+        .whereType<Map>()
+        .map((e) => e.cast<String, dynamic>())
+        .where((g) => g['id'] is String && g['name'] is String)
+        .toList(growable: false);
+
+    final tempSelected = Set<String>.from(selectedIds);
+    final searchCtrl = TextEditingController();
+
+    List<Map<String, dynamic>> filtered(String q) {
+      final qq = q.trim().toLowerCase();
+      if (qq.isEmpty) return allGenres;
+      return allGenres
+          .where((g) => (g['name'] as String).toLowerCase().contains(qq))
+          .toList(growable: false);
+    }
+
+    var results = filtered('');
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return AlertDialog(
+              title: const Text('Odaberi žanrove'),
+              content: SizedBox(
+                width: 520,
+                height: 520,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: searchCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Pretraga',
+                        prefixIcon: Icon(Icons.search),
+                        isDense: true,
+                      ),
+                      onChanged: (q) {
+                        setModalState(() {
+                          results = filtered(q);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Scrollbar(
+                        child: ListView.builder(
+                          itemCount: results.length,
+                          itemBuilder: (ctx, i) {
+                            final g = results[i];
+                            final id = g['id'] as String;
+                            final name = g['name'] as String;
+                            final selected = tempSelected.contains(id);
+                            return CheckboxListTile(
+                              value: selected,
+                              dense: true,
+                              title: Text(name),
+                              onChanged: (v) {
+                                setModalState(() {
+                                  if (v == true) {
+                                    tempSelected.add(id);
+                                  } else {
+                                    tempSelected.remove(id);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Otkaži'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedIds = tempSelected;
+                    });
+                    Navigator.of(ctx).pop();
+                  },
+                  child: const Text('Sačuvaj'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String? _actorNameById(String id) {
+    for (final a in widget.actors.whereType<Map>().map((e) => e.cast<String, dynamic>())) {
+      if (a['id'] == id) return a['fullName'] as String?;
+    }
+    return null;
+  }
+
+  Future<void> _openActorsMultiSelect() async {
+    final allActors = widget.actors
+        .whereType<Map>()
+        .map((e) => e.cast<String, dynamic>())
+        .where((a) => a['id'] is String && a['fullName'] is String)
+        .toList(growable: false);
+
+    final tempSelected = Set<String>.from(selectedActorIds);
+    final searchCtrl = TextEditingController();
+
+    List<Map<String, dynamic>> filtered(String q) {
+      final qq = q.trim().toLowerCase();
+      if (qq.isEmpty) return allActors;
+      return allActors
+          .where((a) => (a['fullName'] as String).toLowerCase().contains(qq))
+          .toList(growable: false);
+    }
+
+    var results = filtered('');
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return AlertDialog(
+              title: const Text('Odaberi glumce'),
+              content: SizedBox(
+                width: 520,
+                height: 520,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: searchCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Pretraga',
+                        prefixIcon: Icon(Icons.search),
+                        isDense: true,
+                      ),
+                      onChanged: (q) {
+                        setModalState(() {
+                          results = filtered(q);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Scrollbar(
+                        child: ListView.builder(
+                          itemCount: results.length,
+                          itemBuilder: (ctx, i) {
+                            final a = results[i];
+                            final id = a['id'] as String;
+                            final name = a['fullName'] as String;
+                            final selected = tempSelected.contains(id);
+                            return CheckboxListTile(
+                              value: selected,
+                              dense: true,
+                              title: Text(name),
+                              onChanged: (v) {
+                                setModalState(() {
+                                  if (v == true) {
+                                    tempSelected.add(id);
+                                  } else {
+                                    tempSelected.remove(id);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Otkaži'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedActorIds = tempSelected;
+                    });
+                    Navigator.of(ctx).pop();
+                  },
+                  child: const Text('Sačuvaj'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _onSave() {
@@ -117,6 +334,7 @@ class _MovieEditFormState extends State<MovieEditForm> {
           genres: selectedIds.toList(),
           ageRating: _ageRating,
           directorId: _directorId,
+          actorIds: selectedActorIds.toList(),
         ),
         _posterPath,
         _posterMime,
@@ -514,54 +732,54 @@ class _MovieEditFormState extends State<MovieEditForm> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Žanrovi (odabir više)',
+                                  'Žanrovi (više izbora)',
                                   style: Theme.of(context).textTheme.labelMedium,
                                 ),
                                 const SizedBox(height: 8),
                                 FormField<bool>(
-                                  validator: (_) => selectedIds.isEmpty
-                                      ? 'Odaberite barem jedan žanr.'
-                                      : null,
+                                  validator: (_) => selectedIds.isEmpty ? 'Odaberite barem jedan žanr.' : null,
                                   builder: (state) => Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Wrap(
-                                        spacing: 12,
-                                        runSpacing: 4,
-                                        children: widget.genres
-                                            .whereType<Map>()
-                                            .map((g) => g.cast<String, dynamic>())
-                                            .where((g) => g['id'] is String && g['name'] is String)
-                                            .map((genre) {
-                                          final String id = genre['id'] as String;
-                                          final String name = genre['name'] as String;
-                                          return IntrinsicWidth(
-                                            child: ConstrainedBox(
-                                              constraints: const BoxConstraints(maxWidth: 180),
-                                              child: CheckboxListTile(
-                                                dense: true,
-                                                visualDensity: VisualDensity.compact,
-                                                contentPadding: EdgeInsets.zero,
-                                                controlAffinity: ListTileControlAffinity.leading,
-                                                title: Text(
-                                                  name,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                value: selectedIds.contains(id),
-                                                onChanged: (bool? checked) {
-                                                  setState(() {
-                                                    if (checked == true) {
-                                                      selectedIds.add(id);
-                                                    } else {
-                                                      selectedIds.remove(id);
-                                                    }
-                                                  });
-                                                  state.validate();
-                                                },
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              icon: const Icon(Icons.category_outlined),
+                                              label: Text(
+                                                selectedIds.isEmpty
+                                                    ? 'Odaberi žanrove'
+                                                    : 'Odabrano: ${selectedIds.length}',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              onPressed: () async {
+                                                await _openGenresMultiSelect();
+                                                // revalidate after closing dialog
+                                                state.validate();
+                                              },
+                                              style: OutlinedButton.styleFrom(
+                                                alignment: Alignment.centerLeft,
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                                               ),
                                             ),
-                                          );
-                                        }).toList(),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: selectedIds
+                                            .map((id) => InputChip(
+                                                  label: Text(_genreNameById(id) ?? id),
+                                                  onDeleted: () {
+                                                    setState(() {
+                                                      selectedIds.remove(id);
+                                                    });
+                                                    state.validate();
+                                                  },
+                                                ))
+                                            .toList(),
                                       ),
                                       if (state.hasError)
                                         Padding(
@@ -580,10 +798,63 @@ class _MovieEditFormState extends State<MovieEditForm> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 12),
+
+                          // Actors multi-select (searchable dropdown-style)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Glumci (više izbora)',
+                                  style: Theme.of(context).textTheme.labelMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        icon: const Icon(Icons.people_outline),
+                                        label: Text(
+                                          selectedActorIds.isEmpty
+                                              ? 'Odaberi glumce'
+                                              : 'Odabrano: ${selectedActorIds.length}',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        onPressed: _openActorsMultiSelect,
+                                        style: OutlinedButton.styleFrom(
+                                          alignment: Alignment.centerLeft,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                // Show selected as chips
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: selectedActorIds
+                                      .map((id) => InputChip(
+                                            label: Text(_actorNameById(id) ?? id),
+                                            onDeleted: () {
+                                              setState(() {
+                                                selectedActorIds.remove(id);
+                                              });
+                                            },
+                                          ))
+                                      .toList(),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
 
+                    const SizedBox(height: 20),
                     const Spacer(),
                     // actions
                     Row(

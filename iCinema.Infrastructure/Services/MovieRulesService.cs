@@ -15,7 +15,7 @@ public class MovieRulesService : IMovieRulesService
     {
         if (!string.IsNullOrWhiteSpace(ageRating) && !AllowedAgeRatings.Contains(ageRating))
         {
-            throw new BusinessRuleException("AgeRating must be one of: G, PG, PG-13, R, NC-17, NR.");
+            throw new BusinessRuleException("Neispravan rejting filma. Dozvoljene vrijednosti su: G, PG, PG-13, R, NC-17, NR.");
         }
         return Task.CompletedTask;
     }

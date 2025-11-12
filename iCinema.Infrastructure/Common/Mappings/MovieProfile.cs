@@ -15,7 +15,13 @@ public class MovieProfile : Profile
             .ForMember(dest => dest.DirectorId, opt => opt.MapFrom(src => src.DirectorId))
             .ForMember(dest => dest.DirectorName, opt => opt.MapFrom(src => src.Director != null ? src.Director.FullName : null))
             .ForMember(dest => dest.AverageRating, opt => opt.MapFrom(src => src.Ratings.Count == 0 ? (double?)null : Math.Round(src.Ratings.Average(r => r.RatingValue), 2)))
-            .ForMember(dest => dest.RatingsCount, opt => opt.MapFrom(src => src.Ratings.Count));
+            .ForMember(dest => dest.RatingsCount, opt => opt.MapFrom(src => src.Ratings.Count))
+            .ForMember(dest => dest.Cast, opt => opt.MapFrom(src => src.MovieActors.Select(ma => new CastItemDto
+            {
+                ActorId = ma.ActorId,
+                ActorName = ma.Actor != null ? ma.Actor.FullName : string.Empty,
+                RoleName = ma.RoleName
+            })));
         CreateMap<MovieDto, Movie>()
             .ForMember(dest => dest.DurationMin, opt => opt.MapFrom(src => src.Duration));
         CreateMap<MovieCreateDto, Movie>()

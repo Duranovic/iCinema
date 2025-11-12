@@ -29,7 +29,7 @@ public class ProjectionRulesService(iCinemaDbContext context) : IProjectionRules
     {
         var movie = await context.Movies.FirstOrDefaultAsync(m => m.Id == movieId, cancellationToken);
         if (movie == null)
-            throw new BusinessRuleException("Selected movie does not exist.");
+            throw new BusinessRuleException("Odabrani film ne postoji.");
 
         var endTime = startTime.AddMinutes(movie.DurationMin);
 
@@ -42,17 +42,17 @@ public class ProjectionRulesService(iCinemaDbContext context) : IProjectionRules
             .AnyAsync(cancellationToken);
 
         if (overlapping)
-            throw new BusinessRuleException("Projection overlaps with another in the same hall.");
+            throw new BusinessRuleException("Projekcija se preklapa sa drugom projekcijom u istoj sali.");
     }
 
     public async Task EnsureHallHasCapacity(Guid hallId, CancellationToken cancellationToken = default)
     {
         var hall = await context.Halls.FirstOrDefaultAsync(h => h.Id == hallId, cancellationToken);
         if (hall == null)
-            throw new BusinessRuleException("Selected hall does not exist.");
+            throw new BusinessRuleException("Odabrana sala ne postoji.");
 
         var capacity = hall.RowsCount * hall.SeatsPerRow;
         if (capacity <= 0)
-            throw new BusinessRuleException("The selected hall has zero seating capacity. Please configure rows and seats first.");
+            throw new BusinessRuleException("Odabrana sala nema kapacitet sjedišta. Molimo prvo podesite redove i sjedala.");
     }
 }

@@ -5,6 +5,7 @@ import '../bloc/movies_event.dart';
 import '../bloc/movies_state.dart';
 import '../widgets/movie_list.dart';
 import '../widgets/movie_edit_form.dart';
+import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
 
 class MoviesPage extends StatefulWidget {
   const MoviesPage({super.key});
@@ -42,8 +43,11 @@ class _MoviesPageState extends State<MoviesPage> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
       ),
-      body: BlocBuilder<MoviesBloc, MoviesState>(
-        builder: (context, state) {
+      body: StateErrorListener<MoviesBloc, MoviesState>(
+        errorSelector: (s) => s is MoviesError ? s.message : null,
+        onClear: () => context.read<MoviesBloc>().add(LoadMovies()),
+        child: BlocBuilder<MoviesBloc, MoviesState>(
+          builder: (context, state) {
           if (state is MoviesLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is MoviesError) {
@@ -121,6 +125,7 @@ class _MoviesPageState extends State<MoviesPage> {
                         genres: state.genres,
                         ageRatings: state.ageRatings,
                         directors: state.directors,
+                        actors: state.actors,
                         onClose: closePanel,
                         onSave: (movie, posterPath, mimeType) {
                           if (isAdding) {
@@ -142,7 +147,8 @@ class _MoviesPageState extends State<MoviesPage> {
           }
           // Initial or unknown state
           return const SizedBox();
-        },
+          },
+        ),
       ),
       floatingActionButton: null, // All actions in the UI itself
     );

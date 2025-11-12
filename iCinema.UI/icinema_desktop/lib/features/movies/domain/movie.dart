@@ -9,8 +9,10 @@ class Movie {
   final String? posterBase64;
   final String? ageRating; // e.g., G, PG, PG-13, R, NC-17, NR
   final String? directorId;
+  final List<String> actorIds; // selected actors for UI/cast sync
 
-  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id, this.posterUrl, this.posterBase64, this.ageRating, this.directorId});
+  Movie({required this.title, required this.description, required this.genres, this.releaseDate, this.duration, this.id, this.posterUrl, this.posterBase64, this.ageRating, this.directorId, List<String>? actorIds})
+      : actorIds = actorIds ?? const [];
 
   // For easy API conversion:
   factory Movie.fromJson(dynamic json) => Movie(
@@ -34,6 +36,13 @@ class Movie {
             return g.toString();
           }
           return g.toString();
+        })
+        .whereType<String>()
+        .toList(),
+    actorIds: ((json['cast'] as List<dynamic>?) ?? const [])
+        .map((c) {
+          if (c is Map && c['actorId'] is String) return c['actorId'] as String;
+          return null;
         })
         .whereType<String>()
         .toList(),

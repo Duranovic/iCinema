@@ -1,4 +1,5 @@
 using AutoMapper;
+using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs;
 using iCinema.Application.DTOs.City;
@@ -9,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class CityRepository(iCinemaDbContext context, IMapper mapper, ICityRulesService rules)
-    : BaseRepository<City, CityDto, CityCreateDto, CityUpdateDto>(context, mapper), ICityRepository
-{
+    public class CityRepository(iCinemaDbContext context, IMapper mapper, ICityRulesService rules)
+        : BaseRepository<City, CityDto, CityCreateDto, CityUpdateDto>(context, mapper), ICityRepository
+    {
     protected override string[] SearchableFields => ["Name"];
     
     protected override IQueryable<City> AddFilter(IQueryable<City> query, BaseFilter baseFilter)
@@ -23,19 +24,25 @@ public class CityRepository(iCinemaDbContext context, IMapper mapper, ICityRules
         return query;
     }
     
-    protected override IQueryable<City> AddInclude(IQueryable<City> query)
-    {
-        return query.Include(item => item.Country);
-    }
-    
     protected override async Task BeforeInsert(City entity, CityCreateDto dto)
     {
         await rules.EnsureCityNameIsUnique(dto.Name, dto.CountryId);
     }
-
+    
     public override async Task<CityDto?> UpdateAsync(Guid id, CityUpdateDto dto, CancellationToken cancellationToken)
     {
         await rules.EnsureCityNameIsUnique(dto.Name, dto.CountryId, id, cancellationToken);
         return await base.UpdateAsync(id, dto, cancellationToken);
+    }
+
+    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var inUse = await DbSet.AnyAsync(c => c.Id == id && c.Cinemas.Any(), cancellationToken);
+        if (inUse)
+        {
+            throw new BusinessRuleException("Ne možete obrisati grad jer je povezan s kinima.");
+        }
+
+        return await base.DeleteAsync(id, cancellationToken);
     }
 }

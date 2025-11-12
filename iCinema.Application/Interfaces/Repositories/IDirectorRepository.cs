@@ -1,8 +1,10 @@
 using iCinema.Application.DTOs.Metadata;
+using iCinema.Application.DTOs.Director;
 
 namespace iCinema.Application.Interfaces.Repositories;
 
-public interface IDirectorRepository
+public interface IDirectorRepository : IBaseRepository<DirectorDto, DirectorCreateDto, DirectorUpdateDto>
 {
-    Task<IEnumerable<DirectorItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    // Lightweight list for metadata (id, name)
+    Task<IEnumerable<DirectorItemDto>> GetItemsAsync(CancellationToken cancellationToken = default);
 }

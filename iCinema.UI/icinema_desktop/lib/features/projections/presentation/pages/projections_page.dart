@@ -5,6 +5,8 @@ import 'package:icinema_desktop/features/projections/presentation/widgets/cinema
 import 'package:icinema_desktop/app/di/injection.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_bloc.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
+import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
+import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
 
@@ -49,15 +51,33 @@ class _ProjectionsPage extends State<ProjectionsPage> {
               ..add(LoadMovies()),
           ),
         ],
-        child: const Padding(
-          padding: EdgeInsets.all(12),
-          child: Column(
-            children: [
-              CinemaSelector(),
-              Expanded(
-                child: ProjectionsCalendar(),
-              ),
-            ],
+        child: StateErrorListener<ProjectionsBloc, ProjectionsState>(
+          errorSelector: (s) => s is ProjectionsError ? s.message : null,
+          onClear: () {
+            final bloc = context.read<ProjectionsBloc>();
+            final st = bloc.state;
+            DateTime month;
+            if (st is ProjectionsLoaded) {
+              month = st.month;
+            } else if (st is ProjectionsLoading) {
+              month = st.month;
+            } else if (st is ProjectionsError) {
+              month = st.month;
+            } else {
+              month = DateTime.now();
+            }
+            bloc.add(LoadProjectionsForMonth(month));
+          },
+          child: const Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(
+              children: [
+                CinemaSelector(),
+                Expanded(
+                  child: ProjectionsCalendar(),
+                ),
+              ],
+            ),
           ),
         ),
       ),

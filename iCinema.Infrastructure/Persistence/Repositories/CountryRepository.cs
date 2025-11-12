@@ -1,7 +1,5 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using iCinema.Application.Common.Filters;
-using iCinema.Application.DTOs;
+using iCinema.Application.Common.Exceptions;
 using iCinema.Application.DTOs.Country;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
@@ -23,5 +21,16 @@ public class CountryRepository(iCinemaDbContext context, IMapper mapper, ICountr
     {
         await rules.EnsureCountryNameIsUnique(dto.Name, id, cancellationToken);
         return await base.UpdateAsync(id, dto, cancellationToken);
+    }
+
+    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var inUse = await DbSet.AnyAsync(c => c.Id == id && c.Cities.Any(), cancellationToken);
+        if (inUse)
+        {
+            throw new BusinessRuleException("Ne možete obrisati državu jer ima povezane gradove.");
+        }
+
+        return await base.DeleteAsync(id, cancellationToken);
     }
 }

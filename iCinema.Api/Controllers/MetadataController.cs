@@ -19,7 +19,7 @@ public class MetadataController(IMovieRulesService movieRulesService, IDirectorR
     [HttpGet("directors")]
     public async Task<ActionResult<IEnumerable<DirectorItemDto>>> GetDirectors(CancellationToken cancellationToken)
     {
-        var items = await directorRepository.GetAllAsync(cancellationToken);
+        var items = await directorRepository.GetItemsAsync(cancellationToken);
         return Ok(items);
     }
 }

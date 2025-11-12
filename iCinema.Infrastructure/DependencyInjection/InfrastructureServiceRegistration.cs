@@ -1,5 +1,6 @@
 using System.Text;
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Application.DTOs.Actor;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Common.Mappings;
 using MassTransit;
@@ -42,8 +43,8 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<IGenreRepository, GenreRepository>();
         services.AddScoped<ICityRepository, CityRepository>();
-        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ICinemaRepository, CinemaRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IHallRepository, HallRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -54,6 +55,8 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IRatingRepository, RatingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
+        services.AddScoped<IActorRepository, ActorRepository>();
+        services.AddScoped<IBaseRepository<ActorDto, ActorCreateDto, ActorUpdateDto>, ActorRepository>();
         
         // Services
         services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
@@ -84,8 +87,8 @@ public static class InfrastructureServiceRegistration
                 });
             });
         });
-        
-        // Identity Server
+
+        // Identity Server / JWT
         services.AddScoped<JwtTokenService>();
         services.AddAuthentication(options =>
         {
@@ -103,8 +106,7 @@ public static class InfrastructureServiceRegistration
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
             };
         });
-            
-        // Automapper Profiles
+
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
         services.AddAutoMapper(typeof(CountryProfile).Assembly);
         services.AddAutoMapper(typeof(GenresProfile).Assembly);
@@ -113,6 +115,8 @@ public static class InfrastructureServiceRegistration
         services.AddAutoMapper(typeof(CinemaProfile).Assembly);
         services.AddAutoMapper(typeof(ProjectionsProfile).Assembly);
         services.AddAutoMapper(typeof(HallProfile).Assembly);
+        services.AddAutoMapper(typeof(DirectorProfile).Assembly);
+        services.AddAutoMapper(typeof(ActorProfile).Assembly);
         
         return services;
     }

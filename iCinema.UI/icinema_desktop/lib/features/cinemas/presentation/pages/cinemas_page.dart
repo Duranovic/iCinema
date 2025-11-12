@@ -7,6 +7,7 @@ import '../bloc/cinemas_state.dart';
 import '../widgets/cinema_search_bar.dart';
 import '../widgets/cinema_list_view.dart';
 import '../widgets/cinema_detail_view.dart';
+import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
 
 class CinemasPage extends StatelessWidget {
   const CinemasPage({super.key});
@@ -21,7 +22,11 @@ class CinemasPage extends StatelessWidget {
           backgroundColor: Theme.of(context).colorScheme.surface,
           elevation: 0,
         ),
-        body: const CinemasPageContent(),
+        body: StateErrorListener<CinemasBloc, CinemasState>(
+          errorSelector: (s) => s is CinemasError ? s.message : null,
+          onClear: () => context.read<CinemasBloc>().add(LoadCinemas()),
+          child: const CinemasPageContent(),
+        ),
       ),
     );
   }

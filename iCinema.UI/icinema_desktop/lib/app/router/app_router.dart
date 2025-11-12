@@ -14,6 +14,12 @@ import 'package:icinema_desktop/features/cinemas/presentation/pages/cinemas_page
 import 'package:icinema_desktop/features/home/presentation/pages/home_page.dart';
 import 'package:icinema_desktop/features/home/presentation/bloc/home_kpis_cubit.dart';
 import 'package:icinema_desktop/features/reports/presentation/pages/reports_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/admin_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/countries_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/cities_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/genres_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/directors_page.dart';
+import 'package:icinema_desktop/features/reference/presentation/pages/actors_page.dart';
 
 // Helper function for simple fade transition
 Page<void> _fadeTransitionPage(Widget child, GoRouterState state) {
@@ -93,6 +99,48 @@ GoRouter buildRouter() {
             path: '/reports',
             pageBuilder: (context, state) => _fadeTransitionPage(
               const ReportsPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const AdminPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/countries',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const CountriesPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/cities',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const CitiesPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/genres',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const GenresPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/directors',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const DirectorsPage(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/actors',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const ActorsPage(),
               state,
             ),
           ),

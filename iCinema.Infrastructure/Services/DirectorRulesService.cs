@@ -17,6 +17,6 @@ public class DirectorRulesService(iCinemaDbContext context) : IDirectorRulesServ
             .AnyAsync(d => d.Id == directorId.Value, cancellationToken);
 
         if (!exists)
-            throw new BusinessRuleException("Director does not exist.");
+            throw new BusinessRuleException("Režiser ne postoji.");
     }
 }

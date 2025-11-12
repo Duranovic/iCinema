@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../data/movie_service.dart';
 import '../../domain/movie.dart';
@@ -19,16 +20,19 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           movieService.fetchGenres(),
           movieService.fetchAgeRatings(),
           movieService.fetchDirectors(),
+          movieService.fetchActors(),
         ]);
 
         final movies = results[0] as List<Movie>;
         final genres = results[1];
         final ageRatings = results[2];
         final directors = results[3];
+        final actors = results[4];
 
-        emit(MoviesLoaded(movies, genres, ageRatings, directors));
+        emit(MoviesLoaded(movies, genres, ageRatings, directors, actors));
       } catch (e) {
-        emit(MoviesError('Failed to load movies: $e'));
+        final msg = e is DioException ? (e.message ?? 'Došlo je do greške pri učitavanju filmova.') : e.toString();
+        emit(MoviesError(msg));
       }
     });
 
@@ -43,7 +47,8 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           );
           add(LoadMovies()); // reload after add
         } catch (e) {
-          emit(MoviesError('Failed to add movie'));
+          final msg = e is DioException ? (e.message ?? 'Neuspješno dodavanje filma.') : e.toString();
+          emit(MoviesError(msg));
         }
       }
     });
@@ -59,7 +64,8 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           );
           add(LoadMovies());
         } catch (e) {
-          emit(MoviesError('Failed to update movie'));
+          final msg = e is DioException ? (e.message ?? 'Neuspješno ažuriranje filma.') : e.toString();
+          emit(MoviesError(msg));
         }
       }
     });
@@ -81,7 +87,8 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
         // Reload the movies after successful deletion.
         add(LoadMovies());
       } catch (e) {
-        emit(MoviesError('Failed to delete movie'));
+        final msg = e is DioException ? (e.message ?? 'Neuspješno brisanje filma.') : e.toString();
+        emit(MoviesError(msg));
       }
     });
   }

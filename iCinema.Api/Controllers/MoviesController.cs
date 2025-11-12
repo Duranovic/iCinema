@@ -9,10 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
-public class MoviesController(IMediator mediator, IRatingRepository ratings)
+public class MoviesController(IMediator mediator, IRatingRepository ratings, IMovieRepository movies)
     : BaseController<MovieDto, MovieCreateDto, MovieUpdateDto, MovieFilter>(mediator)
 {
     private readonly IRatingRepository _ratings = ratings;
+    private readonly IMovieRepository _movies = movies;
 
     [Authorize]
     [HttpGet("{movieId:guid}/my-rating")]
@@ -45,6 +46,43 @@ public class MoviesController(IMediator mediator, IRatingRepository ratings)
             return BadRequest(new { error = "RatingValue must be between 1 and 5" });
 
         await _ratings.UpsertMyRatingAsync(userId, movieId, dto.RatingValue, dto.Review, cancellationToken);
+        return NoContent();
+    }
+
+    // Cast management
+    [HttpGet("{movieId:guid}/cast")]
+    [ProducesResponseType(typeof(IEnumerable<CastItemDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCast(Guid movieId, CancellationToken cancellationToken = default)
+    {
+        var cast = await _movies.GetCastAsync(movieId, cancellationToken);
+        return Ok(cast);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{movieId:guid}/cast")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> AddCast(Guid movieId, [FromBody] AddCastItemsDto dto, CancellationToken cancellationToken = default)
+    {
+        if (dto == null || dto.Items.Count == 0) return BadRequest(new { error = "No cast items provided" });
+        await _movies.AddCastAsync(movieId, dto.Items, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{movieId:guid}/cast/{actorId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UpdateCast(Guid movieId, Guid actorId, [FromBody] UpdateCastItemDto dto, CancellationToken cancellationToken = default)
+    {
+        await _movies.UpdateCastRoleAsync(movieId, actorId, dto?.RoleName, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{movieId:guid}/cast/{actorId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveCast(Guid movieId, Guid actorId, CancellationToken cancellationToken = default)
+    {
+        await _movies.RemoveCastAsync(movieId, actorId, cancellationToken);
         return NoContent();
     }
 }
