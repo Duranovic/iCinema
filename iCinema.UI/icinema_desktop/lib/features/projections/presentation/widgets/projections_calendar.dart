@@ -739,32 +739,46 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
           DateUtils.dateOnly(DateTime(_focusedDay.year, _focusedDay.month, 1)),
         );
 
-        return Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate responsive row height based on available space
+            // Account for header, days of week, and 5-6 weeks of calendar
+            final availableHeight = constraints.maxHeight;
+            final headerHeight = 60.0; // Approximate header height
+            final daysOfWeekHeight = 32.0;
+            final remainingHeight = availableHeight - headerHeight - daysOfWeekHeight;
+            final numberOfWeeks = 6; // Maximum weeks in a month view
+            final calculatedRowHeight = (remainingHeight / numberOfWeeks).clamp(80.0, 140.0);
+            
+            return Stack(
+              children: [
+                Container(
+                  width: constraints.maxWidth,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: TableCalendar<Projection>(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: TableCalendar<Projection>(
                   firstDay: DateTime.utc(2018, 1, 1),
                   lastDay: DateTime.utc(2032, 12, 31),
                   focusedDay: _focusedDay,
                   selectedDayPredicate: (d) => isSameDay(_selectedDay, d),
                   eventLoader: _eventsForDay,
                   calendarFormat: CalendarFormat.month,
-                  // Make each date tile taller
-                  rowHeight: 160,
-                  daysOfWeekHeight: 32,
+                  // Make row height responsive to available space
+                  rowHeight: calculatedRowHeight,
+                  daysOfWeekHeight: daysOfWeekHeight,
                   startingDayOfWeek: StartingDayOfWeek.monday,
                   onDaySelected: (selected, focused) {
                     setState(() {
@@ -815,7 +829,8 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                   ),
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: false,
-                    cellMargin: const EdgeInsets.all(8),
+                    cellMargin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                    cellPadding: EdgeInsets.zero,
                     defaultDecoration: const BoxDecoration(),
                     weekendDecoration: const BoxDecoration(),
                     holidayDecoration: const BoxDecoration(),
@@ -839,64 +854,67 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                         ),
                       );
                     },
-                    defaultBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isWeekend: _isWeekend(day)),
-                    todayBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isToday: true, isWeekend: _isWeekend(day)),
-                    selectedBuilder: (ctx, day, _) => _buildDayCell(ctx, day, isSelected: true, isWeekend: _isWeekend(day)),
-                    outsideBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, isOutside: true, isWeekend: _isWeekend(day)),
+                    defaultBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, calculatedRowHeight, isWeekend: _isWeekend(day)),
+                    todayBuilder: (ctx, day, _) => _buildDayCell(ctx, day, calculatedRowHeight, isToday: true, isWeekend: _isWeekend(day)),
+                    selectedBuilder: (ctx, day, _) => _buildDayCell(ctx, day, calculatedRowHeight, isSelected: true, isWeekend: _isWeekend(day)),
+                    outsideBuilder: (ctx, day, focusedDay) => _buildDayCell(ctx, day, calculatedRowHeight, isOutside: true, isWeekend: _isWeekend(day)),
                     markerBuilder: (ctx, day, events) => const SizedBox.shrink(), // We handle markers in _buildDayCell
                   ),
                 ),
               ),
-            ),
-            if (isLoadingForFocusedMonth)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-              ),
-            if (isErrorForFocusedMonth)
-              Positioned(
-                left: 16,
-                right: 16,
-                top: 16,
-                child: Material(
-                  color: colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Greška pri učitavanju projekcija',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onErrorContainer,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.read<ProjectionsBloc>().add(LoadProjectionsForMonth(_focusedDay)),
-                          child: Text('Pokušaj ponovo', style: TextStyle(color: colorScheme.onErrorContainer)),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-              ),
-          ],
+                  if (isLoadingForFocusedMonth)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
+                  if (isErrorForFocusedMonth)
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      top: 16,
+                      child: Material(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Greška pri učitavanju projekcija',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onErrorContainer,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => context.read<ProjectionsBloc>().add(LoadProjectionsForMonth(_focusedDay)),
+                                child: Text('Pokušaj ponovo', style: TextStyle(color: colorScheme.onErrorContainer)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+          },
         );
       },
     );
   }
 
-  Widget _buildDayCell(BuildContext ctx, DateTime day, {
+  Widget _buildDayCell(BuildContext ctx, DateTime day, double rowHeight, {
     bool isToday = false,
     bool isSelected = false,
     bool isOutside = false,
@@ -929,13 +947,16 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
       backgroundColor = colorScheme.surface;
     }
 
+    // Calculate max height based on row height minus margins
+    final maxCellHeight = rowHeight - 4; // Account for vertical margins
+
     return Container(
       // Keep inner content within the TableCalendar rowHeight to avoid overflow
-      constraints: const BoxConstraints(
-        minHeight: 120,
-        maxHeight: 150,
+      constraints: BoxConstraints(
+        minHeight: (rowHeight * 0.7).clamp(60.0, 100.0),
+        maxHeight: maxCellHeight,
       ),
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -966,8 +987,8 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 // Calculate available space more conservatively
-                final availableHeight = constraints.maxHeight - 12; // Account for padding
-                final headerHeight = 26.0;
+                final availableHeight = constraints.maxHeight - 8; // Account for padding
+                final headerHeight = 24.0;
                 final remainingHeight = availableHeight - headerHeight;
 
                 return Column(
@@ -1023,24 +1044,24 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                       ),
                     ),
                     // Events display - only if there's enough space
-                    if (events.isNotEmpty && remainingHeight > 25)
-                      SizedBox(
-                        height: math.min(remainingHeight, events.length * 18.0 + 4),
+                    if (events.isNotEmpty && remainingHeight > 20)
+                      Flexible(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: ListView.builder(
                             padding: EdgeInsets.zero,
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: math.min(events.length, math.max(1, (remainingHeight / 18).floor())),
+                            itemCount: math.min(events.length, math.max(1, (remainingHeight / 16).floor())),
                             itemBuilder: (context, index) {
                               if (index < events.length && index < 2) {
                                 final event = events[index];
                                 return GestureDetector(
                                   onTap: () => _showEditProjectionModal(context, event),
                                   child: Container(
-                                    height: 16,
+                                    height: 14,
                                     margin: const EdgeInsets.only(bottom: 2),
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: _getEventColor(event, colorScheme).withOpacity(0.15),
                                       borderRadius: BorderRadius.circular(4),
@@ -1050,35 +1071,20 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                                       children: [
                                         Icon(
                                           Icons.circle,
-                                          size: 6,
+                                          size: 5,
                                           color: _getEventColor(event, colorScheme),
                                         ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  event.movieTitle,
-                                                  style: textTheme.labelSmall?.copyWith(
-                                                    color: _getEventColor(event, colorScheme),
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 9,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                event.time.format(ctx),
-                                                style: textTheme.labelSmall?.copyWith(
-                                                  color: _getEventColor(event, colorScheme).withOpacity(0.8),
-                                                  fontWeight: FontWeight.w400,
-                                                  fontSize: 8,
-                                                ),
-                                              ),
-                                            ],
+                                        const SizedBox(width: 3),
+                                        Flexible(
+                                          child: Text(
+                                            '${event.movieTitle} ${event.time.format(ctx)}',
+                                            style: textTheme.labelSmall?.copyWith(
+                                              color: _getEventColor(event, colorScheme),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 8,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
                                         ),
                                       ],
@@ -1090,8 +1096,8 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                                 return GestureDetector(
                                   onTap: () => _showAllProjectionsModal(context, events, day),
                                   child: Container(
-                                    height: 14,
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    height: 12,
+                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: colorScheme.primary.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(3),
@@ -1102,7 +1108,7 @@ class _ProjectionsCalendarState extends State<ProjectionsCalendar> {
                                         style: textTheme.labelSmall?.copyWith(
                                           color: colorScheme.primary,
                                           fontWeight: FontWeight.w500,
-                                          fontSize: 8,
+                                          fontSize: 7,
                                         ),
                                       ),
                                     ),

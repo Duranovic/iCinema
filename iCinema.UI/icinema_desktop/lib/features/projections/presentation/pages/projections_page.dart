@@ -68,16 +68,25 @@ class _ProjectionsPage extends State<ProjectionsPage> {
             }
             bloc.add(LoadProjectionsForMonth(month));
           },
-          child: const Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              children: [
-                CinemaSelector(),
-                Expanded(
-                  child: ProjectionsCalendar(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    const CinemaSelector(),
+                    Expanded(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth - 24, // Account for padding
+                        ),
+                        child: const ProjectionsCalendar(),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

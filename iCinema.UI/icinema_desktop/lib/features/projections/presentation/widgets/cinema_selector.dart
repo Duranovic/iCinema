@@ -142,6 +142,7 @@ class CinemaSelector extends StatelessWidget {
                       ...availableCinemas.map((cinema) => DropdownMenuItem<Cinema?>(
                         value: cinema,
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.movie_outlined,
@@ -149,7 +150,7 @@ class CinemaSelector extends StatelessWidget {
                               color: colorScheme.primary,
                             ),
                             const SizedBox(width: 8),
-                            Expanded(
+                            Flexible(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -161,6 +162,7 @@ class CinemaSelector extends StatelessWidget {
                                       fontWeight: selectedCinema?.id == cinema.id ? FontWeight.w600 : FontWeight.normal,
                                     ),
                                     overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   Text(
                                     cinema.displayLocation,
@@ -168,6 +170,7 @@ class CinemaSelector extends StatelessWidget {
                                       color: colorScheme.onSurfaceVariant,
                                     ),
                                     overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                 ],
                               ),
