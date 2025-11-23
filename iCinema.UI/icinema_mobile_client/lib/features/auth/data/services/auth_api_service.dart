@@ -178,4 +178,61 @@ class AuthApiService {
     final list = data is String ? (json.decode(data) as List) : (data as List);
     return list.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
   }
+
+  Future<UserMe> updateProfile({
+    required String fullName,
+    String? currentPassword,
+    String? newPassword,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/users/me',
+        data: {
+          'fullName': fullName,
+          if (currentPassword != null && currentPassword.isNotEmpty)
+            'currentPassword': currentPassword,
+          if (newPassword != null && newPassword.isNotEmpty)
+            'newPassword': newPassword,
+        },
+      );
+      final data = response.data;
+      Map<String, dynamic> map;
+      if (data is String) {
+        map = json.decode(data) as Map<String, dynamic>;
+      } else {
+        map = data as Map<String, dynamic>;
+      }
+      return UserMe.fromJson(map);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final body = e.response?.data;
+      
+      if (status == 400) {
+        if (body is Map) {
+          final msg = body['message'] ?? body['error'] ?? body['title'];
+          if (msg is String && msg.isNotEmpty) {
+            throw Exception(msg);
+          }
+        }
+        throw Exception('Neispravni podaci. Provjerite unos.');
+      }
+      
+      if (status == 401) {
+        throw Exception('Trenutna lozinka nije ispravna.');
+      }
+      
+      if (body is String && body.isNotEmpty) {
+        throw Exception(body);
+      }
+      
+      if (body is Map) {
+        final msg = body['message'] ?? body['error'] ?? body['title'];
+        if (msg is String && msg.isNotEmpty) {
+          throw Exception(msg);
+        }
+      }
+      
+      throw Exception('Greška pri ažuriranju profila (${status ?? 'nepoznata'}).');
+    }
+  }
 }

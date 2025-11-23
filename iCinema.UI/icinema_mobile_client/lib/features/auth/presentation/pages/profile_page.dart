@@ -12,16 +12,53 @@ import '../../data/models/user_me.dart';
 import '../../data/models/reservation.dart';
 import '../bloc/reservations_cubit.dart';
 import '../bloc/reservations_state.dart';
+import '../bloc/profile_edit_cubit.dart';
+import '../widgets/edit_profile_sheet.dart';
 import '../../../reservations/presentation/details/reservation_details_state.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late Future<UserMe> _meFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _meFuture = getIt<AuthApiService>().getMe();
+  }
+
+  void _refreshProfile() {
+    setState(() {
+      _meFuture = getIt<AuthApiService>().getMe();
+    });
+  }
+
+  Future<void> _openEditProfile(UserMe currentUser) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BlocProvider(
+        create: (_) => ProfileEditCubit(getIt<AuthApiService>()),
+        child: EditProfileSheet(currentUser: currentUser),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _refreshProfile();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = getIt<AuthService>();
     final fallbackEmail = auth.authState.email ?? 'email@domena.com';
-    final meFuture = getIt<AuthApiService>().getMe();
 
     return DefaultTabController(
       length: 2,
@@ -40,7 +77,7 @@ class ProfilePage extends StatelessWidget {
         ],
         ),
         body: FutureBuilder<UserMe>(
-          future: meFuture,
+          future: _meFuture,
           builder: (context, snap) {
             final loading = snap.connectionState == ConnectionState.waiting;
             final me = snap.data;
@@ -83,7 +120,9 @@ class ProfilePage extends StatelessWidget {
                   SizedBox(
                     width: 160,
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: me != null && !loading
+                          ? () => _openEditProfile(me)
+                          : null,
                       icon: const Icon(Icons.edit),
                       label: const Text('Uredi profil'),
                     ),
