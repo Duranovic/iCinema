@@ -167,6 +167,12 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                       const SizedBox(height: 16),
                       _buildDetailsSection(state.movie),
 
+                      // Director and Cast sections
+                      if (state.movie.directorName != null && state.movie.directorName!.isNotEmpty)
+                        _buildDirectorSection(state.movie),
+                      if (state.movie.cast.isNotEmpty)
+                        _buildCastSection(state.movie),
+
                       // Available dates horizontal slider
                       _buildDateSlider(projections),
 
@@ -610,23 +616,35 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         .toSet()
         .length;
     
+    final stats = [
+      (Icons.access_time, movie.formattedDuration),
+      (Icons.calendar_today, movie.releaseYear),
+      (Icons.category, movie.formattedGenres),
+      (Icons.movie, '$totalProjections projekcija'),
+      (Icons.location_on, '$uniqueCinemas kina'),
+      if (projections.isNotEmpty)
+        (Icons.attach_money, '${projections.first.price.toStringAsFixed(0)} KM'),
+    ];
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatRow(Icons.access_time, movie.formattedDuration),
-        const SizedBox(height: 4),
-        _buildStatRow(Icons.calendar_today, movie.releaseYear),
-        const SizedBox(height: 4),
-        _buildStatRow(Icons.category, movie.formattedGenres),
-        const SizedBox(height: 4),
-        _buildStatRow(Icons.movie, '$totalProjections projekcija'),
-        const SizedBox(height: 4),
-        _buildStatRow(Icons.location_on, '$uniqueCinemas kina'),
-        const SizedBox(height: 4),
-        if (projections.isNotEmpty)
-          _buildStatRow(
-            Icons.attach_money,
-            '${projections.first.price.toStringAsFixed(0)} KM',
+        for (int i = 0; i < stats.length; i += 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildStatRow(stats[i].$1, stats[i].$2),
+                ),
+                if (i + 1 < stats.length) ...[
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatRow(stats[i + 1].$1, stats[i + 1].$2),
+                  ),
+                ],
+              ],
+            ),
           ),
       ],
     );
@@ -649,6 +667,120 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDirectorSection(MovieModel movie) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Režiser',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              movie.directorName!,
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCastSection(MovieModel movie) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Glumci',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: movie.cast.map((castMember) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      castMember.actorName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    if (castMember.roleName != null && castMember.roleName!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        castMember.roleName!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 

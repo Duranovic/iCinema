@@ -1,3 +1,31 @@
+class CastMember {
+  final String actorId;
+  final String actorName;
+  final String? roleName;
+
+  const CastMember({
+    required this.actorId,
+    required this.actorName,
+    this.roleName,
+  });
+
+  factory CastMember.fromJson(Map<String, dynamic> json) {
+    return CastMember(
+      actorId: json['actorId'] as String? ?? '',
+      actorName: json['actorName'] as String? ?? 'Nepoznat',
+      roleName: json['roleName'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'actorId': actorId,
+      'actorName': actorName,
+      if (roleName != null) 'roleName': roleName,
+    };
+  }
+}
+
 class MovieModel {
   final String id;
   final String title;
@@ -8,6 +36,9 @@ class MovieModel {
   final String? posterUrl;
   final double? averageRating; // 0-5
   final int? ratingsCount;
+  final String? directorId;
+  final String? directorName;
+  final List<CastMember> cast;
 
   const MovieModel({
     required this.id,
@@ -19,6 +50,9 @@ class MovieModel {
     this.posterUrl,
     this.averageRating,
     this.ratingsCount,
+    this.directorId,
+    this.directorName,
+    this.cast = const [],
   });
 
   factory MovieModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +80,13 @@ class MovieModel {
         if (v is num) return v.toInt();
         return int.tryParse(v.toString());
       }(),
+      directorId: json['directorId'] as String?,
+      directorName: json['directorName'] as String?,
+      cast: json['cast'] != null
+          ? (json['cast'] as List<dynamic>)
+              .map((e) => CastMember.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : <CastMember>[],
     );
   }
 
@@ -60,6 +101,9 @@ class MovieModel {
       'posterUrl': posterUrl,
       'averageRating': averageRating,
       'ratingsCount': ratingsCount,
+      if (directorId != null) 'directorId': directorId,
+      if (directorName != null) 'directorName': directorName,
+      'cast': cast.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -76,7 +120,10 @@ class MovieModel {
         other.genres.every((genre) => genres.contains(genre)) &&
         other.posterUrl == posterUrl &&
         other.averageRating == averageRating &&
-        other.ratingsCount == ratingsCount;
+        other.ratingsCount == ratingsCount &&
+        other.directorId == directorId &&
+        other.directorName == directorName &&
+        other.cast.length == cast.length;
   }
 
   @override
@@ -91,12 +138,15 @@ class MovieModel {
       posterUrl,
       averageRating,
       ratingsCount,
+      directorId,
+      directorName,
+      Object.hashAll(cast.map((e) => e.actorId)),
     );
   }
 
   @override
   String toString() {
-    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres, posterUrl: $posterUrl, averageRating: $averageRating, ratingsCount: $ratingsCount)';
+    return 'MovieModel(id: $id, title: $title, releaseDate: $releaseDate, duration: $duration, description: $description, genres: $genres, posterUrl: $posterUrl, averageRating: $averageRating, ratingsCount: $ratingsCount, directorId: $directorId, directorName: $directorName, cast: $cast)';
   }
 
   MovieModel copyWith({
@@ -109,6 +159,9 @@ class MovieModel {
     String? posterUrl,
     double? averageRating,
     int? ratingsCount,
+    String? directorId,
+    String? directorName,
+    List<CastMember>? cast,
   }) {
     return MovieModel(
       id: id ?? this.id,
@@ -120,6 +173,9 @@ class MovieModel {
       posterUrl: posterUrl ?? this.posterUrl,
       averageRating: averageRating ?? this.averageRating,
       ratingsCount: ratingsCount ?? this.ratingsCount,
+      directorId: directorId ?? this.directorId,
+      directorName: directorName ?? this.directorName,
+      cast: cast ?? this.cast,
     );
   }
 
