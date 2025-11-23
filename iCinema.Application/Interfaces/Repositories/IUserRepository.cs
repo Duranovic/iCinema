@@ -10,5 +10,6 @@ public interface IUserRepository
     
     Task<UserDto> UpdateAsync(Guid id, UserUpdateDto dto, CancellationToken cancellationToken);
     Task<UserDto> UpdateRolesAsync(Guid userId, IList<string> roles, CancellationToken cancellationToken);
+    Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto, CancellationToken cancellationToken);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

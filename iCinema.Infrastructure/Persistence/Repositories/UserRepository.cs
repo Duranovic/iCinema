@@ -95,6 +95,31 @@ public class UserRepository : IUserRepository
         return dto;
     }
 
+    public async Task<UserDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null) throw new Exception("User not found");
+
+        // Update full name
+        user.FullName = dto.FullName;
+
+        // Update password if provided
+        if (!string.IsNullOrEmpty(dto.CurrentPassword) && !string.IsNullOrEmpty(dto.NewPassword))
+        {
+            var passwordChangeResult = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+            if (!passwordChangeResult.Succeeded)
+                throw new Exception($"Failed to change password: {string.Join(", ", passwordChangeResult.Errors.Select(e => e.Description))}");
+        }
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+            throw new Exception($"Failed to update profile: {string.Join(", ", updateResult.Errors.Select(e => e.Description))}");
+
+        var updatedDto = _mapper.Map<UserDto>(user);
+        updatedDto.Roles = await _userManager.GetRolesAsync(user);
+        return updatedDto;
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
