@@ -42,9 +42,7 @@ public class MoviesController(IMediator mediator, IRatingRepository ratings, IMo
         if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             return Unauthorized();
 
-        if (dto == null || dto.RatingValue < 1 || dto.RatingValue > 5)
-            return BadRequest(new { error = "RatingValue must be between 1 and 5" });
-
+        // Validation is handled by FluentValidation via PutMyRatingDtoValidator
         await _ratings.UpsertMyRatingAsync(userId, movieId, dto.RatingValue, dto.Review, cancellationToken);
         return NoContent();
     }
@@ -63,7 +61,7 @@ public class MoviesController(IMediator mediator, IRatingRepository ratings, IMo
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> AddCast(Guid movieId, [FromBody] AddCastItemsDto dto, CancellationToken cancellationToken = default)
     {
-        if (dto == null || dto.Items.Count == 0) return BadRequest(new { error = "No cast items provided" });
+        // Validation is handled by FluentValidation via AddCastItemsDtoValidator
         await _movies.AddCastAsync(movieId, dto.Items, cancellationToken);
         return NoContent();
     }

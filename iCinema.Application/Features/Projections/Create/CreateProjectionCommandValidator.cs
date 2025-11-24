@@ -1,4 +1,5 @@
 using FluentValidation;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.Common.Requests;
 using iCinema.Application.DTOs;
 
@@ -9,17 +10,17 @@ public class CreateProjectionCommandValidator : AbstractValidator<CreateCommand<
     public CreateProjectionCommandValidator()
     {
         RuleFor(x => x.Dto.MovieId)
-            .NotEmpty().WithMessage("MovieId is required.");
+            .NotEmpty().WithMessage(ErrorMessages.MovieIdRequired);
 
         RuleFor(x => x.Dto.HallId)
-            .NotEmpty().WithMessage("HallId is required.");
+            .NotEmpty().WithMessage(ErrorMessages.HallIdRequired);
 
         RuleFor(x => x.Dto.StartTime)
-            .NotEmpty().WithMessage("StartTime is required.")
-            .GreaterThan(DateTime.UtcNow).WithMessage("StartTime must be in the future.");
+            .NotEmpty().WithMessage(ErrorMessages.StartTimeRequired)
+            .GreaterThan(DateTime.UtcNow).WithMessage(ErrorMessages.StartTimeMustBeFuture);
         
         RuleFor(x => x)
             .Must(x => x.Dto.StartTime > DateTime.UtcNow)
-            .WithMessage("Cannot update a projection that has already started.");
+            .WithMessage(ErrorMessages.ProjectionAlreadyStarted);
     }
 }

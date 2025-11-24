@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.DTOs.Reservations;
 using iCinema.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,7 @@ public class TicketsController(ITicketRepository tickets) : ControllerBase
             return Unauthorized();
 
         var dto = await tickets.GetQrAsync(id, userId, ct);
-        if (dto == null) return NotFound(new { error = "Ticket not found or not accessible" });
+        if (dto == null) return NotFound(new { error = ErrorMessages.TicketNotFound });
         return Ok(dto);
     }
 
@@ -35,7 +36,7 @@ public class TicketsController(ITicketRepository tickets) : ControllerBase
     public async Task<IActionResult> Validate([FromBody] TicketValidateRequestDto req, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Token))
-            return BadRequest(new { error = "Token is required" });
+            return BadRequest(new { error = ErrorMessages.TokenRequired });
 
         var result = await tickets.ValidateAsync(req.Token, ct);
         return Ok(result);

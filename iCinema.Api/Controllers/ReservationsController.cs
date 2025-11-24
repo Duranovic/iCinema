@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.DTOs.Reservations;
 using iCinema.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -58,7 +59,7 @@ public class ReservationsController(IReservationRepository reservations) : Contr
             return Unauthorized();
 
         var ok = await reservations.CancelAsync(userId, reservationId, ct);
-        if (!ok) return NotFound(new { error = "Reservation not found" });
+        if (!ok) return NotFound(new { error = ErrorMessages.ReservationNotFound });
         return Ok(new { success = true });
     }
 }

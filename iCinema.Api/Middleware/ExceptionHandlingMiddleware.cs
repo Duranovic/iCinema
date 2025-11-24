@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
@@ -18,26 +19,27 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         catch (DbUpdateException ex)
         {
             // Safety net for FK violations or other DB update issues
+            logger.LogWarning(ex, "Database update error occurred.");
             await HandleExceptionAsync(
                 context,
                 HttpStatusCode.BadRequest,
-                "Greška pri brisanju",
-                "Zapis je u upotrebi i ne može biti obrisan.");
+                ErrorMessages.DeleteError,
+                ErrorMessages.DeleteInUse);
         }
         catch (ValidationException ex)
         {
             logger.LogWarning("Validation error: {Message}", ex.Message);
-            await HandleExceptionAsync(context, HttpStatusCode.BadRequest, "Greška validacije", ex.Message, ex.Errors);
+            await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ErrorMessages.ValidationError, ex.Message, ex.Errors);
         }
         catch (BusinessRuleException ex)
         {
             logger.LogWarning("Business rule violation: {Message}", ex.Message);
-            await HandleExceptionAsync(context, HttpStatusCode.BadRequest, "Povreda poslovnih pravila", ex.Message);
+            await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ErrorMessages.BusinessRuleViolation, ex.Message);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception occurred.");
-            await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, "Interna greška servera", "Dogodila se neočekivana greška.");
+            await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, ErrorMessages.InternalServerError, ErrorMessages.UnexpectedError);
         }
     }
 

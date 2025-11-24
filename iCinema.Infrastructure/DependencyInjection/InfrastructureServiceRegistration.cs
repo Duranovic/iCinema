@@ -56,7 +56,6 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
         services.AddScoped<IActorRepository, ActorRepository>();
-        services.AddScoped<IBaseRepository<ActorDto, ActorCreateDto, ActorUpdateDto>, ActorRepository>();
         
         // Services
         services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
@@ -107,16 +106,8 @@ public static class InfrastructureServiceRegistration
             };
         });
 
+        // All AutoMapper profiles are in the same assembly, so only one registration is needed
         services.AddAutoMapper(typeof(MovieProfile).Assembly);
-        services.AddAutoMapper(typeof(CountryProfile).Assembly);
-        services.AddAutoMapper(typeof(GenresProfile).Assembly);
-        services.AddAutoMapper(typeof(CityProfile).Assembly);
-        services.AddAutoMapper(typeof(RoleProfile).Assembly);
-        services.AddAutoMapper(typeof(CinemaProfile).Assembly);
-        services.AddAutoMapper(typeof(ProjectionsProfile).Assembly);
-        services.AddAutoMapper(typeof(HallProfile).Assembly);
-        services.AddAutoMapper(typeof(DirectorProfile).Assembly);
-        services.AddAutoMapper(typeof(ActorProfile).Assembly);
         
         return services;
     }

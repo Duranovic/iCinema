@@ -1,4 +1,5 @@
 using FluentValidation;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.Common.Requests;
 using iCinema.Application.DTOs.Movie;
 
@@ -9,18 +10,18 @@ public class UpdateMovieCommandValidator : AbstractValidator<UpdateCommand<Movie
     public UpdateMovieCommandValidator()
     {
         RuleFor(x => x.Dto.Title)
-            .NotEmpty().WithMessage("Title is required.")
-            .MaximumLength(200).WithMessage("Title cannot exceed 200 characters.");
+            .NotEmpty().WithMessage(ErrorMessages.TitleRequired)
+            .MaximumLength(200).WithMessage(ErrorMessages.TitleMaxLength);
 
         RuleFor(x => x.Dto.ReleaseDate)
             .Must(d => d == null || (d.Value.Year >= 1900 && d.Value.Year <= DateTime.UtcNow.Year + 1))
-            .WithMessage("Year must be between 1900 and next year.");
+            .WithMessage(ErrorMessages.YearRange);
 
         RuleFor(x => x.Dto.Description)
-            .NotEmpty().WithMessage("Description is required.")
-            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
+            .NotEmpty().WithMessage(ErrorMessages.DescriptionRequired)
+            .MaximumLength(1000).WithMessage(ErrorMessages.DescriptionMaxLength);
 
         RuleFor(x => x.Dto.GenreIds)
-            .NotEmpty().WithMessage("At least one genre must be selected.");
+            .NotEmpty().WithMessage(ErrorMessages.GenreRequired);
     }
 }

@@ -1,3 +1,4 @@
+using iCinema.Application.Common.Constants;
 using iCinema.Application.DTOs;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs.Reservations;
@@ -16,7 +17,7 @@ namespace iCinema.Api.Controllers
         public async Task<IActionResult> GetSeatMap(Guid id, CancellationToken ct)
         {
             var result = await reservations.GetSeatMapAsync(id, ct);
-            return result == null ? NotFound(new { error = "Projection not found" }) : Ok(result);
+            return result == null ? NotFound(new { error = ErrorMessages.ProjectionNotFound }) : Ok(result);
         }
     }
 }

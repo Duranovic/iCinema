@@ -1,4 +1,5 @@
 using FluentValidation;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.Common.Requests;
 using iCinema.Application.DTOs.Cinema;
 
@@ -9,22 +10,22 @@ public class UpdateCinemaCommandValidator : AbstractValidator<UpdateCommand<Cine
     public UpdateCinemaCommandValidator()
     {
         RuleFor(x => x.Dto.Name)
-            .NotEmpty().WithMessage("Cinema name is required.")
-            .MaximumLength(100).WithMessage("Cinema name cannot exceed 100 characters.");
+            .NotEmpty().WithMessage(ErrorMessages.CinemaNameRequired)
+            .MaximumLength(100).WithMessage(ErrorMessages.CinemaNameMaxLength);
 
         RuleFor(x => x.Dto.Address)
-            .NotEmpty().WithMessage("Address is required.")
-            .MaximumLength(200).WithMessage("Address cannot exceed 200 characters.");
+            .NotEmpty().WithMessage(ErrorMessages.AddressRequired)
+            .MaximumLength(200).WithMessage(ErrorMessages.AddressMaxLength);
 
         RuleFor(x => x.Dto.CityId)
-            .NotEmpty().WithMessage("CityId is required.");
+            .NotEmpty().WithMessage(ErrorMessages.CityIdRequired);
 
         RuleFor(x => x.Dto.Email)
             .EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Dto.Email))
-            .WithMessage("Invalid email format.");
+            .WithMessage(ErrorMessages.InvalidEmailFormat);
 
         RuleFor(x => x.Dto.PhoneNumber)
             .Matches(@"^\+?[0-9]{7,15}$").When(x => !string.IsNullOrWhiteSpace(x.Dto.PhoneNumber))
-            .WithMessage("Invalid phone number format.");
+            .WithMessage(ErrorMessages.InvalidPhoneFormat);
     }
 }
