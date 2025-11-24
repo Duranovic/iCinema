@@ -1,4 +1,5 @@
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using iCinema.Infrastructure.Persistence;
@@ -6,7 +7,8 @@ using iCinema.Infrastructure.Persistence;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("health")] 
+[Route("health")]
+[AllowAnonymous]
 public class HealthController(iCinemaDbContext db, IBus bus) : ControllerBase
 {
     [HttpGet]

@@ -19,7 +19,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         catch (DbUpdateException ex)
         {
             // Safety net for FK violations or other DB update issues
-            logger.LogWarning(ex, "Database update error occurred.");
+            logger.LogWarning(ex, 
+                "Database update error occurred. TraceId: {TraceId}, Path: {Path}", 
+                context.TraceIdentifier, 
+                context.Request.Path);
             await HandleExceptionAsync(
                 context,
                 HttpStatusCode.BadRequest,
@@ -28,17 +31,29 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (ValidationException ex)
         {
-            logger.LogWarning("Validation error: {Message}", ex.Message);
+            logger.LogWarning(
+                "Validation error. TraceId: {TraceId}, Path: {Path}, Errors: {ErrorCount}", 
+                context.TraceIdentifier, 
+                context.Request.Path,
+                ex.Errors?.Count ?? 0);
             await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ErrorMessages.ValidationError, ex.Message, ex.Errors);
         }
         catch (BusinessRuleException ex)
         {
-            logger.LogWarning("Business rule violation: {Message}", ex.Message);
+            logger.LogWarning(
+                "Business rule violation. TraceId: {TraceId}, Path: {Path}, Message: {Message}", 
+                context.TraceIdentifier, 
+                context.Request.Path,
+                ex.Message);
             await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ErrorMessages.BusinessRuleViolation, ex.Message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unhandled exception occurred.");
+            logger.LogError(ex, 
+                "Unhandled exception occurred. TraceId: {TraceId}, Path: {Path}, Method: {Method}", 
+                context.TraceIdentifier, 
+                context.Request.Path,
+                context.Request.Method);
             await HandleExceptionAsync(context, HttpStatusCode.InternalServerError, ErrorMessages.InternalServerError, ErrorMessages.UnexpectedError);
         }
     }

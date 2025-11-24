@@ -1,11 +1,13 @@
 using iCinema.Application.DTOs.Home;
 using iCinema.Application.Interfaces.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
 [ApiController]
 [Route("home")]
+[Authorize(Roles = "Admin")]
 public sealed class HomeController : ControllerBase
 {
     private readonly IHomeKpisRepository _kpisRepository;

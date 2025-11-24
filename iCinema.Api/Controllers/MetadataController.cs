@@ -1,12 +1,14 @@
 using iCinema.Application.DTOs.Metadata;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Application.Interfaces.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[AllowAnonymous]
 public class MetadataController(IMovieRulesService movieRulesService, IDirectorRepository directorRepository) : ControllerBase
 {
     [HttpGet("age-ratings")]

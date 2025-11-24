@@ -8,6 +8,7 @@ namespace iCinema.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize(Roles = "Admin")]
 public class ReportsController(IMediator mediator) : ControllerBase
 {
     [HttpPost("generate")]
