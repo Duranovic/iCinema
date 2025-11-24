@@ -24,6 +24,7 @@ import '../../features/reservations/data/services/reservation_api_service.dart';
 import '../../features/reservations/presentation/details/reservation_details_state.dart';
 import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/validation/presentation/pages/validation_page.dart';
 
 // Global route observer for RouteAware widgets
 final RouteObserver<ModalRoute<dynamic>> routeObserver = RouteObserver<ModalRoute<dynamic>>();
@@ -111,6 +112,13 @@ GoRouter buildRouter() {
                 create: (_) => getIt<SearchCubit>(),
                 child: const SearchPage(),
               ),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/validation',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              const ValidationPage(),
               state,
             ),
           ),

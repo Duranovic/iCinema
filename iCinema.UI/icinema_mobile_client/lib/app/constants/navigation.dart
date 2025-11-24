@@ -12,6 +12,11 @@ const mainNavigationItems = [
     label: 'Repertoar',
   ),
   BottomNavigationBarItem(
+    icon: Icon(Icons.qr_code_scanner_outlined),
+    activeIcon: Icon(Icons.qr_code_scanner),
+    label: 'Validacija',
+  ),
+  BottomNavigationBarItem(
     icon: Icon(Icons.person_outlined),
     activeIcon: Icon(Icons.person),
     label: 'Profil',

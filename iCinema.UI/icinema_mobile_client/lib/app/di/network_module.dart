@@ -4,6 +4,7 @@ import 'package:dio/io.dart';
 import 'package:injectable/injectable.dart';
 import 'package:get_it/get_it.dart';
 import '../services/auth_service.dart';
+import '../config/app_config.dart';
 
 // Allows injectable to register third-party types.
 @module
@@ -13,7 +14,7 @@ abstract class NetworkModule {
   Dio get dio {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'https://localhost:7026', // Same as desktop app
+        baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -27,9 +28,9 @@ abstract class NetworkModule {
     (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
       final client = HttpClient();
       client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-        // In development, accept all certificates for localhost
+        // In development, accept all certificates if configured
         // In production, implement proper certificate validation
-        return host == 'localhost' || host == '127.0.0.1';
+        return AppConfig.allowInsecureCertificates;
       };
       return client;
     };

@@ -2,6 +2,7 @@
 const routePaths = [
   '/home',
   '/movies',
+  '/validation',
   '/profile',
   '/login',
 ];

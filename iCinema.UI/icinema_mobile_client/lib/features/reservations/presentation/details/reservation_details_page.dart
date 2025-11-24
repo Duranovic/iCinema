@@ -119,6 +119,21 @@ class _TicketsList extends StatelessWidget {
   final List<TicketDto> tickets;
   final bool isReservationCanceled;
 
+  String _translateStatus(String status) {
+    switch (status) {
+      case 'Active':
+        return 'Aktivna';
+      case 'Used':
+        return 'Iskorištena';
+      case 'Canceled':
+        return 'Otkazana';
+      case 'Expired':
+        return 'Istekla';
+      default:
+        return status;
+    }
+  }
+
   Color _statusColor(BuildContext ctx, String s) {
     switch (s) {
       case 'Used':
@@ -173,7 +188,7 @@ class _TicketsList extends StatelessWidget {
                           Text('Red ${t.rowNumber}, Sjedište ${t.seatNumber}',
                               style: const TextStyle(fontWeight: FontWeight.w600)),
                           const SizedBox(height: 4),
-                          Text('Status: ${isReservationCanceled ? 'Canceled' : t.ticketStatus}'),
+                          Text('Status: ${_translateStatus(isReservationCanceled ? 'Canceled' : t.ticketStatus)}'),
                         ],
                       ),
                     ),
@@ -184,7 +199,7 @@ class _TicketsList extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        isReservationCanceled ? 'Canceled' : t.ticketStatus,
+                        _translateStatus(isReservationCanceled ? 'Canceled' : t.ticketStatus),
                         style: TextStyle(color: _statusColor(context, isReservationCanceled ? 'Canceled' : t.ticketStatus)),
                       ),
                     )
@@ -313,6 +328,21 @@ class _TicketSheetState extends State<_TicketSheet> {
   String? _error;
   Timer? _ticker;
 
+  String _translateStatus(String status) {
+    switch (status) {
+      case 'Active':
+        return 'Aktivna';
+      case 'Used':
+        return 'Iskorištena';
+      case 'Canceled':
+        return 'Otkazana';
+      case 'Expired':
+        return 'Istekla';
+      default:
+        return status;
+    }
+  }
+
   Future<void> _loadExpiry() async {
     setState(() {
       _loading = true;
@@ -404,7 +434,7 @@ class _TicketSheetState extends State<_TicketSheet> {
             const SizedBox(height: 12),
             Text('Red ${t.rowNumber}, Sjedište ${t.seatNumber}', style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            Text('Status: ${widget.forceDisabled ? 'Canceled' : t.ticketStatus}'),
+            Text('Status: ${_translateStatus(widget.forceDisabled ? 'Canceled' : t.ticketStatus)}'),
             const SizedBox(height: 12),
             if (t.qrCode != null && t.qrCode!.isNotEmpty) ...[
               Align(

@@ -21,6 +21,7 @@ import '../../features/reservations/data/seat_map_refresh_bus.dart';
 import '../../features/auth/data/reservations_refresh_bus.dart';
 import '../../features/notifications/data/services/notifications_api_service.dart';
 import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
+import '../../features/validation/data/services/validation_api_service.dart';
 
 import 'injection.config.dart';
 
@@ -66,6 +67,10 @@ Future<void> configureDependencies() async {
   // Notifications API
   getIt.registerLazySingleton<NotificationsApiService>(
     () => NotificationsApiService(getIt<Dio>()),
+  );
+  // Validation API
+  getIt.registerLazySingleton<ValidationApiService>(
+    () => ValidationApiService(getIt<Dio>()),
   );
 
   // Repositories

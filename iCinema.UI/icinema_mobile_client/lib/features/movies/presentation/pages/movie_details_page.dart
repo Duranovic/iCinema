@@ -659,11 +659,14 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

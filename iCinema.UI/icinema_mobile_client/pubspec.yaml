@@ -39,6 +39,7 @@ dependencies:
   
   # QR Code
   qr_flutter: ^4.1.0
+  mobile_scanner: ^5.2.3
   
   # Screen Brightness
   screen_brightness: ^2.1.7

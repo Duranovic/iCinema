@@ -4,6 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/auth_service.dart';
 import '../../features/auth/presentation/widgets/login_sheet.dart';
+import '../../features/auth/data/services/auth_api_service.dart';
+import '../../features/auth/data/models/user_me.dart';
 import '../constants/navigation.dart';
 import '../constants/route_paths.dart';
 import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
@@ -25,15 +27,54 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   late final NotificationsCubit _notificationsCubit;
+  UserMe? _currentUser;
+  bool _isLoadingUser = false;
+
+  List<BottomNavigationBarItem> get _visibleNavigationItems {
+    final isStaff = _currentUser?.roles.any((role) => 
+      role.toLowerCase() == 'staff' ||
+      role.toLowerCase() == 'admin'
+    ) ?? false;
+
+    if (isStaff) {
+      return mainNavigationItems; // Show all including Validacija
+    } else {
+      // Hide Validacija tab (index 2)
+      return [
+        mainNavigationItems[0], // Početna
+        mainNavigationItems[1], // Repertoar
+        mainNavigationItems[3], // Profil (skip Validacija at index 2)
+      ];
+    }
+  }
+
+  List<String> get _visibleRoutePaths {
+    final isStaff = _currentUser?.roles.any((role) =>
+      role.toLowerCase() == 'staff' ||
+      role.toLowerCase() == 'admin'
+    ) ?? false;
+
+    if (isStaff) {
+      return routePaths;
+    } else {
+      // Remove /validation from paths
+      return [
+        routePaths[0], // /home
+        routePaths[1], // /movies
+        routePaths[3], // /profile (skip /validation at index 2)
+        routePaths[4], // /login
+      ];
+    }
+  }
 
   int get _selectedIndex {
-    return routePaths
+    return _visibleRoutePaths
         .indexWhere((p) => widget.currentLocation.startsWith(p))
-        .clamp(0, routePaths.length - 1);
+        .clamp(0, _visibleRoutePaths.length - 1);
   }
 
   int? get _selectedIndexOrNull {
-    if (_selectedIndex >= mainNavigationItems.length) {
+    if (_selectedIndex >= _visibleNavigationItems.length) {
       return null;
     }
     return _selectedIndex;
@@ -46,11 +87,54 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     // Create notifications cubit once and load items
     _notificationsCubit = GetIt.I<NotificationsCubit>();
     _notificationsCubit.load(top: 50);
+    // Load user info to check roles
+    _loadUserInfo();
+    // Listen to auth state changes
+    GetIt.I<AuthService>().authState.addListener(_onAuthStateChanged);
+  }
+
+  void _onAuthStateChanged() {
+    // When auth state changes (login/logout), reload user info
+    if (GetIt.I<AuthService>().authState.isAuthenticated) {
+      _loadUserInfo();
+    } else {
+      // User logged out, clear user info
+      if (mounted) {
+        setState(() {
+          _currentUser = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadUserInfo() async {
+    final auth = GetIt.I<AuthService>();
+    if (!auth.authState.isAuthenticated) {
+      return;
+    }
+
+    if (_isLoadingUser) return;
+    setState(() => _isLoadingUser = true);
+
+    try {
+      final user = await GetIt.I<AuthApiService>().getMe();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoadingUser = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingUser = false);
+      }
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    GetIt.I<AuthService>().authState.removeListener(_onAuthStateChanged);
     super.dispose();
   }
 
@@ -64,7 +148,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   void _onItemTapped(BuildContext context, int index) {
     // If tapping Profile and not authenticated, show login sheet without leaving current page
-    final profileIndex = routePaths.indexOf('/profile');
+    final profileIndex = _visibleRoutePaths.indexOf('/profile');
     if (index == profileIndex) {
       final auth = GetIt.I<AuthService>();
       if (!auth.authState.isAuthenticated) {
@@ -89,7 +173,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return; // stay on current page until login success
       }
     }
-    context.go(routePaths[index]);
+    context.go(_visibleRoutePaths[index]);
   }
 
   Widget _bellWithBadge() {
@@ -143,7 +227,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndexOrNull ?? 0,
         onTap: (index) => _onItemTapped(context, index),
-        items: mainNavigationItems,
+        items: _visibleNavigationItems,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
