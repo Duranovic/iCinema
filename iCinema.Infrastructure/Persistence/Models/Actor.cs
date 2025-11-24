@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace iCinema.Infrastructure.Persistence.Models;
 
-public partial class Actor
+public partial class Actor : IAuditable
 {
     public Guid Id { get; set; }
 
@@ -14,4 +14,7 @@ public partial class Actor
     public string? PhotoUrl { get; set; }
 
     public virtual ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace iCinema.Infrastructure.Persistence.Models;
 
-public partial class Movie
+public partial class Movie : IAuditable
 {
     public Guid Id { get; set; }
 
@@ -38,4 +38,7 @@ public partial class Movie
     public virtual ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 
     public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

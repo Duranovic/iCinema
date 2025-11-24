@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace iCinema.Infrastructure.Persistence.Models;
 
-public partial class Cinema
+public partial class Cinema : IAuditable
 {
     public Guid Id { get; set; }
 
@@ -20,4 +20,7 @@ public partial class Cinema
     public virtual City City { get; set; } = null!;
 
     public virtual ICollection<Hall> Halls { get; set; } = new List<Hall>();
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

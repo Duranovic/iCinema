@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace iCinema.Infrastructure.Persistence.Models;
 
-public partial class Hall
+public partial class Hall : IAuditable
 {
     public Guid Id { get; set; }
 
@@ -26,4 +26,7 @@ public partial class Hall
     public virtual ICollection<Projection> Projections { get; set; } = new List<Projection>();
 
     public virtual ICollection<Seat> Seats { get; set; } = new List<Seat>();
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
