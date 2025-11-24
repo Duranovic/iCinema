@@ -5,6 +5,7 @@ using iCinema.Application.Common.Filters;
 using iCinema.Application.Common.Models;
 using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
@@ -57,15 +58,30 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
 
     public virtual async Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await DbSet
+        var query = DbSet.AsQueryable();
+        
+        // Filter out soft-deleted entities if the entity implements ISoftDeletable
+        if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+        {
+            query = query.Where(e => !((ISoftDeletable)e).IsDeleted);
+        }
+        
+        return await query
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
 
     public virtual async Task<TDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await DbSet
-            .Where(e => EF.Property<Guid>(e, "Id") == id)
+        var query = DbSet.Where(e => EF.Property<Guid>(e, "Id") == id);
+        
+        // Filter out soft-deleted entities if the entity implements ISoftDeletable
+        if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+        {
+            query = query.Where(e => !((ISoftDeletable)e).IsDeleted);
+        }
+        
+        return await query
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -97,7 +113,17 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         var entity = await DbSet.FindAsync([id], cancellationToken);
         if (entity == null) return false;
 
-        DbSet.Remove(entity);
+        // Soft delete if entity implements ISoftDeletable, otherwise hard delete
+        if (entity is ISoftDeletable softDeletable)
+        {
+            softDeletable.IsDeleted = true;
+            softDeletable.DeletedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            DbSet.Remove(entity);
+        }
+        
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -105,6 +131,13 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
     public virtual async Task<PagedResult<TDto>> GetFilteredAsync(BaseFilter filter, CancellationToken cancellationToken)
     {
         var query = DbSet.AsQueryable();
+        
+        // Filter out soft-deleted entities if the entity implements ISoftDeletable
+        if (typeof(ISoftDeletable).IsAssignableFrom(typeof(TEntity)))
+        {
+            query = query.Where(e => !((ISoftDeletable)e).IsDeleted);
+        }
+        
         query = AddInclude(query);
         query = AddFilter(query, filter);
 

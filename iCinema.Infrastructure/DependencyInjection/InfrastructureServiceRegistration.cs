@@ -61,13 +61,13 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IActorRepository, ActorRepository>();
         
         // Services
-        services.AddScoped<IProjectionRulesService, ProjectionRulesService>();
-        services.AddScoped<ICountryRulesService, CountryRulesService>();
-        services.AddScoped<IGenreRulesService, GenreRulesService>();
-        services.AddScoped<ICityRulesService, CityRulesService>();
-        services.AddScoped<ICinemaRulesService, CinemaRulesService>();
-        services.AddScoped<IMovieRulesService, MovieRulesService>();
-        services.AddScoped<IDirectorRulesService, DirectorRulesService>();
+        services.AddScoped<IProjectionRulesService, Services.Rules.ProjectionRulesService>();
+        services.AddScoped<ICountryRulesService, Services.Rules.CountryRulesService>();
+        services.AddScoped<IGenreRulesService, Services.Rules.GenreRulesService>();
+        services.AddScoped<ICityRulesService, Services.Rules.CityRulesService>();
+        services.AddScoped<ICinemaRulesService, Services.Rules.CinemaRulesService>();
+        services.AddScoped<IMovieRulesService, Services.Rules.MovieRulesService>();
+        services.AddScoped<IDirectorRulesService, Services.Rules.DirectorRulesService>();
         services.AddScoped<IReportsService, ReportsService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();

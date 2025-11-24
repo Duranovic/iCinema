@@ -65,15 +65,10 @@ public partial class iCinemaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Actor>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Actors__3214EC07DC3757D0");
+        // Apply all entity configurations from the Configurations folder
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(iCinemaDbContext).Assembly);
 
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.PhotoUrl).HasMaxLength(250);
-        });
-
+        // ASP.NET Identity entities (keep inline as they're framework-managed)
         modelBuilder.Entity<AspNetRole>(entity =>
         {
             entity.HasIndex(e => e.NormalizedName, "RoleNameIndex")
@@ -142,90 +137,6 @@ public partial class iCinemaDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.AspNetUserTokens).HasForeignKey(d => d.UserId);
         });
 
-        modelBuilder.Entity<Cinema>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Cinemas__3214EC07336722AE");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Address).HasMaxLength(250);
-            entity.Property(e => e.Name).HasMaxLength(150);
-
-            entity.HasOne(d => d.City).WithMany(p => p.Cinemas)
-                .HasForeignKey(d => d.CityId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Cinemas_Cities");
-        });
-
-        modelBuilder.Entity<City>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Cities__3214EC07B6373934");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Name).HasMaxLength(100);
-
-            entity.HasOne(d => d.Country).WithMany(p => p.Cities)
-                .HasForeignKey(d => d.CountryId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Cities_Countries");
-        });
-
-        modelBuilder.Entity<Country>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Countrie__3214EC07A87D9B58");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Name).HasMaxLength(100);
-        });
-
-        modelBuilder.Entity<Director>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Director__3214EC0717AA3D8B");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.PhotoUrl).HasMaxLength(250);
-        });
-
-        modelBuilder.Entity<Genre>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Genres__3214EC07DEAD6A98");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Name).HasMaxLength(50);
-        });
-
-        modelBuilder.Entity<Hall>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Halls__3214EC073E00AFC8");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.HallType).HasMaxLength(50);
-            entity.Property(e => e.IsDolbyAtmos).HasDefaultValue(false);
-            entity.Property(e => e.Name).HasMaxLength(50);
-            entity.Property(e => e.ScreenSize).HasMaxLength(50);
-
-            entity.HasOne(d => d.Cinema).WithMany(p => p.Halls)
-                .HasForeignKey(d => d.CinemaId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Halls_Cinemas");
-        });
-
-        modelBuilder.Entity<Movie>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Movies__3214EC07269DD239");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.AgeRating).HasMaxLength(10);
-            entity.Property(e => e.Language).HasMaxLength(50);
-            entity.Property(e => e.PosterUrl).HasMaxLength(250);
-            entity.Property(e => e.Title).HasMaxLength(200);
-            entity.Property(e => e.TrailerUrl).HasMaxLength(250);
-
-            entity.HasOne(d => d.Director).WithMany(p => p.Movies)
-                .HasForeignKey(d => d.DirectorId)
-                .HasConstraintName("FK_Movies_Director");
-        });
-
         modelBuilder.Entity<MovieActor>(entity =>
         {
             entity.HasKey(e => new { e.MovieId, e.ActorId }).HasName("PK__MovieAct__EEA9AABED67E3EC6");
@@ -262,27 +173,6 @@ public partial class iCinemaDbContext : DbContext
                 .HasConstraintName("FK_MovieGenres_Movie");
         });
 
-        modelBuilder.Entity<Projection>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Projecti__3214EC07DD1D3F4C");
-
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.IsSubtitled).HasDefaultValue(false);
-            entity.Property(e => e.Price).HasColumnType("decimal(8, 2)");
-            entity.Property(e => e.ProjectionType).HasMaxLength(20);
-            entity.Property(e => e.StartTime).HasColumnType("datetime");
-
-            entity.HasOne(d => d.Hall).WithMany(p => p.Projections)
-                .HasForeignKey(d => d.HallId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Projections_Halls");
-
-            entity.HasOne(d => d.Movie).WithMany(p => p.Projections)
-                .HasForeignKey(d => d.MovieId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Projections_Movies");
-        });
 
         modelBuilder.Entity<PromoCode>(entity =>
         {

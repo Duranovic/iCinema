@@ -3,7 +3,7 @@ using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace iCinema.Infrastructure.Services;
+namespace iCinema.Infrastructure.Services.Rules;
 
 public class CityRulesService(iCinemaDbContext context) : ICityRulesService
 {

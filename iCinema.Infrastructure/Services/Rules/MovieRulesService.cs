@@ -2,7 +2,7 @@ using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Application.DTOs.Metadata;
 
-namespace iCinema.Infrastructure.Services;
+namespace iCinema.Infrastructure.Services.Rules;
 
 public class MovieRulesService : IMovieRulesService
 {
