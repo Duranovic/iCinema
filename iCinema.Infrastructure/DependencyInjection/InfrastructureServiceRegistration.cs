@@ -8,7 +8,6 @@ using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Repositories;
 using iCinema.Infrastructure.Services;
-using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Messaging.Consumers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

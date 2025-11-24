@@ -6,7 +6,6 @@ WORKDIR /src
 COPY iCinema.sln ./
 COPY iCinema.Api/iCinema.Api.csproj iCinema.Api/
 COPY iCinema.Application/iCinema.Application.csproj iCinema.Application/
-COPY iCinema.Domain/iCinema.Domain.csproj iCinema.Domain/
 COPY iCinema.Infrastructure/iCinema.Infrastructure.csproj iCinema.Infrastructure/
 
 # Restore dependencies
