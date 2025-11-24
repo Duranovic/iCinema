@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using iCinema.Api.Extensions;
 using iCinema.Application.Common.Constants;
 using iCinema.Application.DTOs.Reservations;
 using iCinema.Application.Interfaces.Repositories;
@@ -32,18 +33,18 @@ public class ReservationsController(IReservationRepository reservations) : Contr
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return this.BadRequestError(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
             // map known messages to proper codes
             if (ex.Message.Contains("Projection not found", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = ex.Message });
+                return this.NotFoundError(ex.Message);
             if (ex.Message.Contains("Seats already taken", StringComparison.OrdinalIgnoreCase))
-                return Conflict(new { error = ex.Message });
+                return this.ConflictError(ex.Message);
             if (ex.Message.Contains("invalid", StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { error = ex.Message });
-            return BadRequest(new { error = ex.Message });
+                return this.BadRequestError(ex.Message);
+            return this.BadRequestError(ex.Message);
         }
     }
 
@@ -59,7 +60,7 @@ public class ReservationsController(IReservationRepository reservations) : Contr
             return Unauthorized();
 
         var ok = await reservations.CancelAsync(userId, reservationId, ct);
-        if (!ok) return NotFound(new { error = ErrorMessages.ReservationNotFound });
+        if (!ok) return this.NotFoundError(ErrorMessages.ReservationNotFound);
         return Ok(new { success = true });
     }
 }

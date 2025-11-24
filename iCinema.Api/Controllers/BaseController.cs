@@ -1,3 +1,5 @@
+using iCinema.Api.Extensions;
+using iCinema.Application.Common.Constants;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.Common.Models;
 using iCinema.Application.Common.Requests;
@@ -60,5 +62,15 @@ namespace iCinema.Api.Controllers
             var prop = typeof(TDto).GetProperty("Id");
             return prop != null ? (Guid)(prop.GetValue(dto) ?? Guid.Empty) : Guid.Empty;
         }
+
+        // Error response helpers for consistent error formatting (using extension methods)
+        protected IActionResult BadRequestError(string message, IDictionary<string, string[]>? details = null)
+            => this.BadRequestError(message, details);
+
+        protected IActionResult NotFoundError(string message)
+            => this.NotFoundError(message);
+
+        protected IActionResult ConflictError(string message)
+            => this.ConflictError(message);
     }
 }
