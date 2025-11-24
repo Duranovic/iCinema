@@ -180,7 +180,7 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
         return true;
     }
 
-    public async Task<PagedResult<ReservationListItemDto>> GetMyReservations(
+    public async Task<PagedResult<ReservationListItemDto>> GetMyReservationsAsync(
         Guid userId,
         string status,
         int page,
@@ -244,7 +244,7 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
         };
     }
 
-    public async Task<List<TicketDto>> GetTicketsForReservation(Guid reservationId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<List<TicketDto>> GetTicketsForReservationAsync(Guid reservationId, Guid userId, CancellationToken cancellationToken = default)
     {
         // ensure reservation belongs to user
         var belongs = await _context.Reservations.AnyAsync(r => r.Id == reservationId && r.UserId == userId, cancellationToken);

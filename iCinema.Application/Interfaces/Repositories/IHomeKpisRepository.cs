@@ -4,5 +4,5 @@ namespace iCinema.Application.Interfaces.Repositories;
 
 public interface IHomeKpisRepository
 {
-    public Task<HomeKpisDto> GetKpisAsync();
+    Task<HomeKpisDto> GetKpisAsync(CancellationToken cancellationToken = default);
 }

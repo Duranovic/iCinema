@@ -13,7 +13,7 @@ public sealed class HomeKpisRepository : IHomeKpisRepository
         _db = db;
     }
 
-    public async Task<HomeKpisDto> GetKpisAsync()
+    public async Task<HomeKpisDto> GetKpisAsync(CancellationToken cancellationToken = default)
     {
         var todayUtc = DateTime.UtcNow.Date;
         var tomorrowUtc = todayUtc.AddDays(1);
@@ -25,7 +25,7 @@ public sealed class HomeKpisRepository : IHomeKpisRepository
         // Reservations today (exclude canceled if provided)
         var reservationsToday = await _db.Reservations
             .AsNoTracking()
-            .CountAsync(r => r.ReservedAt >= todayUtc && r.ReservedAt < tomorrowUtc && (r.IsCanceled == null || r.IsCanceled == false));
+            .CountAsync(r => r.ReservedAt >= todayUtc && r.ReservedAt < tomorrowUtc && (r.IsCanceled == null || r.IsCanceled == false), cancellationToken);
 
         // Revenue this month = sum of projection price per issued ticket in month range (based on reservation time)
         var revenueMonthDecimal = await (from t in _db.Tickets.AsNoTracking()
@@ -34,7 +34,7 @@ public sealed class HomeKpisRepository : IHomeKpisRepository
                                          where r.ReservedAt >= monthStartUtc && r.ReservedAt < nextMonthStartUtc
                                                && (r.IsCanceled == null || r.IsCanceled == false)
                                          select (decimal?)p.Price)
-                                         .SumAsync() ?? 0m;
+                                         .SumAsync(cancellationToken) ?? 0m;
 
         // Average occupancy across projections in the month
         var projectionsInMonth = await _db.Projections
@@ -42,7 +42,7 @@ public sealed class HomeKpisRepository : IHomeKpisRepository
             .Include(p => p.Hall)
             .Where(p => p.StartTime >= monthStartUtc && p.StartTime < nextMonthStartUtc)
             .Select(p => new { p.Id, p.Hall.RowsCount, p.Hall.SeatsPerRow })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         double avgOccupancy = 0.0;
         if (projectionsInMonth.Count > 0)
@@ -56,7 +56,7 @@ public sealed class HomeKpisRepository : IHomeKpisRepository
                                                     && (r.IsCanceled == null || r.IsCanceled == false)
                                               group t by r.ProjectionId into g
                                               select new { ProjectionId = g.Key, Count = g.Count() })
-                                              .ToListAsync();
+                                              .ToListAsync(cancellationToken);
 
             var ticketsDict = ticketsPerProjection.ToDictionary(x => x.ProjectionId, x => x.Count);
 

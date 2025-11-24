@@ -19,14 +19,14 @@ public interface IReservationRepository
         Guid reservationId,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<ReservationListItemDto>> GetMyReservations(
+    Task<PagedResult<ReservationListItemDto>> GetMyReservationsAsync(
         Guid userId,
         string status, // "Active" | "Past"
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
 
-    Task<List<TicketDto>> GetTicketsForReservation(
+    Task<List<TicketDto>> GetTicketsForReservationAsync(
         Guid reservationId,
         Guid userId,
         CancellationToken cancellationToken = default);

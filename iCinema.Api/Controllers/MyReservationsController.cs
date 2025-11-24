@@ -21,7 +21,7 @@ public class MyReservationsController(IReservationRepository reservations) : Con
         if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             return Unauthorized();
 
-        var result = await reservations.GetMyReservations(userId, status, page, pageSize, cancellationToken);
+        var result = await reservations.GetMyReservationsAsync(userId, status, page, pageSize, cancellationToken);
         return Ok(result);
     }
 
@@ -34,7 +34,7 @@ public class MyReservationsController(IReservationRepository reservations) : Con
         if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             return Unauthorized();
 
-        var result = await reservations.GetTicketsForReservation(reservationId, userId, cancellationToken);
+        var result = await reservations.GetTicketsForReservationAsync(reservationId, userId, cancellationToken);
         return Ok(result);
     }
 }
