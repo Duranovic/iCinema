@@ -1,4 +1,5 @@
 using iCinema.Application.DTOs.Reservations;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence;
@@ -8,7 +9,7 @@ using iCinema.Application.Events.Tickets;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class TicketRepository(iCinemaDbContext context, IQrCodeService qr, IPublishEndpoint bus) : ITicketRepository
+public class TicketRepository(iCinemaDbContext context, IUnitOfWork unitOfWork, IQrCodeService qr, IPublishEndpoint bus) : ITicketRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IQrCodeService _qr = qr;
@@ -130,7 +131,7 @@ public class TicketRepository(iCinemaDbContext context, IQrCodeService qr, IPubl
 
         // Mark as used
         ticket.TicketStatus = "Used";
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish TicketUsed event
         await _bus.Publish(new TicketUsed(

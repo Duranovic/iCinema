@@ -3,12 +3,13 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.Common.Models;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbContext context, IMapper mapper)
+public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork)
     : IBaseRepository<TDto, TCreateDto, TUpdateDto>
     where TEntity : class
 {
@@ -75,7 +76,7 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         await BeforeInsert(entity, dto);
 
         await DbSet.AddAsync(entity, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<TDto>(entity);
     }
@@ -86,7 +87,7 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         if (entity == null) return default;
 
         mapper.Map(dto, entity);
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<TDto>(entity);
     }
@@ -97,7 +98,7 @@ public class BaseRepository<TEntity, TDto, TCreateDto, TUpdateDto>(iCinemaDbCont
         if (entity == null) return false;
 
         DbSet.Remove(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 

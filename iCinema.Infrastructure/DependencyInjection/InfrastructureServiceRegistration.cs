@@ -1,4 +1,5 @@
 using System.Text;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.DTOs.Actor;
 using iCinema.Application.Interfaces.Services;
@@ -27,6 +28,9 @@ public static class InfrastructureServiceRegistration
         
         services.AddDbContext<iCinemaIdentityContext>(options => 
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        
+        // Unit of Work
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {

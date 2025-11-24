@@ -1,5 +1,6 @@
 using iCinema.Application.Common.Models;
 using iCinema.Application.DTOs.Reservations;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Models;
@@ -10,7 +11,7 @@ using iCinema.Application.Events.Reservations;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCodeService, IPublishEndpoint publishEndpoint) : IReservationRepository
+public class ReservationRepository(iCinemaDbContext context, IUnitOfWork unitOfWork, IQrCodeService qrCodeService, IPublishEndpoint publishEndpoint) : IReservationRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IQrCodeService _qr = qrCodeService;
@@ -137,7 +138,7 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
             await _context.Tickets.AddAsync(ticket, cancellationToken);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // publish ReservationCreated event
         await _bus.Publish(new ReservationCreated(
@@ -168,7 +169,7 @@ public class ReservationRepository(iCinemaDbContext context, IQrCodeService qrCo
         if (reservation.ExpiresAt.HasValue && reservation.ExpiresAt.Value <= DateTime.UtcNow) return true; // already expired effect
 
         reservation.IsCanceled = true;
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // publish ReservationCanceled event
         await _bus.Publish(new ReservationCanceled(

@@ -1,13 +1,14 @@
 using AutoMapper;
 using iCinema.Application.DTOs.Actor;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ActorRepository(iCinemaDbContext context, IMapper mapper)
-    : BaseRepository<Actor, ActorDto, ActorCreateDto, ActorUpdateDto>(context, mapper), IActorRepository
+public class ActorRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork)
+    : BaseRepository<Actor, ActorDto, ActorCreateDto, ActorUpdateDto>(context, mapper, unitOfWork), IActorRepository
 {
     protected override string[] SearchableFields => ["FullName", "Bio"];    
 

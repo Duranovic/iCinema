@@ -1,6 +1,7 @@
 using AutoMapper;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs.Cinema;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -8,8 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class CinemaRepository(iCinemaDbContext context, IMapper mapper, ICinemaRulesService rules)
-    : BaseRepository<Cinema, CinemaDto, CinemaCreateDto, CinemaUpdateDto>(context, mapper),
+public class CinemaRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, ICinemaRulesService rules)
+    : BaseRepository<Cinema, CinemaDto, CinemaCreateDto, CinemaUpdateDto>(context, mapper, unitOfWork),
         ICinemaRepository
 {
     private readonly iCinemaDbContext _context = context;
@@ -65,7 +66,7 @@ public class CinemaRepository(iCinemaDbContext context, IMapper mapper, ICinemaR
         // Delete cinema
         DbSet.Remove(cinema);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

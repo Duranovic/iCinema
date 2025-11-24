@@ -3,6 +3,7 @@ using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs.Hall;
 using iCinema.Application.DTOs.Movie;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class HallRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRulesService) : BaseRepository<Hall, HallDto, HallCreateDto, HallUpdateDto>(context, mapper), IHallRepository
+public class HallRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IProjectionRulesService projectionRulesService) : BaseRepository<Hall, HallDto, HallCreateDto, HallUpdateDto>(context, mapper, unitOfWork), IHallRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IMapper _mapper = mapper;
@@ -84,7 +85,7 @@ public class HallRepository(iCinemaDbContext context, IMapper mapper, IProjectio
         // Delete hall
         DbSet.Remove(hall);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

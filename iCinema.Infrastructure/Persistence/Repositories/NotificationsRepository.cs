@@ -1,11 +1,12 @@
 using iCinema.Application.DTOs.Notifications;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class NotificationsRepository(iCinemaDbContext context) : INotificationsRepository
+public class NotificationsRepository(iCinemaDbContext context, IUnitOfWork unitOfWork) : INotificationsRepository
 {
     private readonly iCinemaDbContext _context = context;
 
@@ -31,7 +32,7 @@ public class NotificationsRepository(iCinemaDbContext context) : INotificationsR
         var n = await _context.Notifications.FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == userId, ct);
         if (n == null) return;
         n.IsRead = true;
-        await _context.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task AddAsync(Guid userId, string title, string message, CancellationToken ct = default)
@@ -46,6 +47,6 @@ public class NotificationsRepository(iCinemaDbContext context) : INotificationsR
             IsRead = false
         };
         await _context.Notifications.AddAsync(n, ct);
-        await _context.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(ct);
     }
 }

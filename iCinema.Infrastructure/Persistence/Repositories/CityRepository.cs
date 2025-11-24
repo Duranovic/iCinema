@@ -3,6 +3,7 @@ using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs;
 using iCinema.Application.DTOs.City;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -10,8 +11,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-    public class CityRepository(iCinemaDbContext context, IMapper mapper, ICityRulesService rules)
-        : BaseRepository<City, CityDto, CityCreateDto, CityUpdateDto>(context, mapper), ICityRepository
+    public class CityRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, ICityRulesService rules)
+        : BaseRepository<City, CityDto, CityCreateDto, CityUpdateDto>(context, mapper, unitOfWork), ICityRepository
     {
     protected override string[] SearchableFields => ["Name"];
     

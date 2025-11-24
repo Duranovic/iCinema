@@ -2,6 +2,7 @@ using AutoMapper;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -9,8 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRules)
-    : BaseRepository<Projection, ProjectionDto, ProjectionCreateDto, ProjectionUpdateDto>(context, mapper),
+public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IProjectionRulesService projectionRules)
+    : BaseRepository<Projection, ProjectionDto, ProjectionCreateDto, ProjectionUpdateDto>(context, mapper, unitOfWork),
         IProjectionRepository
 {
     private readonly iCinemaDbContext _context = context;
@@ -72,7 +73,7 @@ public class ProjectionRepository(iCinemaDbContext context, IMapper mapper, IPro
         await projectionRules.EnsureHallHasCapacity(dto.HallId, cancellationToken);
 
         mapper.Map(dto, entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return mapper.Map<ProjectionDto>(entity);
     }
 

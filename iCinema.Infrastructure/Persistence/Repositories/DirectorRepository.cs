@@ -2,14 +2,15 @@ using AutoMapper;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.DTOs.Director;
 using iCinema.Application.DTOs.Metadata;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-    public class DirectorRepository(iCinemaDbContext context, IMapper mapper)
-        : BaseRepository<Director, DirectorDto, DirectorCreateDto, DirectorUpdateDto>(context, mapper), IDirectorRepository
+    public class DirectorRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork)
+        : BaseRepository<Director, DirectorDto, DirectorCreateDto, DirectorUpdateDto>(context, mapper, unitOfWork), IDirectorRepository
     {
         protected override string[] SearchableFields => ["FullName"];    
 

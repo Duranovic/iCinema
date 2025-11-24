@@ -1,11 +1,12 @@
 using iCinema.Application.DTOs.Ratings;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class RatingRepository(iCinemaDbContext context) : IRatingRepository
+public class RatingRepository(iCinemaDbContext context, IUnitOfWork unitOfWork) : IRatingRepository
 {
     private readonly iCinemaDbContext _context = context;
 
@@ -47,6 +48,6 @@ public class RatingRepository(iCinemaDbContext context) : IRatingRepository
             existing.Review = review;
             existing.RatedAt = DateTime.UtcNow;
         }
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.DTOs.Country;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class CountryRepository(iCinemaDbContext context, IMapper mapper, ICountryRulesService rules) : BaseRepository<Country, CountryDto, CountryCreateDto, CountryUpdateDto>(context, mapper), ICountryRepository
+public class CountryRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, ICountryRulesService rules) : BaseRepository<Country, CountryDto, CountryCreateDto, CountryUpdateDto>(context, mapper, unitOfWork), ICountryRepository
 {
     protected override string[] SearchableFields => ["Name"];
     

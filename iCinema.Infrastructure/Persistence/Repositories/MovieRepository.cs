@@ -2,6 +2,7 @@ using AutoMapper;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.Common.Filters;
 using iCinema.Application.DTOs.Movie;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -11,7 +12,7 @@ using System.IO;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService, IMovieRulesService movieRulesService, IDirectorRulesService directorRulesService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper), IMovieRepository
+public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService, IMovieRulesService movieRulesService, IDirectorRulesService directorRulesService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper, unitOfWork), IMovieRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IMapper _mapper = mapper;
@@ -97,7 +98,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         if (toAdd.Count > 0)
         {
             _context.MovieActors.AddRange(toAdd);
-            await _context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -106,7 +107,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         var link = await _context.MovieActors.FirstOrDefaultAsync(ma => ma.MovieId == movieId && ma.ActorId == actorId, cancellationToken);
         if (link == null) throw new BusinessRuleException("Veza filma i glumca nije pronađena.");
         link.RoleName = roleName;
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveCastAsync(Guid movieId, Guid actorId, CancellationToken cancellationToken)
@@ -114,7 +115,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         var link = await _context.MovieActors.FirstOrDefaultAsync(ma => ma.MovieId == movieId && ma.ActorId == actorId, cancellationToken);
         if (link == null) return;
         _context.MovieActors.Remove(link);
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
     public override async Task<MovieDto?> CreateAsync(MovieCreateDto dto, CancellationToken cancellationToken)
     {
@@ -138,14 +139,14 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         }
 
         DbSet.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         
         // Handle poster upload from base64 if provided
         if (!string.IsNullOrWhiteSpace(dto.PosterBase64) && !string.IsNullOrWhiteSpace(dto.PosterMimeType))
         {
             var posterUrl = await SavePosterFromBase64Async(entity.Id, dto.PosterBase64!, dto.PosterMimeType!, cancellationToken);
             entity.PosterUrl = posterUrl;
-            await _context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         
         var createdEntity = await DbSet
@@ -192,7 +193,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
             entity.PosterUrl = posterUrl;
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         
         var updatedEntity = await DbSet
             .Include(m => m.MovieGenres).ThenInclude(mg => mg.Genre)
@@ -220,7 +221,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IProjecti
         _context.MovieGenres.RemoveRange(movie.MovieGenres);
 
         DbSet.Remove(movie);
-        await _context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using iCinema.Application.Common.Exceptions;
 using iCinema.Application.DTOs.Genres;
+using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class GenreRepository(iCinemaDbContext context, IMapper mapper, IGenreRulesService rules) : BaseRepository<Genre, GenreDto, GenreCreateDto, GenreUpdateDto>(context, mapper), IGenreRepository
+public class GenreRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IGenreRulesService rules) : BaseRepository<Genre, GenreDto, GenreCreateDto, GenreUpdateDto>(context, mapper, unitOfWork), IGenreRepository
 {
     protected override string[] SearchableFields => ["Name"];
     
