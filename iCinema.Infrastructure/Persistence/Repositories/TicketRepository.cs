@@ -36,33 +36,97 @@ public class TicketRepository(iCinemaDbContext context, IQrCodeService qr, IPubl
         };
     }
 
-    public async Task<(bool ok, string message)> ValidateAsync(string token, CancellationToken cancellationToken = default)
+    public async Task<TicketValidationResponseDto> ValidateAsync(string token, CancellationToken cancellationToken = default)
     {
         if (!_qr.TryValidate(token, out var ticketId, out var projectionId, out var exp, out var error))
         {
-            return (false, error ?? "Invalid token");
+            return new TicketValidationResponseDto
+            {
+                Status = "invalid",
+                Message = error ?? "Nevažeći QR kod."
+            };
         }
 
         var ticket = await _context.Tickets
             .Include(t => t.Reservation)
+                .ThenInclude(r => r.Projection)
+                    .ThenInclude(p => p.Movie)
+            .Include(t => t.Reservation)
+                .ThenInclude(r => r.Projection)
+                    .ThenInclude(p => p.Hall)
+                        .ThenInclude(h => h.Cinema)
+            .Include(t => t.Seat)
             .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
-        if (ticket == null) return (false, "Ticket not found");
+
+        if (ticket == null)
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "invalid",
+                Message = "Karta nije pronađena."
+            };
+        }
+
         if (!string.Equals(ticket.QRCode, token, StringComparison.Ordinal))
-            return (false, "Token mismatch");
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "invalid",
+                Message = "QR kod se ne podudara."
+            };
+        }
 
         // Ensure projection matches (defense-in-depth)
         if (ticket.Reservation.ProjectionId != projectionId)
-            return (false, "Projection mismatch");
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "invalid",
+                Message = "Projekcija se ne podudara."
+            };
+        }
+
+        // Build ticket info for response
+        var ticketInfo = new TicketInfoDto
+        {
+            MovieTitle = ticket.Reservation.Projection.Movie.Title,
+            CinemaName = ticket.Reservation.Projection.Hall.Cinema.Name,
+            HallName = ticket.Reservation.Projection.Hall.Name,
+            StartTime = ticket.Reservation.Projection.StartTime,
+            SeatNumber = $"{ticket.Seat.RowNumber}{ticket.Seat.SeatNumber}",
+            Price = ticket.Reservation.Projection.Price
+        };
 
         if (ticket.Reservation.IsCanceled == true)
-            return (false, "Reservation canceled");
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "invalid",
+                Message = "Rezervacija je otkazana.",
+                TicketInfo = ticketInfo
+            };
+        }
 
         if (string.Equals(ticket.TicketStatus, "Used", StringComparison.OrdinalIgnoreCase))
-            return (false, "Ticket already used");
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "used",
+                Message = "Karta je već iskorištena.",
+                TicketInfo = ticketInfo
+            };
+        }
 
         // Optional: Ensure we are within a reasonable window (e.g., token expiry already enforced)
         if (exp <= DateTime.UtcNow)
-            return (false, "QR expired");
+        {
+            return new TicketValidationResponseDto
+            {
+                Status = "expired",
+                Message = "QR kod je istekao.",
+                TicketInfo = ticketInfo
+            };
+        }
 
         // Mark as used
         ticket.TicketStatus = "Used";
@@ -76,6 +140,12 @@ public class TicketRepository(iCinemaDbContext context, IQrCodeService qr, IPubl
             ticket.Reservation.ProjectionId,
             DateTime.UtcNow
         ), cancellationToken);
-        return (true, "OK");
+
+        return new TicketValidationResponseDto
+        {
+            Status = "valid",
+            Message = "Karta je validna. Dobrodošli!",
+            TicketInfo = ticketInfo
+        };
     }
 }

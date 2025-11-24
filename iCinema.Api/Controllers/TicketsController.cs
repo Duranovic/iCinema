@@ -30,15 +30,14 @@ public class TicketsController(ITicketRepository tickets) : ControllerBase
     // POST /tickets/validate - staff/admin validates QR token and marks ticket used
     [Authorize(Roles = "Admin,Staff")] // adjust roles as needed
     [HttpPost("validate")]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TicketValidationResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Validate([FromBody] TicketValidateRequestDto req, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Token))
             return BadRequest(new { error = "Token is required" });
 
-        var (ok, message) = await tickets.ValidateAsync(req.Token, ct);
-        if (!ok) return BadRequest(new { error = message });
-        return Ok(new { success = true });
+        var result = await tickets.ValidateAsync(req.Token, ct);
+        return Ok(result);
     }
 }
