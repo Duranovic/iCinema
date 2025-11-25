@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/projection_model.dart';
-import '../../data/repositories/home_repository.dart';
-import '../../data/services/projections_api_service.dart';
+import '../../data/datasources/projections_api_service.dart';
+import '../../domain/usecases/get_home_data_usecase.dart';
 import '../../../movies/data/models/movie_score_dto.dart';
 
 // Home State
@@ -61,26 +61,21 @@ class HomeError extends HomeState {
 
 // Home Cubit
 class HomeCubit extends Cubit<HomeState> {
-  final HomeRepository _repository;
+  final GetHomeDataUseCase _getHomeDataUseCase;
 
-  HomeCubit(this._repository) : super(const HomeInitial());
+  HomeCubit(this._getHomeDataUseCase) : super(const HomeInitial());
 
   Future<void> loadHomeData() async {
     emit(const HomeLoading());
     
     try {
       // Load all data concurrently for better performance
-      final results = await Future.wait([
-        _repository.getTodayProjections(),
-        _repository.getUpcomingProjections(),
-        _repository.getGroupedProjections(),
-        _repository.getMyRecommendations(),
-      ]);
-
-      final todayProjections = results[0] as List<ProjectionModel>;
-      final upcomingProjections = results[1] as List<ProjectionModel>;
-      final groupedProjections = results[2] as Map<String, List<ProjectionModel>>;
-      final recommendations = results[3] as List<MovieScoreDto>;
+      final (
+        todayProjections,
+        upcomingProjections,
+        groupedProjections,
+        recommendations,
+      ) = await _getHomeDataUseCase();
 
       // Create featured projections from today's projections
       // Take the first 3 unique movies for the slider
@@ -119,17 +114,12 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> refreshHomeData() async {
     // Don't show loading state for refresh, just reload data
     try {
-      final results = await Future.wait([
-        _repository.getTodayProjections(),
-        _repository.getUpcomingProjections(),
-        _repository.getGroupedProjections(),
-        _repository.getMyRecommendations(),
-      ]);
-
-      final todayProjections = results[0] as List<ProjectionModel>;
-      final upcomingProjections = results[1] as List<ProjectionModel>;
-      final groupedProjections = results[2] as Map<String, List<ProjectionModel>>;
-      final recommendations = results[3] as List<MovieScoreDto>;
+      final (
+        todayProjections,
+        upcomingProjections,
+        groupedProjections,
+        recommendations,
+      ) = await _getHomeDataUseCase();
 
       final featuredProjections = _createFeaturedProjections(todayProjections, upcomingProjections);
 

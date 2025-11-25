@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/services/validation_api_service.dart';
+import '../../domain/usecases/validate_ticket_usecase.dart';
 import '../../data/models/validation_result.dart';
 
 // States
@@ -26,9 +26,9 @@ class ValidationError extends ValidationState {
 
 // Cubit
 class ValidationCubit extends Cubit<ValidationState> {
-  final ValidationApiService _apiService;
+  final ValidateTicketUseCase _validateTicketUseCase;
 
-  ValidationCubit(this._apiService) : super(ValidationInitial());
+  ValidationCubit(this._validateTicketUseCase) : super(ValidationInitial());
 
   void startScanning() {
     emit(ValidationScanning());
@@ -47,7 +47,7 @@ class ValidationCubit extends Cubit<ValidationState> {
     emit(ValidationLoading(qrCode));
 
     try {
-      final result = await _apiService.validateTicket(qrCode);
+      final result = await _validateTicketUseCase(qrCode);
       emit(ValidationSuccess(result));
     } catch (e) {
       emit(ValidationError('Greška pri validaciji: ${e.toString()}'));

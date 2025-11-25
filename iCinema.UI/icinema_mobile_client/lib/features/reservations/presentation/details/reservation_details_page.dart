@@ -7,7 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'dart:async';
 import '../../../../app/config/url_utils.dart';
 import '../../data/models/ticket_dto.dart';
-import '../../data/services/reservation_api_service.dart';
+import '../../domain/usecases/get_ticket_qr_usecase.dart';
 import 'reservation_details_cubit.dart';
 import 'reservation_details_state.dart';
 
@@ -349,8 +349,8 @@ class _TicketSheetState extends State<_TicketSheet> {
       _error = null;
     });
     try {
-      final api = GetIt.I<ReservationApiService>();
-      final qr = await api.getTicketQr(widget.ticket.ticketId);
+      final getTicketQrUseCase = GetIt.I<GetTicketQrUseCase>();
+      final qr = await getTicketQrUseCase(widget.ticket.ticketId);
       setState(() {
         _expiresAt = qr.expiresAt;
       });

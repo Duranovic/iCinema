@@ -5,8 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/router/app_router.dart';
 import 'app/di/injection.dart';
 import 'app/config/app_config.dart';
+import 'app/services/auth_service.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/auth/presentation/bloc/reservations_cubit.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/register_usecase.dart';
+import 'features/auth/domain/usecases/get_me_usecase.dart';
 
 class DevHttpOverrides extends HttpOverrides {
   @override
@@ -44,7 +48,12 @@ class MyApp extends StatelessWidget {
     // Defensive: ensure AuthCubit is registered (hot reload/init order safety)
     if (!getIt.isRegistered<AuthCubit>()) {
       getIt.registerLazySingleton<AuthCubit>(
-        () => AuthCubit(getIt(), getIt()),
+        () => AuthCubit(
+          getIt<LoginUseCase>(),
+          getIt<RegisterUseCase>(),
+          getIt<GetMeUseCase>(),
+          getIt<AuthService>(),
+        ),
       );
     }
     // Defensive: ensure ReservationsCubit factory is registered (hot reload safety)

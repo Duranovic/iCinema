@@ -5,7 +5,7 @@ import '../../../../app/di/injection.dart';
 import '../../../../app/config/url_utils.dart';
 import '../../../../app/services/auth_service.dart';
 import '../bloc/similar_movies_cubit.dart';
-import '../../data/services/recommendations_api_service.dart';
+import '../../domain/usecases/get_similar_movies_usecase.dart';
 import '../../data/models/movie_score_dto.dart';
 import '../../../home/data/models/projection_model.dart';
 import '../../data/models/movie_model.dart';
@@ -113,7 +113,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<SimilarMoviesCubit>(
-      create: (_) => SimilarMoviesCubit(getIt<RecommendationsApiService>())
+      create: (_) => SimilarMoviesCubit(getIt<GetSimilarMoviesUseCase>())
         ..loadSimilar(widget.movieId, top: 10),
       child: Scaffold(
         body: BlocBuilder<MovieDetailsCubit, MovieDetailsState>(

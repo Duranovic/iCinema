@@ -1,21 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/services/reservation_api_service.dart';
+import '../../domain/usecases/get_seat_map_usecase.dart';
 import 'seat_map_state.dart';
 import '../../data/seat_map_refresh_bus.dart';
 import '../../../../app/di/injection.dart';
 import 'dart:async';
 
 class SeatMapCubit extends Cubit<SeatMapState> {
-  final ReservationApiService _api;
+  final GetSeatMapUseCase _getSeatMapUseCase;
+  final CreateReservationUseCase _createReservationUseCase;
   final String projectionId;
   StreamSubscription<void>? _refreshSub;
 
-  SeatMapCubit(this._api, {required this.projectionId}) : super(SeatMapState.initial());
+  SeatMapCubit(
+    this._getSeatMapUseCase,
+    this._createReservationUseCase, {
+    required this.projectionId,
+  }) : super(SeatMapState.initial());
 
   Future<void> loadMap() async {
     emit(state.copyWith(loading: true, clearError: true, clearSuccess: true));
     try {
-      final map = await _api.getSeatMap(projectionId);
+      final map = await _getSeatMapUseCase(projectionId);
       emit(state.copyWith(loading: false, map: map));
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
@@ -35,12 +40,12 @@ class SeatMapCubit extends Cubit<SeatMapState> {
     if (state.selectedSeatIds.isEmpty) return;
     emit(state.copyWith(reserving: true, clearError: true, clearSuccess: true));
     try {
-      final created = await _api.createReservation(
+      final created = await _createReservationUseCase(
         projectionId: projectionId,
         seatIds: state.selectedSeatIds.toList(),
       );
       // success: refresh seat map and clear selection
-      final map = await _api.getSeatMap(projectionId);
+      final map = await _getSeatMapUseCase(projectionId);
       emit(state.copyWith(
         reserving: false,
         map: map,

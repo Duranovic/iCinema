@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/auth_service.dart';
 import '../../features/auth/presentation/widgets/login_sheet.dart';
-import '../../features/auth/data/services/auth_api_service.dart';
+import '../../features/auth/domain/usecases/get_me_usecase.dart';
 import 'package:icinema_shared/icinema_shared.dart';
 import '../constants/navigation.dart';
 import '../constants/route_paths.dart';
@@ -117,7 +117,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     setState(() => _isLoadingUser = true);
 
     try {
-      final user = await GetIt.I<AuthApiService>().getMe();
+      final user = await GetIt.I<GetMeUseCase>()();
       if (mounted) {
         setState(() {
           _currentUser = user;

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/services/search_api_service.dart';
+import '../../domain/usecases/search_movies_usecase.dart';
 import '../../data/models/movie_model.dart';
 
 abstract class SearchState {}
@@ -38,7 +38,7 @@ class SearchError extends SearchState {
 }
 
 class SearchCubit extends Cubit<SearchState> {
-  final SearchApiService _api;
+  final SearchMoviesUseCase _searchMoviesUseCase;
   Timer? _debounce;
   String _currentQuery = '';
   int _page = 1;
@@ -46,7 +46,7 @@ class SearchCubit extends Cubit<SearchState> {
   bool _isLoadingMore = false;
   List<MovieModel> _buffer = [];
 
-  SearchCubit(this._api) : super(SearchInitial());
+  SearchCubit(this._searchMoviesUseCase) : super(SearchInitial());
 
   void onQueryChanged(String q) {
     _currentQuery = q.trim();
@@ -69,7 +69,7 @@ class SearchCubit extends Cubit<SearchState> {
       _isLoadingMore = true;
       _page += 1;
       try {
-        final res = await _api.searchMovies(search: _currentQuery, page: _page, pageSize: _pageSize);
+        final res = await _searchMoviesUseCase(search: _currentQuery, page: _page, pageSize: _pageSize);
         _buffer.addAll(res.items);
         emit(SearchLoaded(items: List<MovieModel>.from(_buffer), total: res.total, page: res.page, pageSize: res.pageSize));
       } catch (e) {
@@ -88,7 +88,7 @@ class SearchCubit extends Cubit<SearchState> {
   Future<void> _search({bool reset = false}) async {
     try {
       emit(SearchLoading());
-      final res = await _api.searchMovies(search: _currentQuery, page: 1, pageSize: _pageSize);
+      final res = await _searchMoviesUseCase(search: _currentQuery, page: 1, pageSize: _pageSize);
       if (res.items.isEmpty) {
         _buffer = [];
         emit(SearchEmpty(_currentQuery));

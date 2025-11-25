@@ -1,19 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icinema_shared/icinema_shared.dart';
-import '../../data/services/auth_api_service.dart';
+import '../../domain/usecases/get_my_reservations_usecase.dart';
 import 'reservations_state.dart';
 
 class ReservationsCubit extends Cubit<ReservationsState> {
-  final AuthApiService _api;
+  final GetMyReservationsPagedUseCase _getReservationsUseCase;
   final String status; // 'Active' | 'Past'
 
-  ReservationsCubit(this._api, {required this.status})
+  ReservationsCubit(this._getReservationsUseCase, {required this.status})
       : super(ReservationsState.initial());
 
   Future<void> loadInitial({int pageSize = 20}) async {
     emit(state.copyWith(loading: true, page: 1, pageSize: pageSize, error: null));
     try {
-      final paged = await _api.getMyReservationsPaged(status: status, page: 1, pageSize: pageSize);
+      final paged = await _getReservationsUseCase(status: status, page: 1, pageSize: pageSize);
       emit(ReservationsState(
         items: paged.items,
         page: paged.page,
@@ -33,7 +33,7 @@ class ReservationsCubit extends Cubit<ReservationsState> {
     emit(state.copyWith(loadingMore: true));
     try {
       final nextPage = state.page + 1;
-      final paged = await _api.getMyReservationsPaged(status: status, page: nextPage, pageSize: state.pageSize);
+      final paged = await _getReservationsUseCase(status: status, page: nextPage, pageSize: state.pageSize);
       emit(ReservationsState(
         items: [...state.items, ...paged.items],
         page: paged.page,

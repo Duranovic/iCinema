@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../home/data/models/projection_model.dart';
-import '../../../home/data/services/projections_api_service.dart';
+import '../../../home/data/datasources/projections_api_service.dart';
 import '../../data/models/movie_model.dart';
-import '../../data/services/movies_api_service.dart';
+import '../../domain/usecases/load_repertoire_usecase.dart';
 
 // States
 abstract class MoviesState {
@@ -52,9 +52,9 @@ class MoviesLoaded extends MoviesState {
 
 // Cubit
 class MoviesCubit extends Cubit<MoviesState> {
-  final ProjectionsApiService _api;
-  final MoviesApiService _moviesApi;
-  MoviesCubit(this._api, this._moviesApi) : super(const MoviesInitial());
+  final LoadRepertoireUseCase _loadRepertoireUseCase;
+  
+  MoviesCubit(this._loadRepertoireUseCase) : super(const MoviesInitial());
 
   Future<void> loadRepertoire({int daysAhead = 14}) async {
     emit(const MoviesLoading());
@@ -64,16 +64,10 @@ class MoviesCubit extends Cubit<MoviesState> {
       final toBase = now.add(Duration(days: daysAhead));
       final to = DateTime(toBase.year, toBase.month, toBase.day, 23, 59, 59);
 
-      final resp = await _api.getProjectionsInRange(startDate: from, endDate: to);
-      // Fetch movie details for unique movieIds
-      final uniqueMovieIds = resp.items.map((p) => p.movieId).toSet().toList();
-      Map<String, MovieModel> moviesById = {};
-      if (uniqueMovieIds.isNotEmpty) {
-        final movies = await _moviesApi.getMoviesByIds(uniqueMovieIds);
-        moviesById = {for (final m in movies) m.id: m};
-      }
+      final (projections, moviesById) = await _loadRepertoireUseCase(from: from, to: to);
+      
       emit(MoviesLoaded(
-        projections: resp.items,
+        projections: projections,
         from: from,
         to: to,
         moviesById: moviesById,

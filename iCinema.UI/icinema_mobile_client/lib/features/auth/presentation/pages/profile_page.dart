@@ -7,7 +7,9 @@ import '../../../../app/services/auth_service.dart';
 import '../../../../app/router/app_router.dart' show routeObserver; // for RouteAware refresh
 import '../../../../app/config/url_utils.dart';
 import '../../data/reservations_refresh_bus.dart';
-import '../../data/services/auth_api_service.dart';
+import '../../domain/usecases/get_me_usecase.dart';
+import '../../domain/usecases/get_my_reservations_usecase.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 import 'package:icinema_shared/icinema_shared.dart';
 import '../bloc/reservations_cubit.dart';
 import '../bloc/reservations_state.dart';
@@ -28,12 +30,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _meFuture = getIt<AuthApiService>().getMe();
+    _meFuture = getIt<GetMeUseCase>()();
   }
 
   void _refreshProfile() {
     setState(() {
-      _meFuture = getIt<AuthApiService>().getMe();
+      _meFuture = getIt<GetMeUseCase>()();
     });
   }
 
@@ -44,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
       showDragHandle: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BlocProvider(
-        create: (_) => ProfileEditCubit(getIt<AuthApiService>()),
+        create: (_) => ProfileEditCubit(getIt<UpdateProfileUseCase>()),
         child: EditProfileSheet(currentUser: currentUser),
       ),
     );
@@ -180,7 +182,7 @@ class _ReservationsTabState extends State<_ReservationsTab> with RouteAware {
       try {
         _cubit = getIt<ReservationsCubit>(param1: widget.status);
       } catch (_) {
-        _cubit = ReservationsCubit(getIt<AuthApiService>(), status: widget.status);
+        _cubit = ReservationsCubit(getIt<GetMyReservationsPagedUseCase>(), status: widget.status);
       }
     } else {
       _cubit = getIt<ReservationsCubit>(param1: widget.status);

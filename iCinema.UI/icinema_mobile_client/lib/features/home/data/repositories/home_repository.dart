@@ -1,16 +1,11 @@
+import '../../domain/repositories/home_repository.dart' as domain;
 import '../models/projection_model.dart';
-import '../services/projections_api_service.dart';
-import '../../../movies/data/services/recommendations_api_service.dart';
+import '../datasources/projections_api_service.dart';
+import '../../../movies/data/datasources/recommendations_api_service.dart';
 import '../../../movies/data/models/movie_score_dto.dart';
 
-abstract class HomeRepository {
-  Future<List<ProjectionModel>> getTodayProjections();
-  Future<List<ProjectionModel>> getUpcomingProjections();
-  Future<Map<String, List<ProjectionModel>>> getGroupedProjections();
-  Future<List<MovieScoreDto>> getMyRecommendations();
-}
-
-class HomeRepositoryImpl implements HomeRepository {
+/// Implementation of HomeRepository
+class HomeRepositoryImpl implements domain.HomeRepository {
   final ProjectionsApiService _apiService;
   final RecommendationsApiService _recsService;
 

@@ -2,10 +2,49 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:icinema_shared/icinema_shared.dart';
 
-class AuthApiService {
-  final Dio _dio;
-  AuthApiService(this._dio);
+/// Remote data source for authentication API calls
+abstract class AuthRemoteDataSource {
+  Future<(String token, DateTime? expiresAt)> login({
+    required String email,
+    required String password,
+  });
 
+  Future<(String token, DateTime? expiresAt)> register({
+    required String email,
+    required String password,
+    String? fullName,
+  });
+
+  Future<UserMeModel> getMe();
+
+  Future<PagedResult<ReservationModel>> getMyReservationsPaged({
+    required String status,
+    int page = 1,
+    int pageSize = 20,
+  });
+
+  Future<List<ReservationModel>> getMyReservations({
+    required String status,
+    int page = 1,
+    int pageSize = 20,
+  });
+
+  Future<List<TicketModel>> getReservationTickets(String reservationId);
+
+  Future<UserMeModel> updateProfile({
+    required String fullName,
+    String? currentPassword,
+    String? newPassword,
+  });
+}
+
+/// Implementation of AuthRemoteDataSource
+class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
+  final Dio _dio;
+
+  AuthRemoteDataSourceImpl(this._dio);
+
+  @override
   Future<(String token, DateTime? expiresAt)> login({
     required String email,
     required String password,
@@ -60,6 +99,7 @@ class AuthApiService {
     }
   }
 
+  @override
   Future<UserMeModel> getMe() async {
     try {
       final response = await _dio.get('/users/me');
@@ -87,6 +127,7 @@ class AuthApiService {
     }
   }
 
+  @override
   Future<(String token, DateTime? expiresAt)> register({
     required String email,
     required String password,
@@ -130,6 +171,7 @@ class AuthApiService {
     }
   }
 
+  @override
   Future<PagedResult<ReservationModel>> getMyReservationsPaged({
     required String status,
     int page = 1,
@@ -160,6 +202,7 @@ class AuthApiService {
     return PagedResult(items: list, totalCount: list.length, page: page, pageSize: pageSize);
   }
 
+  @override
   Future<List<ReservationModel>> getMyReservations({
     required String status,
     int page = 1,
@@ -169,6 +212,7 @@ class AuthApiService {
     return paged.items;
   }
 
+  @override
   Future<List<TicketModel>> getReservationTickets(String reservationId) async {
     final resp = await _dio.get('/users/me/reservations/$reservationId/tickets');
     final data = resp.data;
@@ -176,6 +220,7 @@ class AuthApiService {
     return list.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  @override
   Future<UserMeModel> updateProfile({
     required String fullName,
     String? currentPassword,
@@ -233,3 +278,4 @@ class AuthApiService {
     }
   }
 }
+

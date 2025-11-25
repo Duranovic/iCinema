@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/di/injection.dart';
-import '../../data/services/validation_api_service.dart';
+import '../../domain/usecases/validate_ticket_usecase.dart';
 import '../bloc/validation_cubit.dart';
 import '../widgets/validation_result_dialog.dart';
 import 'qr_scanner_page.dart';
@@ -13,7 +13,7 @@ class ValidationPage extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider(
-          create: (_) => ValidationCubit(getIt<ValidationApiService>())..startScanning(),
+          create: (_) => ValidationCubit(getIt<ValidateTicketUseCase>())..startScanning(),
           child: const QrScannerPage(),
         ),
       ),
@@ -22,7 +22,7 @@ class ValidationPage extends StatelessWidget {
 
   void _showManualEntryDialog(BuildContext context) {
     final controller = TextEditingController();
-    final cubit = ValidationCubit(getIt<ValidationApiService>());
+    final cubit = ValidationCubit(getIt<ValidateTicketUseCase>());
     final scaffoldContext = context; // Capture context
 
     showDialog(

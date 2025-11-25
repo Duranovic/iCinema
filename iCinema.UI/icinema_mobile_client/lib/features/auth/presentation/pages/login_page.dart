@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/di/injection.dart';
 import '../../../../app/services/auth_service.dart';
-import '../../data/services/auth_api_service.dart';
+import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/get_me_usecase.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,8 +29,8 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final api = getIt<AuthApiService>();
-      final (token, expiresAt) = await api.login(
+      final loginUseCase = getIt<LoginUseCase>();
+      final (token, expiresAt) = await loginUseCase(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );

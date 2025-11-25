@@ -1,17 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/services/reservation_api_service.dart';
+import '../../domain/usecases/get_seat_map_usecase.dart';
 import 'reservation_details_state.dart';
 import '../../data/seat_map_refresh_bus.dart';
 import '../../../../app/di/injection.dart';
 import '../../../auth/data/reservations_refresh_bus.dart';
 
 class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
-  final ReservationApiService _api;
+  final GetTicketsUseCase _getTicketsUseCase;
+  final CancelReservationUseCase _cancelReservationUseCase;
   final String reservationId;
   final ReservationHeader? initialHeader;
 
   ReservationDetailsCubit(
-    this._api, {
+    this._getTicketsUseCase,
+    this._cancelReservationUseCase, {
     required this.reservationId,
     this.initialHeader,
   }) : super(ReservationDetailsState.initial()) {
@@ -24,7 +26,7 @@ class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
   Future<void> load() async {
     emit(state.copyWith(loading: true, clearError: true));
     try {
-      final tickets = await _api.getTickets(reservationId);
+      final tickets = await _getTicketsUseCase(reservationId);
       emit(state.copyWith(loading: false, tickets: tickets));
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
@@ -36,7 +38,7 @@ class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
   Future<void> cancel() async {
     emit(state.copyWith(loading: true, clearError: true));
     try {
-      final ok = await _api.cancelReservation(reservationId);
+      final ok = await _cancelReservationUseCase(reservationId);
       if (ok) {
         // flip header isCanceled and reload tickets
         final h = state.header;
@@ -53,7 +55,7 @@ class ReservationDetailsCubit extends Cubit<ReservationDetailsState> {
                 movieTitle: h.movieTitle,
                 posterUrl: h.posterUrl,
               );
-        final tickets = await _api.getTickets(reservationId);
+        final tickets = await _getTicketsUseCase(reservationId);
         emit(state.copyWith(loading: false, header: updated, tickets: tickets));
         // Notify any active seat maps to reload
         if (getIt.isRegistered<SeatMapRefreshBus>()) {

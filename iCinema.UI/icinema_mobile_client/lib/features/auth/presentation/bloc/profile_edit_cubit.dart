@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/services/auth_api_service.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 import 'package:icinema_shared/icinema_shared.dart';
 
 // States
@@ -21,9 +21,9 @@ class ProfileEditError extends ProfileEditState {
 
 // Cubit
 class ProfileEditCubit extends Cubit<ProfileEditState> {
-  final AuthApiService _authApiService;
+  final UpdateProfileUseCase _updateProfileUseCase;
 
-  ProfileEditCubit(this._authApiService) : super(ProfileEditInitial());
+  ProfileEditCubit(this._updateProfileUseCase) : super(ProfileEditInitial());
 
   Future<void> updateProfile({
     required String fullName,
@@ -57,7 +57,7 @@ class ProfileEditCubit extends Cubit<ProfileEditState> {
     emit(ProfileEditLoading());
 
     try {
-      final updatedUser = await _authApiService.updateProfile(
+      final updatedUser = await _updateProfileUseCase(
         fullName: fullName.trim(),
         currentPassword: currentPassword,
         newPassword: newPassword,

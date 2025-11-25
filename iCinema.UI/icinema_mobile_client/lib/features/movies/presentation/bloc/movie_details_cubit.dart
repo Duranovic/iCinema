@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../data/models/movie_model.dart';
-import '../../data/services/movies_api_service.dart';
+import '../../domain/usecases/get_my_rating_usecase.dart';
+import '../../domain/usecases/get_my_rating_usecase.dart';
+import '../../domain/usecases/get_movie_details_usecase.dart';
+import '../../data/datasources/movies_api_service.dart';
 import '../../../home/data/models/projection_model.dart';
-import '../../../home/data/services/projections_api_service.dart';
 
 // States
 abstract class MovieDetailsState {}
@@ -46,52 +48,37 @@ class MovieDetailsError extends MovieDetailsState {
 
 @injectable
 class MovieDetailsCubit extends Cubit<MovieDetailsState> {
-  final MoviesApiService _moviesApiService;
-  final ProjectionsApiService _projectionsApiService;
+  final GetMovieDetailsUseCase _getMovieDetailsUseCase;
+  final GetMyRatingUseCase _getMyRatingUseCase;
+  final SaveRatingUseCase _saveRatingUseCase;
+  final CanRateUseCase _canRateUseCase;
 
-  MovieDetailsCubit(this._moviesApiService, this._projectionsApiService)
-      : super(MovieDetailsInitial());
+  MovieDetailsCubit(
+    this._getMovieDetailsUseCase,
+    this._getMyRatingUseCase,
+    this._saveRatingUseCase,
+    this._canRateUseCase,
+  ) : super(MovieDetailsInitial());
 
   /// Load movie details and projections
   Future<void> loadMovieDetails(String movieId, List<ProjectionModel> projections) async {
     emit(MovieDetailsLoading());
 
     try {
-      final movie = await _moviesApiService.getMovieById(movieId);
       final now = DateTime.now();
-      // Always fetch complete (future) projections for this movie,
-      // regardless of what was passed in via navigation extras. The extras
-      // may represent only a single day and would hide other available days.
-      List<ProjectionModel> finalProjections;
-      final resp = await _projectionsApiService.getProjectionsForMovie(
+      final (movie, finalProjections, myRating, canRate) = await _getMovieDetailsUseCase(
         movieId: movieId,
-        startDate: now,
+        now: now,
+        fallbackProjections: projections,
       );
-      finalProjections = resp.items.where((p) => p.startTime.isAfter(now)).toList();
-      // In rare case backend returns empty, fallback to filtered provided list
-      if (finalProjections.isEmpty && projections.isNotEmpty) {
-        finalProjections = projections.where((p) => p.startTime.isAfter(now)).toList();
-      }
 
-  /// Check if user can rate (must have purchased a ticket)
-  Future<void> loadCanRate(String movieId) async {
-    try {
-      final allowed = await _moviesApiService.canRate(movieId);
-      final s = state;
-      if (s is MovieDetailsLoaded) {
-        emit(s.copyWith(canRate: allowed));
-      }
-    } catch (_) {
-      final s = state;
-      if (s is MovieDetailsLoaded) emit(s.copyWith(canRate: false));
-    }
-  }
       // Emit loaded state
-      emit(MovieDetailsLoaded(movie: movie, projections: finalProjections));
-      // Load my rating after details are loaded to avoid race with UI init
-      await loadMyRating(movieId);
-      // Load canRate flag (401 -> false)
-      await loadCanRate(movieId);
+      emit(MovieDetailsLoaded(
+        movie: movie,
+        projections: finalProjections,
+        myRating: myRating,
+        canRate: canRate,
+      ));
     } on MovieNotFoundException {
       emit(MovieDetailsError('Film nije pronađen'));
     } on MoviesNetworkException catch (e) {
@@ -103,10 +90,24 @@ class MovieDetailsCubit extends Cubit<MovieDetailsState> {
     }
   }
 
+  /// Check if user can rate (must have purchased a ticket)
+  Future<void> loadCanRate(String movieId) async {
+    try {
+      final allowed = await _canRateUseCase(movieId);
+      final s = state;
+      if (s is MovieDetailsLoaded) {
+        emit(s.copyWith(canRate: allowed));
+      }
+    } catch (_) {
+      final s = state;
+      if (s is MovieDetailsLoaded) emit(s.copyWith(canRate: false));
+    }
+  }
+
   /// Load current user's rating, if any
   Future<void> loadMyRating(String movieId) async {
     try {
-      final rating = await _moviesApiService.getMyRating(movieId);
+      final rating = await _getMyRatingUseCase(movieId);
       final s = state;
       if (s is MovieDetailsLoaded) {
         emit(s.copyWith(myRating: rating));
@@ -153,7 +154,7 @@ class MovieDetailsCubit extends Cubit<MovieDetailsState> {
     ));
 
     try {
-      await _moviesApiService.saveMyRating(movieId: movieId, rating: r, review: review);
+      await _saveRatingUseCase(movieId: movieId, rating: r, review: review);
       // Optionally refresh from server in background later if needed
     } catch (e) {
       // Rollback on failure

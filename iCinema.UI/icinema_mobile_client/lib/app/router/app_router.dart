@@ -20,8 +20,9 @@ import '../../features/reservations/presentation/pages/reservation_page.dart';
 import '../../features/reservations/presentation/bloc/seat_map_cubit.dart';
 import '../../features/reservations/presentation/details/reservation_details_cubit.dart';
 import '../../features/reservations/presentation/details/reservation_details_page.dart';
-import '../../features/reservations/data/services/reservation_api_service.dart';
+// Removed - using DI now
 import '../../features/reservations/presentation/details/reservation_details_state.dart';
+import '../../features/reservations/domain/usecases/get_seat_map_usecase.dart';
 import '../../features/notifications/presentation/bloc/notifications_cubit.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/validation/presentation/pages/validation_page.dart';
@@ -190,7 +191,8 @@ GoRouter buildRouter() {
           return _slideTransitionPage(
             BlocProvider<ReservationDetailsCubit>(
               create: (_) => ReservationDetailsCubit(
-                getIt<ReservationApiService>(),
+                getIt<GetTicketsUseCase>(),
+                getIt<CancelReservationUseCase>(),
                 reservationId: id,
                 initialHeader: header,
               )..load(),
