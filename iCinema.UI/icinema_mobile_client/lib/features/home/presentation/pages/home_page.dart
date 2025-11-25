@@ -805,10 +805,12 @@ class _HomePageState extends State<HomePage> {
     // Get the movieId from the first projection
     if (projections.isNotEmpty) {
       final movieId = projections.first.movieId;
-      context.push(
-        '/movie-details/${Uri.encodeComponent(movieId)}',
-        extra: projections,
-      );
+      if (movieId != null && movieId.isNotEmpty) {
+        context.push(
+          '/movie-details/${Uri.encodeComponent(movieId)}',
+          extra: projections,
+        );
+      }
     }
   }
 

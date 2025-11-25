@@ -144,14 +144,15 @@ class _MovieResultTile extends StatelessWidget {
       subtitle: Text(
         [
           if (movie.genres.isNotEmpty) movie.formattedGenres,
-          if (movie.releaseDate.year > 0) movie.releaseYear,
+          if (movie.releaseDate != null && movie.releaseDate!.year > 0) movie.releaseYear,
           if (movie.duration != null) movie.formattedDuration,
         ].join(' • '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       onTap: () {
-        context.push('/movie-details/${Uri.encodeComponent(movie.id)}');
+        if (movie.id == null) return;
+        context.push('/movie-details/${Uri.encodeComponent(movie.id!)}');
       },
     );
   }

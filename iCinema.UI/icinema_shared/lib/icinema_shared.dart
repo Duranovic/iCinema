@@ -19,6 +19,9 @@ export 'data/models/common/paged_result.dart';
 export 'data/models/user/user_me_model.dart';
 export 'data/models/reservation/reservation_model.dart';
 export 'data/models/reservation/ticket_model.dart';
+export 'data/models/movie/movie_model.dart';
+export 'data/models/movie/cast_member_model.dart';
+export 'data/models/projection/projection_model.dart';
 
 // Domain - Entities
 export 'domain/entities/user_entity.dart';

@@ -112,11 +112,12 @@ class _MoviesPageState extends State<MoviesPage> {
                     return const SizedBox.shrink();
                   }
                   final movie = movies[index - 2];
-                  final movieProjections = projectionsFor(movie.id);
+                  final movieProjections = projectionsFor(movie.id ?? '');
                   return _MovieListItem(
                     movie: movie,
                     onTap: () {
-                      final encodedId = Uri.encodeComponent(movie.id);
+                      if (movie.id == null) return;
+                      final encodedId = Uri.encodeComponent(movie.id!);
                       context.push('/movie-details/$encodedId', extra: movieProjections);
                     },
                   );

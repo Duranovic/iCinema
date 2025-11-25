@@ -594,9 +594,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prijavite se da ocijenite film.')));
                   return;
                 }
-                if (!canRate) return; // read-only when not allowed
+                if (!canRate || movie.id == null) return; // read-only when not allowed
                 context.read<MovieDetailsCubit>().saveMyRating(
-                      movieId: movie.id,
+                      movieId: movie.id!,
                       rating: starIndex.toDouble(),
                     );
               },
@@ -1142,7 +1142,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  projection.cinemaName,
+                  projection.cinemaName ?? '',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1174,9 +1174,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               ),
               const SizedBox(height: 4),
               FilledButton(
-                onPressed: canReserve
+                onPressed: canReserve && projection.id != null
                     ? () {
-                        final id = Uri.encodeComponent(projection.id);
+                        final id = Uri.encodeComponent(projection.id!);
                         context.push('/projections/$id/reserve');
                       }
                     : null,

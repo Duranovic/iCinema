@@ -26,12 +26,17 @@ class LoadRepertoireUseCase {
     );
 
     // Fetch movie details for unique movieIds
-    final uniqueMovieIds = resp.items.map((p) => p.movieId).where((id) => id.isNotEmpty).toSet().toList();
+    final uniqueMovieIds = resp.items
+        .map((p) => p.movieId)
+        .where((id) => id != null && id.isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
     Map<String, MovieModel> moviesById = {};
     
     if (uniqueMovieIds.isNotEmpty) {
       final movies = await _moviesRepository.getMoviesByIds(uniqueMovieIds);
-      moviesById = {for (final m in movies) m.id: m};
+      moviesById = {for (final m in movies) if (m.id != null) m.id!: m};
     }
 
     return (resp.items, moviesById);
