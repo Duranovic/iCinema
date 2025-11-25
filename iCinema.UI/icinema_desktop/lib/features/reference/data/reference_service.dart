@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-
-import '../domain/paged_result.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../domain/country.dart';
 import '../domain/city.dart';
 import '../domain/genre.dart';

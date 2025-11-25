@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/reference_service.dart';
 import '../../domain/actor.dart';
-import '../../domain/paged_result.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 class ActorsState {
   final bool loading;

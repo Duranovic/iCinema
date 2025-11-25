@@ -8,8 +8,7 @@ import '../../../../app/router/app_router.dart' show routeObserver; // for Route
 import '../../../../app/config/url_utils.dart';
 import '../../data/reservations_refresh_bus.dart';
 import '../../data/services/auth_api_service.dart';
-import '../../data/models/user_me.dart';
-import '../../data/models/reservation.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../bloc/reservations_cubit.dart';
 import '../bloc/reservations_state.dart';
 import '../bloc/profile_edit_cubit.dart';
@@ -24,7 +23,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late Future<UserMe> _meFuture;
+  late Future<UserMeModel> _meFuture;
 
   @override
   void initState() {
@@ -38,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Future<void> _openEditProfile(UserMe currentUser) async {
+  Future<void> _openEditProfile(UserMeModel currentUser) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -76,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
         ),
-        body: FutureBuilder<UserMe>(
+        body: FutureBuilder<UserMeModel>(
           future: _meFuture,
           builder: (context, snap) {
             final loading = snap.connectionState == ConnectionState.waiting;

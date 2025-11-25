@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import '../../data/reference_service.dart';
 import '../../domain/country.dart';
-import '../../domain/paged_result.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 class CountriesState {
   final bool loading;

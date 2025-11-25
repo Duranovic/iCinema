@@ -1,9 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import '../models/user_me.dart';
-import '../models/reservation.dart';
-import '../models/ticket.dart';
-import '../../../../app/models/paged_result.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 class AuthApiService {
   final Dio _dio;
@@ -63,7 +60,7 @@ class AuthApiService {
     }
   }
 
-  Future<UserMe> getMe() async {
+  Future<UserMeModel> getMe() async {
     try {
       final response = await _dio.get('/users/me');
       final data = response.data;
@@ -73,7 +70,7 @@ class AuthApiService {
       } else {
         map = data as Map<String, dynamic>;
       }
-      return UserMe.fromJson(map);
+      return UserMeModel.fromJson(map);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final body = e.response?.data;
@@ -179,7 +176,7 @@ class AuthApiService {
     return list.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<UserMe> updateProfile({
+  Future<UserMeModel> updateProfile({
     required String fullName,
     String? currentPassword,
     String? newPassword,
@@ -202,7 +199,7 @@ class AuthApiService {
       } else {
         map = data as Map<String, dynamic>;
       }
-      return UserMe.fromJson(map);
+      return UserMeModel.fromJson(map);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final body = e.response?.data;

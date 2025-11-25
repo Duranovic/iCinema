@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:icinema_desktop/app/di/injection.dart';
 import 'package:icinema_desktop/app/services/auth_service.dart';
 import 'package:icinema_desktop/app/layout/app_shell.dart';
-import 'package:icinema_desktop/features/auth/presentation/blocs/login/login_bloc.dart';
+import 'package:icinema_desktop/features/auth/presentation/bloc/login/login_bloc.dart';
 import 'package:icinema_desktop/features/auth/presentation/pages/login_page.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';

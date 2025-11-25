@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/models/user_me.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../bloc/profile_edit_cubit.dart';
 
 class EditProfileSheet extends StatefulWidget {
-  final UserMe currentUser;
+  final UserMeModel currentUser;
 
   const EditProfileSheet({
     super.key,

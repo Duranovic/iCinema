@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icinema_desktop/app/di/injection.dart';
 import 'package:icinema_desktop/app/services/auth_service.dart';
-import '../blocs/login/login_bloc.dart';
-import '../blocs/login/login_event.dart';
-import '../blocs/login/login_state.dart';
+import '../bloc/login/login_bloc.dart';
+import '../bloc/login/login_event.dart';
+import '../bloc/login/login_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

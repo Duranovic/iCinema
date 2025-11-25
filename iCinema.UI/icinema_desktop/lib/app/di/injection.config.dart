@@ -19,7 +19,7 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
-import '../../features/auth/presentation/blocs/login/login_bloc.dart' as _i1018;
+import '../../features/auth/presentation/bloc/login/login_bloc.dart' as _i1018;
 import '../../features/cinemas/data/city_service.dart' as _i1012;
 import '../../features/cinemas/presentation/bloc/cinemas_bloc.dart' as _i415;
 import '../../features/home/data/home_service.dart' as _i216;

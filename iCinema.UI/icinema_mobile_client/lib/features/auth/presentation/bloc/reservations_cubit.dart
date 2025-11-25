@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../data/services/auth_api_service.dart';
 import 'reservations_state.dart';
-import '../../data/models/reservation.dart';
 
 class ReservationsCubit extends Cubit<ReservationsState> {
   final AuthApiService _api;

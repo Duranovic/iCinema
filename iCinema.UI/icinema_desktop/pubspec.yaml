@@ -46,6 +46,10 @@ dependencies:
   get_it: ^8.1.0
   injectable: ^2.5.1
   json_annotation: ^4.9.0
+  
+  # Shared Package
+  icinema_shared:
+    path: ../icinema_shared
   table_calendar: ^3.1.2
   pdf: ^3.10.4
   printing: ^5.11.0

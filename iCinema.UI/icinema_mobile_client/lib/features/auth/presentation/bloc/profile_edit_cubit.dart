@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/services/auth_api_service.dart';
-import '../../data/models/user_me.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 // States
 abstract class ProfileEditState {}
@@ -10,7 +10,7 @@ class ProfileEditInitial extends ProfileEditState {}
 class ProfileEditLoading extends ProfileEditState {}
 
 class ProfileEditSuccess extends ProfileEditState {
-  final UserMe updatedUser;
+  final UserMeModel updatedUser;
   ProfileEditSuccess(this.updatedUser);
 }
 

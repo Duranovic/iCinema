@@ -1,10 +1,10 @@
-import '../../data/models/user_me.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 enum AuthStatus { unauthenticated, authenticating, authenticated, error }
 
 class AuthState {
   final AuthStatus status;
-  final UserMe? user;
+  final UserMeModel? user;
   final String? token;
   final String? errorMessage;
 
@@ -17,7 +17,7 @@ class AuthState {
 
   factory AuthState.unauthenticated() => const AuthState(status: AuthStatus.unauthenticated);
   factory AuthState.authenticating() => const AuthState(status: AuthStatus.authenticating);
-  factory AuthState.authenticated(UserMe user, String token) => AuthState(
+  factory AuthState.authenticated(UserMeModel user, String token) => AuthState(
         status: AuthStatus.authenticated,
         user: user,
         token: token,
@@ -26,7 +26,7 @@ class AuthState {
 
   AuthState copyWith({
     AuthStatus? status,
-    UserMe? user,
+    UserMeModel? user,
     String? token,
     String? errorMessage,
   }) {

@@ -1,4 +1,4 @@
-import '../../data/models/reservation.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 
 class ReservationsState {
   final List<ReservationModel> items;
