@@ -2,7 +2,9 @@ using iCinema.Infrastructure.Identity;
 using iCinema.Infrastructure.Persistence;
 using iCinema.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 
 namespace iCinema.Api.Extensions;
 
@@ -11,6 +13,29 @@ namespace iCinema.Api.Extensions;
 /// </summary>
 public static class WebApplicationExtensions
 {
+    /// <summary>
+    /// Applies pending database migrations.
+    /// </summary>
+    public static async Task MigrateDatabaseAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<iCinemaDbContext>();
+        var identityContext = scope.ServiceProvider.GetRequiredService<iCinemaIdentityContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        // Apply migrations (now that we have an InitialCreate migration)
+        try
+        {
+            await context.Database.MigrateAsync();
+            await identityContext.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply database migrations.");
+            throw; // Re-throw to prevent app from starting with broken database
+        }
+    }
+
     /// <summary>
     /// Seeds the database with initial data.
     /// </summary>

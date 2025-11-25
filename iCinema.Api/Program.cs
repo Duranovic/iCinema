@@ -5,6 +5,39 @@ using iCinema.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel for HTTPS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    var httpsPort = builder.Configuration.GetValue<int>("ASPNETCORE_HTTPS_PORT", 7026);
+    var httpPort = 5218;
+    
+    options.ListenAnyIP(httpPort, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+    });
+    
+    options.ListenAnyIP(httpsPort, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+        
+        // Try to use a certificate file if it exists (for Docker), otherwise use default
+        var certPath = Path.Combine(AppContext.BaseDirectory, "https-dev.crt");
+        var keyPath = Path.Combine(AppContext.BaseDirectory, "https-dev.key");
+        
+        if (File.Exists(certPath) && File.Exists(keyPath))
+        {
+            // Load certificate from PEM files
+            var cert = System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPemFile(certPath, keyPath);
+            listenOptions.UseHttps(cert);
+        }
+        else
+        {
+            // Use default certificate (development certificate)
+            listenOptions.UseHttps();
+        }
+    });
+});
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddResponseCaching();
@@ -35,6 +68,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+await app.MigrateDatabaseAsync();
 await app.SeedDatabaseAsync();
 app.ConfigureSwagger();
 app.ConfigureStaticFiles(builder.Configuration);

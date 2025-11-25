@@ -12,8 +12,8 @@ using iCinema.Infrastructure.Persistence;
 namespace iCinema.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(iCinemaDbContext))]
-    [Migration("20250928183946_AddNotifications")]
-    partial class AddNotifications
+    [Migration("20251125132549_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("Bio")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -58,6 +61,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Actors__3214EC07DC3757D0");
@@ -254,6 +260,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CityId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
@@ -264,6 +273,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Cinemas__3214EC07336722AE");
@@ -283,10 +295,16 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CountryId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Cities__3214EC07B6373934");
@@ -303,10 +321,16 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("(newid())");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Countrie__3214EC07A87D9B58");
@@ -324,6 +348,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("Bio")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -332,6 +359,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Director__3214EC0717AA3D8B");
@@ -346,10 +376,16 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("(newid())");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Genres__3214EC07DEAD6A98");
@@ -366,6 +402,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CinemaId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("HallType")
                         .HasMaxLength(50)
@@ -391,6 +430,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<int>("SeatsPerRow")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id")
                         .HasName("PK__Halls__3214EC073E00AFC8");
 
@@ -409,6 +451,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("AgeRating")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -438,6 +483,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                     b.Property<string>("TrailerUrl")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Movies__3214EC07269DD239");
@@ -523,6 +571,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("(newid())");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("HallId")
                         .HasColumnType("uniqueidentifier");
 
@@ -548,6 +599,9 @@ namespace iCinema.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK__Projecti__3214EC07DD1D3F4C");

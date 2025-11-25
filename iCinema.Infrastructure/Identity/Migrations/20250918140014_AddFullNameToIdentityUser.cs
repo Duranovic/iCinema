@@ -10,11 +10,14 @@ namespace iCinema.Infrastructure.Identity.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "FullName",
-                table: "AspNetUsers",
-                type: "nvarchar(max)",
-                nullable: true);
+            // Only add column if table exists and column doesn't exist
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'AspNetUsers')
+                    AND NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'FullName')
+                BEGIN
+                    ALTER TABLE [AspNetUsers] ADD [FullName] nvarchar(max) NULL;
+                END
+            ");
         }
 
         /// <inheritdoc />

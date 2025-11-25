@@ -13,8 +13,14 @@ class DevHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
     client.badCertificateCallback = (cert, host, port) {
-      // Trust local dev servers
-      if (host == 'localhost' || host == '127.0.0.1') return true;
+      // Trust local dev servers (localhost, 127.0.0.1, and local network IPs)
+      if (host == 'localhost' || 
+          host == '127.0.0.1' || 
+          host.startsWith('192.168.') ||
+          host.startsWith('10.') ||
+          host.startsWith('172.')) {
+        return true;
+      }
       return false;
     };
     return client;
