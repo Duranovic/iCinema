@@ -19,19 +19,47 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
-import '../../features/auth/presentation/bloc/login/login_bloc.dart' as _i1018;
+import '../../features/auth/presentation/bloc/login/login_bloc.dart' as _i208;
 import '../../features/cinemas/data/city_service.dart' as _i1012;
 import '../../features/cinemas/presentation/bloc/cinemas_bloc.dart' as _i415;
 import '../../features/home/data/home_service.dart' as _i216;
 import '../../features/home/presentation/bloc/home_kpis_cubit.dart' as _i856;
 import '../../features/movies/data/movie_service.dart' as _i1055;
+import '../../features/movies/data/repositories/movies_repository_impl.dart'
+    as _i985;
+import '../../features/movies/domain/repositories/movies_repository.dart'
+    as _i435;
+import '../../features/movies/domain/usecases/add_movie_usecase.dart' as _i934;
+import '../../features/movies/domain/usecases/delete_movie_usecase.dart'
+    as _i708;
+import '../../features/movies/domain/usecases/load_movies_usecase.dart' as _i52;
+import '../../features/movies/domain/usecases/update_movie_usecase.dart'
+    as _i879;
 import '../../features/movies/presentation/bloc/movies_bloc.dart' as _i169;
 import '../../features/projections/data/cinema_service.dart' as _i468;
 import '../../features/projections/data/projection_service.dart' as _i963;
+import '../../features/projections/data/repositories/projections_repository_impl.dart'
+    as _i88;
+import '../../features/projections/domain/repositories/projections_repository.dart'
+    as _i422;
+import '../../features/projections/domain/usecases/add_projection_usecase.dart'
+    as _i609;
+import '../../features/projections/domain/usecases/delete_projection_usecase.dart'
+    as _i58;
+import '../../features/projections/domain/usecases/load_projections_usecase.dart'
+    as _i888;
+import '../../features/projections/domain/usecases/update_projection_usecase.dart'
+    as _i14;
 import '../../features/projections/presentation/bloc/projections_bloc.dart'
     as _i850;
 import '../../features/reports/data/pdf_service.dart' as _i795;
 import '../../features/reports/data/reports_service.dart' as _i653;
+import '../../features/reports/data/repositories/reports_repository_impl.dart'
+    as _i227;
+import '../../features/reports/domain/repositories/reports_repository.dart'
+    as _i808;
+import '../../features/reports/domain/usecases/generate_report_usecase.dart'
+    as _i367;
 import '../services/auth_service.dart' as _i745;
 import 'network_module.dart' as _i567;
 
@@ -72,16 +100,47 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i856.HomeKpisCubit>(
         () => _i856.HomeKpisCubit(gh<_i216.HomeService>()));
+    gh.lazySingleton<_i422.ProjectionsRepository>(
+        () => _i88.ProjectionsRepositoryImpl(gh<_i963.ProjectionService>()));
+    gh.lazySingleton<_i14.UpdateProjectionUseCase>(
+        () => _i14.UpdateProjectionUseCase(gh<_i422.ProjectionsRepository>()));
+    gh.lazySingleton<_i888.LoadProjectionsUseCase>(
+        () => _i888.LoadProjectionsUseCase(gh<_i422.ProjectionsRepository>()));
+    gh.lazySingleton<_i58.DeleteProjectionUseCase>(
+        () => _i58.DeleteProjectionUseCase(gh<_i422.ProjectionsRepository>()));
+    gh.lazySingleton<_i609.AddProjectionUseCase>(
+        () => _i609.AddProjectionUseCase(gh<_i422.ProjectionsRepository>()));
+    gh.lazySingleton<_i435.MoviesRepository>(
+        () => _i985.MoviesRepositoryImpl(gh<_i1055.MovieService>()));
+    gh.lazySingleton<_i934.AddMovieUseCase>(
+        () => _i934.AddMovieUseCase(gh<_i435.MoviesRepository>()));
+    gh.lazySingleton<_i879.UpdateMovieUseCase>(
+        () => _i879.UpdateMovieUseCase(gh<_i435.MoviesRepository>()));
+    gh.lazySingleton<_i52.LoadMoviesUseCase>(
+        () => _i52.LoadMoviesUseCase(gh<_i435.MoviesRepository>()));
+    gh.lazySingleton<_i708.DeleteMovieUseCase>(
+        () => _i708.DeleteMovieUseCase(gh<_i435.MoviesRepository>()));
     gh.factory<_i188.LoginUseCase>(
         () => _i188.LoginUseCase(gh<_i787.AuthRepository>()));
-    gh.factory<_i169.MoviesBloc>(
-        () => _i169.MoviesBloc(gh<_i1055.MovieService>()));
+    gh.lazySingleton<_i808.ReportsRepository>(
+        () => _i227.ReportsRepositoryImpl(gh<_i653.ReportsService>()));
+    gh.factory<_i169.MoviesBloc>(() => _i169.MoviesBloc(
+          gh<_i52.LoadMoviesUseCase>(),
+          gh<_i934.AddMovieUseCase>(),
+          gh<_i879.UpdateMovieUseCase>(),
+          gh<_i708.DeleteMovieUseCase>(),
+        ));
+    gh.factory<_i208.LoginBloc>(
+        () => _i208.LoginBloc(gh<_i188.LoginUseCase>()));
     gh.factory<_i850.ProjectionsBloc>(() => _i850.ProjectionsBloc(
-          gh<_i963.ProjectionService>(),
+          gh<_i888.LoadProjectionsUseCase>(),
+          gh<_i609.AddProjectionUseCase>(),
+          gh<_i14.UpdateProjectionUseCase>(),
+          gh<_i58.DeleteProjectionUseCase>(),
           gh<_i468.CinemaService>(),
         ));
-    gh.factory<_i1018.LoginBloc>(
-        () => _i1018.LoginBloc(gh<_i188.LoginUseCase>()));
+    gh.lazySingleton<_i367.GenerateReportUseCase>(
+        () => _i367.GenerateReportUseCase(gh<_i808.ReportsRepository>()));
     return this;
   }
 }

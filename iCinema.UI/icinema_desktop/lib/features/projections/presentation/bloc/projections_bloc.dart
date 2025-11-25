@@ -1,15 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:icinema_desktop/features/projections/data/projection_service.dart';
 import 'package:icinema_desktop/features/projections/data/cinema_service.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
 import 'package:icinema_desktop/features/projections/domain/projection.dart';
 import 'package:icinema_desktop/features/projections/domain/cinema.dart';
+import 'package:icinema_desktop/features/projections/domain/usecases/load_projections_usecase.dart';
+import 'package:icinema_desktop/features/projections/domain/usecases/add_projection_usecase.dart';
+import 'package:icinema_desktop/features/projections/domain/usecases/update_projection_usecase.dart';
+import 'package:icinema_desktop/features/projections/domain/usecases/delete_projection_usecase.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
 class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
-  final ProjectionService projectionService;
+  final LoadProjectionsUseCase _loadProjectionsUseCase;
+  final AddProjectionUseCase _addProjectionUseCase;
+  final UpdateProjectionUseCase _updateProjectionUseCase;
+  final DeleteProjectionUseCase _deleteProjectionUseCase;
   final CinemaService cinemaService;
 
   // simple in-memory cache keyed by yyyy-MM-cinemaId (or yyyy-MM-all for all cinemas)
@@ -20,7 +26,13 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
   List<Cinema> _availableCinemas = [];
   Cinema? _selectedCinema;
 
-  ProjectionsBloc(this.projectionService, this.cinemaService) : super(ProjectionsInitial()) {
+  ProjectionsBloc(
+    this._loadProjectionsUseCase,
+    this._addProjectionUseCase,
+    this._updateProjectionUseCase,
+    this._deleteProjectionUseCase,
+    this.cinemaService,
+  ) : super(ProjectionsInitial()) {
     on<LoadCinemas>((event, emit) async {
       try {
         _availableCinemas = await cinemaService.fetchCinemas();
@@ -69,7 +81,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       }
 
       try {
-        final projections = await projectionService.fetchProjections(
+        final projections = await _loadProjectionsUseCase(
             date: month, disablePaging: true, cinemaId: _selectedCinema?.id);
         // Guard against stale responses
         if (_latestRequestKey != key) return;
@@ -90,7 +102,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       emit(ProjectionsLoading(currentMonth, 
           availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       try {
-        await projectionService.addProjection(event.projection);
+        await _addProjectionUseCase(event.projection);
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth)); // reload after add
       } catch (e) {
@@ -105,7 +117,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       emit(ProjectionsLoading(currentMonth, 
           availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       try {
-        await projectionService.updateProjection(event.projection);
+        await _updateProjectionUseCase(event.projection);
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth));
       } catch (e) {
@@ -129,7 +141,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       emit(ProjectionsLoading(currentMonth, 
           availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       try {
-        await projectionService.deleteProjection(id);
+        await _deleteProjectionUseCase(id);
         // Reload the Projections after successful deletion.
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth));

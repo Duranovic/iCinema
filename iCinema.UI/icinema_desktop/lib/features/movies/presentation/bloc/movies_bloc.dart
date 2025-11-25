@@ -1,35 +1,37 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import '../../data/movie_service.dart';
-import '../../domain/movie.dart';
+import '../../domain/usecases/load_movies_usecase.dart';
+import '../../domain/usecases/add_movie_usecase.dart';
+import '../../domain/usecases/update_movie_usecase.dart';
+import '../../domain/usecases/delete_movie_usecase.dart';
 import 'movies_event.dart';
 import 'movies_state.dart';
 
 @injectable
 class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
-  final MovieService movieService;
+  final LoadMoviesUseCase _loadMoviesUseCase;
+  final AddMovieUseCase _addMovieUseCase;
+  final UpdateMovieUseCase _updateMovieUseCase;
+  final DeleteMovieUseCase _deleteMovieUseCase;
 
-  MoviesBloc(this.movieService) : super(MoviesInitial()) {
+  MoviesBloc(
+    this._loadMoviesUseCase,
+    this._addMovieUseCase,
+    this._updateMovieUseCase,
+    this._deleteMovieUseCase,
+  ) : super(MoviesInitial()) {
     on<LoadMovies>((event, emit) async {
       try {
         emit(MoviesLoading());
-        
-        final results = await Future.wait([
-          movieService.fetchMovies(),
-          movieService.fetchGenres(),
-          movieService.fetchAgeRatings(),
-          movieService.fetchDirectors(),
-          movieService.fetchActors(),
-        ]);
-
-        final movies = results[0] as List<Movie>;
-        final genres = results[1];
-        final ageRatings = results[2];
-        final directors = results[3];
-        final actors = results[4];
-
-        emit(MoviesLoaded(movies, genres, ageRatings, directors, actors));
+        final data = await _loadMoviesUseCase();
+        emit(MoviesLoaded(
+          data.movies,
+          data.genres,
+          data.ageRatings,
+          data.directors,
+          data.actors,
+        ));
       } catch (e) {
         final msg = e is DioException ? (e.message ?? 'Došlo je do greške pri učitavanju filmova.') : e.toString();
         emit(MoviesError(msg));
@@ -40,12 +42,12 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
       if (state is MoviesLoaded) {
         emit(MoviesLoading());
         try {
-          await movieService.addMovie(
+          await _addMovieUseCase(
             event.movie,
             posterPath: event.posterPath,
             mimeType: event.mimeType,
           );
-          add(LoadMovies()); // reload after add
+          add(LoadMovies());
         } catch (e) {
           final msg = e is DioException ? (e.message ?? 'Neuspješno dodavanje filma.') : e.toString();
           emit(MoviesError(msg));
@@ -57,7 +59,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
       if (state is MoviesLoaded) {
         emit(MoviesLoading());
         try {
-          await movieService.updateMovie(
+          await _updateMovieUseCase(
             event.movie,
             posterPath: event.posterPath,
             mimeType: event.mimeType,
@@ -71,10 +73,8 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
     });
 
     on<DeleteMovie>((event, emit) async {
-      // Proceed only if movies are loaded; otherwise, ignore the delete.
       if (state is! MoviesLoaded) return;
 
-      // Validate ID before showing loading state to avoid flicker on invalid input.
       final id = event.id;
       if (id == null || id.isEmpty) {
         emit(MoviesError('No movie id provided'));
@@ -83,8 +83,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
 
       emit(MoviesLoading());
       try {
-        await movieService.deleteMovie(id);
-        // Reload the movies after successful deletion.
+        await _deleteMovieUseCase(id);
         add(LoadMovies());
       } catch (e) {
         final msg = e is DioException ? (e.message ?? 'Neuspješno brisanje filma.') : e.toString();

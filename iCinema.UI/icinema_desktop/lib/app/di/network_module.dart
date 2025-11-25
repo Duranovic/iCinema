@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:get_it/get_it.dart';
 import 'package:icinema_desktop/app/services/auth_service.dart';
 import 'package:injectable/injectable.dart';
@@ -16,6 +18,13 @@ abstract class NetworkModule {
         receiveTimeout: const Duration(seconds: 3),
       ),
     );
+
+    // Allow self-signed certificates for development
+    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
+      client.badCertificateCallback = (cert, host, port) => true;
+      return client;
+    };
 
     // Attach interceptor to inject Authorization header and handle errors (401, 400)
     dio.interceptors.add(InterceptorsWrapper(
