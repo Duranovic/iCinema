@@ -19,6 +19,8 @@ public partial class Movie : IAuditable
 
     public string? PosterUrl { get; set; }
 
+    public string? ThumbnailUrl { get; set; }
+
     public string? AgeRating { get; set; }
 
     public string? Language { get; set; }

@@ -71,6 +71,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IReportsService, ReportsService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<ImageProcessingService>();
         services.AddHttpContextAccessor();
 
         // MassTransit + RabbitMQ

@@ -6,13 +6,14 @@ using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Persistence.Models;
+using iCinema.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 
 namespace iCinema.Infrastructure.Persistence.Repositories;
 
-public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService, IMovieRulesService movieRulesService, IDirectorRulesService directorRulesService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper, unitOfWork), IMovieRepository
+public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWork unitOfWork, IProjectionRulesService projectionRulesService, IFileStorageService fileStorageService, IMovieRulesService movieRulesService, IDirectorRulesService directorRulesService, ImageProcessingService imageProcessingService) : BaseRepository<Movie, MovieDto, MovieCreateDto, MovieUpdateDto>(context, mapper, unitOfWork), IMovieRepository
 {
     private readonly iCinemaDbContext _context = context;
     private readonly IMapper _mapper = mapper;
@@ -20,6 +21,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
     private readonly IFileStorageService _fileStorageService = fileStorageService;
     private readonly IMovieRulesService _movieRulesService = movieRulesService;
     private readonly IDirectorRulesService _directorRulesService = directorRulesService;
+    private readonly ImageProcessingService _imageProcessingService = imageProcessingService;
     protected override string[] SearchableFields => ["Title", "Description"];
     
     protected override IQueryable<Movie> AddInclude(IQueryable<Movie> query)
@@ -144,8 +146,9 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
         // Handle poster upload from base64 if provided
         if (!string.IsNullOrWhiteSpace(dto.PosterBase64) && !string.IsNullOrWhiteSpace(dto.PosterMimeType))
         {
-            var posterUrl = await SavePosterFromBase64Async(entity.Id, dto.PosterBase64!, dto.PosterMimeType!, cancellationToken);
+            var (posterUrl, thumbnailUrl) = await SavePosterFromBase64Async(entity.Id, dto.PosterBase64!, dto.PosterMimeType!, cancellationToken);
             entity.PosterUrl = posterUrl;
+            entity.ThumbnailUrl = thumbnailUrl;
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         
@@ -185,12 +188,18 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
         // Handle poster upload from base64 if provided
         if (!string.IsNullOrWhiteSpace(dto.PosterBase64) && !string.IsNullOrWhiteSpace(dto.PosterMimeType))
         {
+            // Delete old poster and thumbnail
             if (!string.IsNullOrEmpty(entity.PosterUrl))
             {
                 await _fileStorageService.DeleteByRelativeUrlAsync(entity.PosterUrl, cancellationToken);
             }
-            var posterUrl = await SavePosterFromBase64Async(id, dto.PosterBase64!, dto.PosterMimeType!, cancellationToken);
+            if (!string.IsNullOrEmpty(entity.ThumbnailUrl))
+            {
+                await _fileStorageService.DeleteByRelativeUrlAsync(entity.ThumbnailUrl, cancellationToken);
+            }
+            var (posterUrl, thumbnailUrl) = await SavePosterFromBase64Async(id, dto.PosterBase64!, dto.PosterMimeType!, cancellationToken);
             entity.PosterUrl = posterUrl;
+            entity.ThumbnailUrl = thumbnailUrl;
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -227,7 +236,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
     }
 
 
-    private async Task<string> SavePosterFromBase64Async(Guid movieId, string base64, string mimeType, CancellationToken ct)
+    private async Task<(string posterUrl, string thumbnailUrl)> SavePosterFromBase64Async(Guid movieId, string base64, string mimeType, CancellationToken ct)
     {
         // Strip possible data URI prefix
         var commaIdx = base64.IndexOf(',');
@@ -251,23 +260,72 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
         if (bytes.LongLength > maxBytes)
             throw new BusinessRuleException("Poster je prevelik (max 20MB).");
 
-        // Derive extension from mime
-        var ext = mimeType switch
-        {
-            "image/jpeg" => ".jpg",
-            "image/png" => ".png",
-            "image/webp" => ".webp",
-            _ => throw new BusinessRuleException("Nepodržan MIME tip postera: " + mimeType)
-        };
+        // Validate image magic bytes
+        var detectedMime = DetectImageMimeType(bytes);
+        if (detectedMime == null)
+            throw new BusinessRuleException("Datoteka nije validna slika.");
+        
+        // Verify declared MIME matches actual content
+        if (!string.Equals(detectedMime, mimeType, StringComparison.OrdinalIgnoreCase))
+            throw new BusinessRuleException($"MIME tip ({mimeType}) ne odgovara stvarnom sadržaju datoteke ({detectedMime}).");
 
-        await using var ms = new MemoryStream(bytes);
-        return await _fileStorageService.SaveImageAsync(
+        // Process main image: resize to max 1920x1080 and convert to WebP
+        var mainImage = _imageProcessingService.ProcessImage(bytes, maxWidth: 1920, maxHeight: 1080, quality: 85);
+        
+        // Generate thumbnail: max 400x600
+        var thumbnail = _imageProcessingService.GenerateThumbnail(bytes, maxWidth: 400, maxHeight: 600, quality: 80);
+
+        // Save main poster
+        await using var mainStream = new MemoryStream(mainImage.Bytes);
+        var posterUrl = await _fileStorageService.SaveImageAsync(
             category: "movies",
             relativeFolder: movieId.ToString(),
-            originalFileName: $"poster{ext}",
-            contentType: mimeType,
-            length: bytes.LongLength,
-            stream: ms,
+            originalFileName: $"poster{mainImage.Extension}",
+            contentType: mainImage.MimeType,
+            length: mainImage.Bytes.LongLength,
+            stream: mainStream,
             ct: ct);
+
+        // Save thumbnail
+        await using var thumbStream = new MemoryStream(thumbnail.Bytes);
+        var thumbnailUrl = await _fileStorageService.SaveImageAsync(
+            category: "movies",
+            relativeFolder: movieId.ToString(),
+            originalFileName: $"thumb{thumbnail.Extension}",
+            contentType: thumbnail.MimeType,
+            length: thumbnail.Bytes.LongLength,
+            stream: thumbStream,
+            ct: ct);
+
+        return (posterUrl, thumbnailUrl);
+    }
+
+    /// <summary>
+    /// Detects image MIME type by checking magic bytes (file signature)
+    /// </summary>
+    private static string? DetectImageMimeType(byte[] bytes)
+    {
+        if (bytes.Length < 12) return null;
+
+        // JPEG: FF D8 FF
+        if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
+            return "image/jpeg";
+
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47 &&
+            bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A)
+            return "image/png";
+
+        // WebP: RIFF....WEBP
+        if (bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 &&
+            bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50)
+            return "image/webp";
+
+        // GIF: GIF87a or GIF89a
+        if (bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x38 &&
+            (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61)
+            return "image/gif";
+
+        return null;
     }
 }

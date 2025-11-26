@@ -15,5 +15,6 @@ public class MovieDto
     public int RatingsCount { get; set; }
     public List<string> Genres { get; set; } = [];
     public string? PosterUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public List<CastItemDto> Cast { get; set; } = [];
 }
