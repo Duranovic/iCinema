@@ -14,6 +14,9 @@ export 'core/network/interceptors/error_interceptor.dart';
 export 'core/constants/api_endpoints.dart';
 export 'core/constants/app_constants.dart';
 
+// Core - Utils
+export 'core/utils/error_handler.dart';
+
 // Data - Models
 export 'data/models/common/paged_result.dart';
 export 'data/models/user/user_me_model.dart';

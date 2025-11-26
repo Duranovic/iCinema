@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../data/models/projection_model.dart';
 import '../../data/datasources/projections_api_service.dart';
 import '../../domain/usecases/get_home_data_usecase.dart';
@@ -105,7 +106,7 @@ class HomeCubit extends Cubit<HomeState> {
       ));
     } catch (e) {
       emit(HomeError(
-        message: 'Dogodila se neočekivana greška: ${e.toString()}',
+        message: ErrorHandler.getMessage(e),
         errorType: 'unknown',
       ));
     }

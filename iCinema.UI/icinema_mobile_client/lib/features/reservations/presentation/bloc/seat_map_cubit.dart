@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../domain/usecases/get_seat_map_usecase.dart';
 import 'seat_map_state.dart';
 import '../../data/seat_map_refresh_bus.dart';
@@ -23,7 +24,7 @@ class SeatMapCubit extends Cubit<SeatMapState> {
       final map = await _getSeatMapUseCase(projectionId);
       emit(state.copyWith(loading: false, map: map));
     } catch (e) {
-      emit(state.copyWith(loading: false, error: e.toString()));
+      emit(state.copyWith(loading: false, error: ErrorHandler.getMessage(e)));
     }
   }
 
@@ -54,7 +55,7 @@ class SeatMapCubit extends Cubit<SeatMapState> {
         lastReservationId: created.reservationId,
       ));
     } catch (e) {
-      emit(state.copyWith(reserving: false, error: e.toString()));
+      emit(state.copyWith(reserving: false, error: ErrorHandler.getMessage(e)));
       // On conflict, also refresh map to reflect latest status
       await loadMap();
     }

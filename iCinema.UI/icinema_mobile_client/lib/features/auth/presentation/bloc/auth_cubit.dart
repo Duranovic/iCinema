@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/get_me_usecase.dart';
@@ -44,7 +45,7 @@ class AuthCubit extends Cubit<AuthState> {
       final me = await _getMeUseCase();
       emit(AuthState.authenticated(me, token));
     } catch (e) {
-      emit(AuthState.error(e.toString().replaceFirst('Exception: ', '')));
+      emit(AuthState.error(ErrorHandler.getMessage(e)));
       emit(AuthState.unauthenticated());
     }
   }
@@ -75,7 +76,7 @@ class AuthCubit extends Cubit<AuthState> {
       final me = await _getMeUseCase();
       emit(AuthState.authenticated(me, token));
     } catch (e) {
-      emit(AuthState.error(e.toString().replaceFirst('Exception: ', '')));
+      emit(AuthState.error(ErrorHandler.getMessage(e)));
       emit(AuthState.unauthenticated());
     }
   }

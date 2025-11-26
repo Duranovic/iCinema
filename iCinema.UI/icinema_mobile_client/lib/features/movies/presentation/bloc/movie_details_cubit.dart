@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../data/models/movie_model.dart';
-import '../../domain/usecases/get_my_rating_usecase.dart';
 import '../../domain/usecases/get_my_rating_usecase.dart';
 import '../../domain/usecases/get_movie_details_usecase.dart';
 import '../../data/datasources/movies_api_service.dart';
@@ -86,7 +86,7 @@ class MovieDetailsCubit extends Cubit<MovieDetailsState> {
     } on MoviesUnknownException catch (e) {
       emit(MovieDetailsError('Neočekivana greška: ${e.message}'));
     } catch (e) {
-      emit(MovieDetailsError('Greška pri učitavanju filma: $e'));
+      emit(MovieDetailsError(ErrorHandler.getMessage(e)));
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../domain/usecases/load_movies_usecase.dart';
 import '../../domain/usecases/add_movie_usecase.dart';
 import '../../domain/usecases/update_movie_usecase.dart';
@@ -33,8 +33,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           data.actors,
         ));
       } catch (e) {
-        final msg = e is DioException ? (e.message ?? 'Došlo je do greške pri učitavanju filmova.') : e.toString();
-        emit(MoviesError(msg));
+        emit(MoviesError(ErrorHandler.getMessage(e)));
       }
     });
 
@@ -49,8 +48,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           );
           add(LoadMovies());
         } catch (e) {
-          final msg = e is DioException ? (e.message ?? 'Neuspješno dodavanje filma.') : e.toString();
-          emit(MoviesError(msg));
+          emit(MoviesError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -66,8 +64,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           );
           add(LoadMovies());
         } catch (e) {
-          final msg = e is DioException ? (e.message ?? 'Neuspješno ažuriranje filma.') : e.toString();
-          emit(MoviesError(msg));
+          emit(MoviesError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -86,8 +83,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
         await _deleteMovieUseCase(id);
         add(LoadMovies());
       } catch (e) {
-        final msg = e is DioException ? (e.message ?? 'Neuspješno brisanje filma.') : e.toString();
-        emit(MoviesError(msg));
+        emit(MoviesError(ErrorHandler.getMessage(e)));
       }
     });
   }
