@@ -18,4 +18,15 @@ class NotificationsApiService {
   Future<void> markRead(String id) async {
     await _dio.post('/notifications/$id/read');
   }
+
+  Future<bool> delete(String id) async {
+    final resp = await _dio.delete('/notifications/$id');
+    return resp.statusCode == 200;
+  }
+
+  Future<int> deleteAll() async {
+    final resp = await _dio.delete('/notifications');
+    final data = resp.data as Map<String, dynamic>;
+    return data['deleted'] as int? ?? 0;
+  }
 }

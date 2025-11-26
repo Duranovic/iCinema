@@ -268,6 +268,12 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<MarkNotificationReadUseCase>(
     () => MarkNotificationReadUseCase(getIt<NotificationsRepository>()),
   );
+  getIt.registerLazySingleton<DeleteNotificationUseCase>(
+    () => DeleteNotificationUseCase(getIt<NotificationsRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteAllNotificationsUseCase>(
+    () => DeleteAllNotificationsUseCase(getIt<NotificationsRepository>()),
+  );
 
   // Validation Repositories
   getIt.registerLazySingleton<ValidationRepository>(
@@ -303,6 +309,8 @@ Future<void> configureDependencies() async {
     () => NotificationsCubit(
       getIt<GetNotificationsUseCase>(),
       getIt<MarkNotificationReadUseCase>(),
+      getIt<DeleteNotificationUseCase>(),
+      getIt<DeleteAllNotificationsUseCase>(),
       getIt<SignalRService>(),
     ),
   );

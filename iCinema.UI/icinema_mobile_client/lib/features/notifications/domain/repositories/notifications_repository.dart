@@ -7,5 +7,11 @@ abstract class NotificationsRepository {
 
   /// Mark notification as read
   Future<void> markRead(String id);
+
+  /// Delete a notification
+  Future<bool> delete(String id);
+
+  /// Delete all notifications
+  Future<int> deleteAll();
 }
 

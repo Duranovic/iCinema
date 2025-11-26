@@ -34,4 +34,29 @@ public class NotificationsController(INotificationsRepository notifications) : C
         await notifications.MarkReadAsync(userId, id, ct);
         return Ok(new { success = true });
     }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var deleted = await notifications.DeleteAsync(userId, id, ct);
+        return deleted ? Ok(new { success = true }) : NotFound();
+    }
+
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteAll(CancellationToken ct)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var count = await notifications.DeleteAllAsync(userId, ct);
+        return Ok(new { success = true, deleted = count });
+    }
 }

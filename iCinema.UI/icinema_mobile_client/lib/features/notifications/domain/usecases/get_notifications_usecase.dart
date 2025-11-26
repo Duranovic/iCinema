@@ -25,3 +25,27 @@ class MarkNotificationReadUseCase {
   }
 }
 
+/// Use case for deleting a notification
+class DeleteNotificationUseCase {
+  final NotificationsRepository _repository;
+
+  DeleteNotificationUseCase(this._repository);
+
+  /// Execute deleting notification
+  Future<bool> call(String id) async {
+    return await _repository.delete(id);
+  }
+}
+
+/// Use case for deleting all notifications
+class DeleteAllNotificationsUseCase {
+  final NotificationsRepository _repository;
+
+  DeleteAllNotificationsUseCase(this._repository);
+
+  /// Execute deleting all notifications
+  Future<int> call() async {
+    return await _repository.deleteAll();
+  }
+}
+

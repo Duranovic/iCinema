@@ -8,12 +8,16 @@ import '../../../../app/services/signalr_service.dart';
 class NotificationsCubit extends Cubit<NotificationsState> {
   final GetNotificationsUseCase _getNotificationsUseCase;
   final MarkNotificationReadUseCase _markNotificationReadUseCase;
+  final DeleteNotificationUseCase _deleteNotificationUseCase;
+  final DeleteAllNotificationsUseCase _deleteAllNotificationsUseCase;
   final SignalRService? _signalRService;
   StreamSubscription<Map<String, dynamic>>? _signalRSubscription;
   
   NotificationsCubit(
     this._getNotificationsUseCase,
-    this._markNotificationReadUseCase, [
+    this._markNotificationReadUseCase,
+    this._deleteNotificationUseCase,
+    this._deleteAllNotificationsUseCase, [
     this._signalRService,
   ]) : super(const NotificationsInitial()) {
     _subscribeToSignalR();
@@ -98,6 +102,35 @@ class NotificationsCubit extends Cubit<NotificationsState> {
         emit(current); // keep old data
       } else {
         emit(NotificationsError('Greška pri osvježavanju notifikacija.'));
+      }
+    }
+  }
+
+  Future<void> delete(String id) async {
+    final current = state;
+    if (current is NotificationsLoaded) {
+      // optimistic update
+      final updated = current.items.where((n) => n.id != id).toList();
+      emit(NotificationsLoaded(updated));
+      try {
+        await _deleteNotificationUseCase(id);
+      } catch (_) {
+        // rollback on failure
+        emit(current);
+      }
+    }
+  }
+
+  Future<void> deleteAll() async {
+    final current = state;
+    if (current is NotificationsLoaded) {
+      // optimistic update
+      emit(NotificationsLoaded(const []));
+      try {
+        await _deleteAllNotificationsUseCase();
+      } catch (_) {
+        // rollback on failure
+        emit(current);
       }
     }
   }

@@ -58,4 +58,22 @@ public class NotificationsRepository(iCinemaDbContext context, IUnitOfWork unitO
             IsRead = n.IsRead
         };
     }
+
+    public async Task<bool> DeleteAsync(Guid userId, Guid notificationId, CancellationToken ct = default)
+    {
+        var n = await _context.Notifications.FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == userId, ct);
+        if (n == null) return false;
+        _context.Notifications.Remove(n);
+        await unitOfWork.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<int> DeleteAllAsync(Guid userId, CancellationToken ct = default)
+    {
+        var notifications = await _context.Notifications.Where(x => x.UserId == userId).ToListAsync(ct);
+        var count = notifications.Count;
+        _context.Notifications.RemoveRange(notifications);
+        await unitOfWork.SaveChangesAsync(ct);
+        return count;
+    }
 }

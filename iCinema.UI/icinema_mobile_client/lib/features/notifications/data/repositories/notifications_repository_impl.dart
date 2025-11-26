@@ -17,5 +17,15 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   Future<void> markRead(String id) async {
     return await _apiService.markRead(id);
   }
+
+  @override
+  Future<bool> delete(String id) async {
+    return await _apiService.delete(id);
+  }
+
+  @override
+  Future<int> deleteAll() async {
+    return await _apiService.deleteAll();
+  }
 }
 
