@@ -1,6 +1,5 @@
 import '../../data/models/movie_model.dart';
 import '../../data/models/movie_score_dto.dart';
-import '../../../home/data/models/projection_model.dart';
 
 /// Repository interface for movies feature operations
 abstract class MoviesRepository {

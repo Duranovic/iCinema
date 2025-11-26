@@ -1,22 +1,16 @@
 # iCinema Shared Package
 
-Shared code package for iCinema desktop and mobile applications.
+Shared code library for iCinema desktop and mobile Flutter applications.
 
-## Structure
+## Overview
 
-```
-lib/
-  core/
-    errors/          # Common exception classes
-    network/         # Base API client and interceptors
-    constants/       # API endpoints and app constants
-  data/
-    models/          # Shared data models
-  domain/
-    entities/        # Shared domain entities
-```
+This package contains common code shared between `icinema_desktop` and `icinema_mobile_client` applications, including:
 
-## Usage
+- **Models** - Data transfer objects and domain entities
+- **Network** - API client, interceptors, and error handling
+- **Utilities** - Common helper functions and error handling
+
+## Installation
 
 Add to your `pubspec.yaml`:
 
@@ -26,35 +20,95 @@ dependencies:
     path: ../icinema_shared
 ```
 
-Then import:
+## Exports
+
+### Core - Errors
+- `AppException` - Base exception class
+- `NetworkException` - Network-related exceptions (ConnectionException, ServerException, ClientException, UnauthorizedException, NotFoundException)
+
+### Core - Network
+- `ApiClient` - Base HTTP client using Dio
+- `AuthInterceptor` - JWT token injection
+- `ErrorInterceptor` - Error normalization
+
+### Core - Constants
+- `ApiEndpoints` - API endpoint paths
+- `AppConstants` - Application-wide constants
+
+### Core - Utils
+- `ErrorHandler` - Centralized error handling with user-friendly messages
+
+### Data - Models
+- `PagedResult<T>` - Generic paginated response model
+- `UserMeModel` - Current user profile
+- `ReservationModel` - Reservation details
+- `TicketModel` - Ticket information
+- `MovieModel` - Movie details with cast and ratings
+- `CastMemberModel` - Actor/role information
+- `ProjectionModel` - Movie screening/projection
+
+### Domain - Entities
+- `UserEntity` - Domain user representation
+
+## Usage
 
 ```dart
 import 'package:icinema_shared/icinema_shared.dart';
+
+// Use ErrorHandler for consistent error messages
+try {
+  await someApiCall();
+} catch (e) {
+  final message = ErrorHandler.getMessage(e);
+  // Display user-friendly message
+}
+
+// Use shared models
+final movie = MovieModel.fromJson(json);
+final projection = ProjectionModel.fromJson(json);
 ```
 
-## Models
+## Architecture
 
-- `PagedResult<T>` - Generic paginated result
-- `UserMeModel` - Current user model
-- `ReservationModel` - Reservation model
-- `TicketModel` - Ticket model
-- `UserEntity` - Domain user entity
+```
+lib/
+├── core/
+│   ├── constants/
+│   │   ├── api_endpoints.dart
+│   │   └── app_constants.dart
+│   ├── errors/
+│   │   ├── app_exception.dart
+│   │   └── network_exception.dart
+│   ├── network/
+│   │   ├── api_client.dart
+│   │   └── interceptors/
+│   │       ├── auth_interceptor.dart
+│   │       └── error_interceptor.dart
+│   └── utils/
+│       └── error_handler.dart
+├── data/
+│   └── models/
+│       ├── common/
+│       │   └── paged_result.dart
+│       ├── movie/
+│       │   ├── cast_member_model.dart
+│       │   └── movie_model.dart
+│       ├── projection/
+│       │   └── projection_model.dart
+│       ├── reservation/
+│       │   ├── reservation_model.dart
+│       │   └── ticket_model.dart
+│       └── user/
+│           └── user_me_model.dart
+├── domain/
+│   └── entities/
+│       └── user_entity.dart
+└── icinema_shared.dart
+```
 
-## Network
+## Dependencies
 
-- `ApiClient` - Base API client class
-- `AuthInterceptor` - Authorization header interceptor
-- `ErrorInterceptor` - Global error handling interceptor
-
-## Constants
-
-- `ApiEndpoints` - API endpoint constants
-- `AppConstants` - Application-wide constants
-
-## Errors
-
-- `AppException` - Base exception
-- `NetworkException` - Network-related exceptions
-- `ValidationException` - Validation errors
-- `BusinessRuleException` - Business rule violations
-
+- `dio` - HTTP client
+- `equatable` - Value equality
+- `get_it` - Dependency injection
+- `shared_preferences` - Local storage

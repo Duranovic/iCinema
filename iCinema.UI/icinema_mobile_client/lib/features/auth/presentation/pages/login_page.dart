@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/di/injection.dart';
 import '../../../../app/services/auth_service.dart';
 import '../../domain/usecases/login_usecase.dart';
-import '../../domain/usecases/get_me_usecase.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
