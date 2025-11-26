@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import '../../features/home/data/repositories/home_repository.dart';
 import '../../features/home/data/datasources/projections_api_service.dart';
@@ -54,6 +55,7 @@ import '../../features/validation/data/repositories/validation_repository_impl.d
 import '../../features/validation/domain/repositories/validation_repository.dart';
 import '../../features/validation/domain/usecases/validate_ticket_usecase.dart';
 import '../../features/validation/presentation/bloc/validation_cubit.dart';
+import '../services/signalr_service.dart';
 
 import 'injection.config.dart';
 
@@ -72,6 +74,11 @@ Future<void> configureDependencies() async {
   // Auth
   getIt.registerLazySingleton<AuthService>(() => AuthService());
   await getIt<AuthService>().init();
+  
+  // SignalR Service for real-time notifications
+  getIt.registerLazySingleton<SignalRService>(
+    () => SignalRService(getIt<AuthService>(), AppConfig.apiBaseUrl),
+  );
   
   // Auth Data Sources
   getIt.registerLazySingleton<AuthRemoteDataSource>(
@@ -218,6 +225,7 @@ Future<void> configureDependencies() async {
       getIt<RegisterUseCase>(),
       getIt<GetMeUseCase>(),
       getIt<AuthService>(),
+      getIt<SignalRService>(),
     ),
   );
 
@@ -295,6 +303,7 @@ Future<void> configureDependencies() async {
     () => NotificationsCubit(
       getIt<GetNotificationsUseCase>(),
       getIt<MarkNotificationReadUseCase>(),
+      getIt<SignalRService>(),
     ),
   );
 

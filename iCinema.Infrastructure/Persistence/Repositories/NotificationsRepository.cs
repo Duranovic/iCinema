@@ -35,7 +35,7 @@ public class NotificationsRepository(iCinemaDbContext context, IUnitOfWork unitO
         await unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task AddAsync(Guid userId, string title, string message, CancellationToken ct = default)
+    public async Task<NotificationDto> AddAsync(Guid userId, string title, string message, CancellationToken ct = default)
     {
         var n = new Notification
         {
@@ -48,5 +48,14 @@ public class NotificationsRepository(iCinemaDbContext context, IUnitOfWork unitO
         };
         await _context.Notifications.AddAsync(n, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        
+        return new NotificationDto
+        {
+            Id = n.Id,
+            Title = n.Title,
+            Message = n.Message,
+            CreatedAt = n.CreatedAt,
+            IsRead = n.IsRead
+        };
     }
 }

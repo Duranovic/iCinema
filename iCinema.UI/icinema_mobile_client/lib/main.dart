@@ -6,6 +6,7 @@ import 'app/router/app_router.dart';
 import 'app/di/injection.dart';
 import 'app/config/app_config.dart';
 import 'app/services/auth_service.dart';
+import 'app/services/signalr_service.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/auth/presentation/bloc/reservations_cubit.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
           getIt<RegisterUseCase>(),
           getIt<GetMeUseCase>(),
           getIt<AuthService>(),
+          getIt<SignalRService>(),
         ),
       );
     }

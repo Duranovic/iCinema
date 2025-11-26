@@ -4,6 +4,7 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/get_me_usecase.dart';
 import '../../../../app/services/auth_service.dart' as auth_svc;
+import '../../../../app/services/signalr_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -11,13 +12,15 @@ class AuthCubit extends Cubit<AuthState> {
   final RegisterUseCase _registerUseCase;
   final GetMeUseCase _getMeUseCase;
   final auth_svc.AuthService _authService;
+  final SignalRService? _signalRService;
 
   AuthCubit(
     this._loginUseCase,
     this._registerUseCase,
     this._getMeUseCase,
-    this._authService,
-  ) : super(AuthState.unauthenticated());
+    this._authService, [
+    this._signalRService,
+  ]) : super(AuthState.unauthenticated());
 
   Future<void> init() async {
     await _authService.init();
@@ -26,6 +29,8 @@ class AuthCubit extends Cubit<AuthState> {
       try {
         final me = await _getMeUseCase();
         emit(AuthState.authenticated(me, token));
+        // Connect to SignalR for real-time notifications
+        _signalRService?.connect();
       } catch (_) {
         emit(AuthState.unauthenticated());
       }
@@ -44,6 +49,8 @@ class AuthCubit extends Cubit<AuthState> {
       await _authService.setSession(token: token, email: email, expiresAt: expiresAt);
       final me = await _getMeUseCase();
       emit(AuthState.authenticated(me, token));
+      // Connect to SignalR for real-time notifications
+      _signalRService?.connect();
     } catch (e) {
       emit(AuthState.error(ErrorHandler.getMessage(e)));
       emit(AuthState.unauthenticated());
@@ -51,6 +58,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    await _signalRService?.disconnect();
     await _authService.logout();
     emit(AuthState.unauthenticated());
   }
@@ -75,6 +83,8 @@ class AuthCubit extends Cubit<AuthState> {
       );
       final me = await _getMeUseCase();
       emit(AuthState.authenticated(me, token));
+      // Connect to SignalR for real-time notifications
+      _signalRService?.connect();
     } catch (e) {
       emit(AuthState.error(ErrorHandler.getMessage(e)));
       emit(AuthState.unauthenticated());

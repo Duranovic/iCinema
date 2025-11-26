@@ -218,7 +218,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('iCinema'),
         actions: [
-          _bellWithBadge(),
+          if (GetIt.I<AuthService>().authState.isAuthenticated) _bellWithBadge(),
         ],
       ),
       body: SafeArea(

@@ -81,6 +81,41 @@ public static class DatabaseSeed
             };
             context.Halls.Add(hall);
             context.SaveChanges();
+            
+            // Create seats for the hall
+            for (int row = 1; row <= hall.RowsCount; row++)
+            {
+                for (int seat = 1; seat <= hall.SeatsPerRow; seat++)
+                {
+                    context.Seats.Add(new Seat
+                    {
+                        Id = Guid.NewGuid(),
+                        HallId = hall.Id,
+                        RowNumber = row,
+                        SeatNumber = seat
+                    });
+                }
+            }
+            context.SaveChanges();
+        }
+        
+        // Ensure seats exist for the hall (in case hall existed but seats don't)
+        if (!context.Seats.Any(s => s.HallId == hall.Id))
+        {
+            for (int row = 1; row <= hall.RowsCount; row++)
+            {
+                for (int seat = 1; seat <= hall.SeatsPerRow; seat++)
+                {
+                    context.Seats.Add(new Seat
+                    {
+                        Id = Guid.NewGuid(),
+                        HallId = hall.Id,
+                        RowNumber = row,
+                        SeatNumber = seat
+                    });
+                }
+            }
+            context.SaveChanges();
         }
 
         // Helper to add a projection if it doesn't already exist at the same time

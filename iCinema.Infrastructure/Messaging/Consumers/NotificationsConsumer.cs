@@ -1,6 +1,7 @@
 using iCinema.Application.Events.Reservations;
 using iCinema.Application.Events.Tickets;
 using iCinema.Application.Interfaces.Repositories;
+using iCinema.Application.Interfaces.Services;
 using MassTransit;
 
 namespace iCinema.Infrastructure.Messaging.Consumers;
@@ -11,10 +12,14 @@ public class NotificationsConsumer :
     IConsumer<TicketUsed>
 {
     private readonly INotificationsRepository _notifications;
+    private readonly INotificationsPushService _pushService;
 
-    public NotificationsConsumer(INotificationsRepository notifications)
+    public NotificationsConsumer(
+        INotificationsRepository notifications,
+        INotificationsPushService pushService)
     {
         _notifications = notifications;
+        _pushService = pushService;
     }
 
     public async Task Consume(ConsumeContext<ReservationCreated> context)
@@ -22,7 +27,8 @@ public class NotificationsConsumer :
         var e = context.Message;
         var title = "Rezervacija potvrđena";
         var body = $"Rezervacija #{e.ReservationId.ToString().Substring(0, 8)} za film '{e.MovieTitle}' na datum {e.StartTime:dd.MM.yyyy HH:mm}. Ulaznice: {e.TicketsCount}.";
-        await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        var notification = await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        await _pushService.PushToUserAsync(e.UserId, notification, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ReservationCanceled> context)
@@ -30,7 +36,8 @@ public class NotificationsConsumer :
         var e = context.Message;
         var title = "Rezervacija otkazana";
         var body = $"Rezervacija #{e.ReservationId.ToString().Substring(0, 8)} je otkazana.";
-        await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        var notification = await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        await _pushService.PushToUserAsync(e.UserId, notification, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<TicketUsed> context)
@@ -38,6 +45,7 @@ public class NotificationsConsumer :
         var e = context.Message;
         var title = "Ulaznica iskorištena";
         var body = $"Ulaznica #{e.TicketId.ToString().Substring(0, 8)} je skenirana ({e.UsedAt:dd.MM.yyyy HH:mm}).";
-        await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        var notification = await _notifications.AddAsync(e.UserId, title, body, context.CancellationToken);
+        await _pushService.PushToUserAsync(e.UserId, notification, context.CancellationToken);
     }
 }

@@ -1,6 +1,9 @@
 using iCinema.Api.Extensions;
+using iCinema.Api.Hubs;
 using iCinema.Api.Middleware;
+using iCinema.Api.Services;
 using iCinema.Application.DependencyInjection;
+using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +66,8 @@ builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApiCors(builder.Configuration);
 builder.Services.AddApiAuthorizationPolicies();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<INotificationsPushService, NotificationsPushService>();
 
 var app = builder.Build();
 
@@ -78,5 +83,6 @@ app.UseApiCors(builder.Configuration);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationsHub>("/hubs/notifications");
 
 app.Run();
