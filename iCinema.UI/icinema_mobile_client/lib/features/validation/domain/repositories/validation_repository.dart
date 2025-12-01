@@ -6,3 +6,5 @@ abstract class ValidationRepository {
   Future<ValidationResult> validateTicket(String qrCode);
 }
 
+
+
