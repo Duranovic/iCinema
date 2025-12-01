@@ -1,4 +1,3 @@
-
 import 'package:icinema_desktop/features/projections/domain/projection.dart';
 import 'package:icinema_desktop/features/projections/domain/cinema.dart';
 
@@ -8,7 +7,8 @@ class LoadProjections extends ProjectionsEvent {}
 
 class LoadProjectionsForMonth extends ProjectionsEvent {
   final DateTime month; // any day within the target month
-  LoadProjectionsForMonth(this.month);
+  final String? successMessage;
+  LoadProjectionsForMonth(this.month, {this.successMessage});
 }
 
 class LoadCinemas extends ProjectionsEvent {}
@@ -32,3 +32,5 @@ class DeleteProjection extends ProjectionsEvent {
   final String? id;
   DeleteProjection(this.id);
 }
+
+class ClearProjectionsSuccessMessage extends ProjectionsEvent {}

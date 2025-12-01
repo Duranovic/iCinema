@@ -1,6 +1,9 @@
 abstract class CinemasEvent {}
 
-class LoadCinemas extends CinemasEvent {}
+class LoadCinemas extends CinemasEvent {
+  final String? successMessage;
+  LoadCinemas({this.successMessage});
+}
 
 class LoadCities extends CinemasEvent {}
 
@@ -11,7 +14,8 @@ class SearchCinemas extends CinemasEvent {
 
 class SelectCinema extends CinemasEvent {
   final String cinemaId;
-  SelectCinema(this.cinemaId);
+  final String? successMessage;
+  SelectCinema(this.cinemaId, {this.successMessage});
 }
 
 class CreateCinema extends CinemasEvent {
@@ -106,3 +110,5 @@ class DeleteHall extends CinemasEvent {
 }
 
 class ClearSelection extends CinemasEvent {}
+
+class ClearCinemasSuccessMessage extends CinemasEvent {}

@@ -216,6 +216,7 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
     {
         var movie = await DbSet
             .Include(m => m.MovieGenres)
+            .Include(m => m.MovieActors)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
         if (movie == null)
@@ -228,6 +229,9 @@ public class MovieRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWo
 
         // Remove MovieGenres entries
         _context.MovieGenres.RemoveRange(movie.MovieGenres);
+        
+        // Remove MovieActors entries
+        _context.MovieActors.RemoveRange(movie.MovieActors);
 
         DbSet.Remove(movie);
         await unitOfWork.SaveChangesAsync(cancellationToken);

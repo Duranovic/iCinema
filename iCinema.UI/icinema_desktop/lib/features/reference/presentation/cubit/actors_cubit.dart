@@ -6,6 +6,7 @@ import 'package:icinema_shared/icinema_shared.dart';
 class ActorsState {
   final bool loading;
   final String? error;
+  final String? success;
   final List<Actor> items;
   final int page;
   final int pageSize;
@@ -14,6 +15,7 @@ class ActorsState {
   ActorsState({
     required this.loading,
     required this.error,
+    this.success,
     required this.items,
     required this.page,
     required this.pageSize,
@@ -23,6 +25,7 @@ class ActorsState {
   factory ActorsState.initial() => ActorsState(
         loading: false,
         error: null,
+        success: null,
         items: const [],
         page: 1,
         pageSize: 20,
@@ -32,13 +35,15 @@ class ActorsState {
   ActorsState copyWith({
     bool? loading,
     String? error,
+    String? success,
     List<Actor>? items,
     int? page,
     int? pageSize,
     int? totalCount,
   }) => ActorsState(
         loading: loading ?? this.loading,
-        error: error,
+        error: error, // Clears error if not provided (intentional)
+        success: success, // Clears success if not provided (intentional)
         items: items ?? this.items,
         page: page ?? this.page,
         pageSize: pageSize ?? this.pageSize,
@@ -50,13 +55,14 @@ class ActorsCubit extends Cubit<ActorsState> {
   final ReferenceService service;
   ActorsCubit(this.service) : super(ActorsState.initial());
 
-  Future<void> load({int page = 1, String? search}) async {
-    emit(state.copyWith(loading: true, error: null));
+  Future<void> load({int page = 1, String? search, String? successMessage}) async {
+    emit(state.copyWith(loading: true, error: null, success: null));
     try {
       final PagedResult<Actor> res = await service.getActors(page: page, pageSize: state.pageSize, search: search);
       emit(ActorsState(
         loading: false,
         error: null,
+        success: successMessage,
         items: res.items,
         page: res.page,
         pageSize: res.pageSize,
@@ -68,12 +74,13 @@ class ActorsCubit extends Cubit<ActorsState> {
   }
 
   void clearError() => emit(state.copyWith(error: null));
+  void clearSuccess() => emit(state.copyWith(success: null));
 
   Future<void> create(String fullName) async {
     emit(state.copyWith(loading: true, error: null));
     try {
       await service.createActor(fullName: fullName);
-      await load(page: 1);
+      await load(page: 1, successMessage: 'Glumac uspješno dodan');
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
     }
@@ -83,7 +90,7 @@ class ActorsCubit extends Cubit<ActorsState> {
     emit(state.copyWith(loading: true, error: null));
     try {
       await service.updateActor(id: id, fullName: fullName);
-      await load(page: state.page);
+      await load(page: state.page, successMessage: 'Glumac uspješno ažuriran');
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
     }
@@ -93,7 +100,7 @@ class ActorsCubit extends Cubit<ActorsState> {
     emit(state.copyWith(loading: true, error: null));
     try {
       await service.deleteActor(id);
-      await load(page: state.page);
+      await load(page: state.page, successMessage: 'Glumac uspješno obrisan');
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
     }

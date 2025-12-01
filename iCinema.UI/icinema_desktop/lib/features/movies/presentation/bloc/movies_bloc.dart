@@ -31,6 +31,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
           data.ageRatings,
           data.directors,
           data.actors,
+          successMessage: event.successMessage,
         ));
       } catch (e) {
         emit(MoviesError(ErrorHandler.getMessage(e)));
@@ -46,7 +47,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
             posterPath: event.posterPath,
             mimeType: event.mimeType,
           );
-          add(LoadMovies());
+          add(LoadMovies(successMessage: 'Film uspješno dodan'));
         } catch (e) {
           emit(MoviesError(ErrorHandler.getMessage(e)));
         }
@@ -62,7 +63,7 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
             posterPath: event.posterPath,
             mimeType: event.mimeType,
           );
-          add(LoadMovies());
+          add(LoadMovies(successMessage: 'Film uspješno ažuriran'));
         } catch (e) {
           emit(MoviesError(ErrorHandler.getMessage(e)));
         }
@@ -81,9 +82,23 @@ class MoviesBloc extends Bloc<MoviesEvent, MoviesState> {
       emit(MoviesLoading());
       try {
         await _deleteMovieUseCase(id);
-        add(LoadMovies());
+        add(LoadMovies(successMessage: 'Film uspješno obrisan'));
       } catch (e) {
         emit(MoviesError(ErrorHandler.getMessage(e)));
+      }
+    });
+
+    on<ClearSuccessMessage>((event, emit) {
+      if (state is MoviesLoaded) {
+        final curr = state as MoviesLoaded;
+        emit(MoviesLoaded(
+          curr.movies,
+          curr.genres,
+          curr.ageRatings,
+          curr.directors,
+          curr.actors,
+          successMessage: null,
+        ));
       }
     });
   }

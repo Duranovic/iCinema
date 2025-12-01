@@ -40,7 +40,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         if (state is ProjectionsLoaded) {
           final current = state as ProjectionsLoaded;
           emit(ProjectionsLoaded(current.projections, current.month, 
-              availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
+              availableCinemas: _availableCinemas, selectedCinema: _selectedCinema, successMessage: current.successMessage));
         } else if (state is ProjectionsError) {
           final current = state as ProjectionsError;
           emit(ProjectionsError(current.message, current.month, 
@@ -74,7 +74,8 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       // if cached, show immediately
       if (_cache.containsKey(key)) {
         emit(ProjectionsLoaded(List<Projection>.from(_cache[key]!), month,
-            availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
+            availableCinemas: _availableCinemas, selectedCinema: _selectedCinema,
+            successMessage: event.successMessage));
       } else {
         emit(ProjectionsLoading(month, 
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
@@ -87,7 +88,8 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         if (_latestRequestKey != key) return;
         _cache[key] = projections;
         emit(ProjectionsLoaded(projections, month,
-            availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
+            availableCinemas: _availableCinemas, selectedCinema: _selectedCinema,
+            successMessage: event.successMessage));
       } catch (e) {
         // Guard against stale errors
         if (_latestRequestKey != key) return;
@@ -104,7 +106,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       try {
         await _addProjectionUseCase(event.projection);
         _invalidateMonth(currentMonth);
-        add(LoadProjectionsForMonth(currentMonth)); // reload after add
+        add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno dodana')); // reload after add
       } catch (e) {
         emit(ProjectionsError('Error adding projection', currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
@@ -119,7 +121,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       try {
         await _updateProjectionUseCase(event.projection);
         _invalidateMonth(currentMonth);
-        add(LoadProjectionsForMonth(currentMonth));
+        add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno ažurirana'));
       } catch (e) {
         emit(ProjectionsError('Error updating projection', currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
@@ -144,10 +146,23 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         await _deleteProjectionUseCase(id);
         // Reload the Projections after successful deletion.
         _invalidateMonth(currentMonth);
-        add(LoadProjectionsForMonth(currentMonth));
+        add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno obrisana'));
       } catch (e) {
         emit(ProjectionsError('Error deleting projection', currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
+      }
+    });
+
+    on<ClearProjectionsSuccessMessage>((event, emit) {
+      if (state is ProjectionsLoaded) {
+        final current = state as ProjectionsLoaded;
+        emit(ProjectionsLoaded(
+          current.projections,
+          current.month,
+          availableCinemas: current.availableCinemas,
+          selectedCinema: current.selectedCinema,
+          successMessage: null,
+        ));
       }
     });
   }

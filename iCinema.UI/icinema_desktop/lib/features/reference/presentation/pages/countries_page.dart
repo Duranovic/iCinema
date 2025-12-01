@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/reference_service.dart';
 import '../cubit/countries_cubit.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
 
 class CountriesPage extends StatelessWidget {
   const CountriesPage({super.key});
@@ -15,23 +16,31 @@ class CountriesPage extends StatelessWidget {
     final theme = Theme.of(context);
     return BlocProvider(
       create: (_) => CountriesCubit(ReferenceService())..load(),
-      child: Scaffold(
-        appBar: AppBar(
-          leadingWidth: 120,
-          leading: TextButton.icon(
-            onPressed: () => context.go('/admin'),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Nazad'),
-          ),
-          title: const Text('Države'),
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-        ),
-        body: StateErrorListener<CountriesCubit, CountriesState>(
-          errorSelector: (s) => s.error,
-          onClear: () => context.read<CountriesCubit>().clearError(),
-          child: const _CountriesContent(),
-        ),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            appBar: AppBar(
+              leadingWidth: 120,
+              leading: TextButton.icon(
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Nazad'),
+              ),
+              title: const Text('Države'),
+              backgroundColor: theme.colorScheme.surface,
+              elevation: 0,
+            ),
+            body: StateErrorListener<CountriesCubit, CountriesState>(
+              errorSelector: (s) => s.error,
+              onClear: () => context.read<CountriesCubit>().clearError(),
+              child: StateSuccessListener<CountriesCubit, CountriesState>(
+                successSelector: (s) => s.success,
+                onClear: () => context.read<CountriesCubit>().clearSuccess(),
+                child: const _CountriesContent(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -22,9 +22,20 @@ class StateErrorListener<B extends StateStreamable<S>, S> extends StatelessWidge
       listenWhen: (prev, curr) => errorSelector(prev) != errorSelector(curr) && errorSelector(curr) != null,
       listener: (context, state) {
         final msg = errorSelector(state) ?? 'Došlo je do greške.';
+        final colorScheme = Theme.of(context).colorScheme;
+        
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(msg)));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                msg,
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red[800],
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         onClear();
       },
       child: child,

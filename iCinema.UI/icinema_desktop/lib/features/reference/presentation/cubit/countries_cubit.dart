@@ -11,6 +11,7 @@ class CountriesState {
   final int pageSize;
   final int totalCount;
   final String? error;
+  final String? success;
   final String search;
 
   CountriesState({
@@ -21,6 +22,7 @@ class CountriesState {
     required this.totalCount,
     required this.search,
     this.error,
+    this.success,
   });
 
   factory CountriesState.initial() => CountriesState(
@@ -30,6 +32,8 @@ class CountriesState {
         pageSize: 20,
         totalCount: 0,
         search: '',
+        error: null,
+        success: null,
       );
 
   CountriesState copyWith({
@@ -39,6 +43,7 @@ class CountriesState {
     int? pageSize,
     int? totalCount,
     String? error,
+    String? success,
     String? search,
   }) => CountriesState(
         loading: loading ?? this.loading,
@@ -47,6 +52,7 @@ class CountriesState {
         pageSize: pageSize ?? this.pageSize,
         totalCount: totalCount ?? this.totalCount,
         error: error,
+        success: success,
         search: search ?? this.search,
       );
 }
@@ -55,20 +61,29 @@ class CountriesCubit extends Cubit<CountriesState> {
   final ReferenceService _service;
   CountriesCubit(this._service) : super(CountriesState.initial());
 
-  Future<void> load({int? page, String? search}) async {
-    emit(state.copyWith(loading: true, error: null, page: page ?? state.page, search: search ?? state.search));
+  Future<void> load({int? page, String? search, String? successMessage}) async {
+    emit(state.copyWith(
+      loading: true, 
+      error: null, 
+      success: null, 
+      page: page ?? state.page, 
+      search: search ?? state.search
+    ));
     try {
       final PagedResult<Country> res = await _service.getCountries(
         page: state.page,
         pageSize: state.pageSize,
         search: state.search.isEmpty ? null : state.search,
       );
-      emit(state.copyWith(
+      emit(CountriesState(
         loading: false,
         items: res.items,
         totalCount: res.totalCount,
         page: res.page,
         pageSize: res.pageSize,
+        search: state.search,
+        success: successMessage,
+        error: null,
       ));
     } catch (e) {
       final msg = e is DioException ? (e.message ?? 'Došlo je do greške.') : e.toString();
@@ -80,7 +95,7 @@ class CountriesCubit extends Cubit<CountriesState> {
     try {
       emit(state.copyWith(loading: true));
       await _service.createCountry(name: name);
-      await load(page: 1);
+      await load(page: 1, successMessage: 'Država uspješno dodana');
     } catch (e) {
       final msg = e is DioException ? (e.message ?? 'Došlo je do greške.') : e.toString();
       emit(state.copyWith(loading: false, error: msg));
@@ -91,7 +106,7 @@ class CountriesCubit extends Cubit<CountriesState> {
     try {
       emit(state.copyWith(loading: true));
       await _service.updateCountry(id: id, name: name);
-      await load(page: state.page);
+      await load(page: state.page, successMessage: 'Država uspješno ažurirana');
     } catch (e) {
       final msg = e is DioException ? (e.message ?? 'Došlo je do greške.') : e.toString();
       emit(state.copyWith(loading: false, error: msg));
@@ -104,7 +119,7 @@ class CountriesCubit extends Cubit<CountriesState> {
       await _service.deleteCountry(id);
       // If last item on page removed, move one page back when possible
       final newPage = state.items.length == 1 && state.page > 1 ? state.page - 1 : state.page;
-      await load(page: newPage);
+      await load(page: newPage, successMessage: 'Država uspješno obrisana');
     } catch (e) {
       final msg = e is DioException ? (e.message ?? 'Došlo je do greške.') : e.toString();
       emit(state.copyWith(loading: false, error: msg));
@@ -114,6 +129,12 @@ class CountriesCubit extends Cubit<CountriesState> {
   void clearError() {
     if (state.error != null) {
       emit(state.copyWith(error: null));
+    }
+  }
+
+  void clearSuccess() {
+    if (state.success != null) {
+      emit(state.copyWith(success: null));
     }
   }
 }

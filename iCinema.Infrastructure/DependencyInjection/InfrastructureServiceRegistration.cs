@@ -2,6 +2,12 @@ using System.Text;
 using iCinema.Application.Interfaces;
 using iCinema.Application.Interfaces.Repositories;
 using iCinema.Application.DTOs.Actor;
+using iCinema.Application.DTOs.Cinema;
+using iCinema.Application.DTOs.City;
+using iCinema.Application.DTOs.Country;
+using iCinema.Application.DTOs.Director;
+using iCinema.Application.DTOs.Genres;
+using iCinema.Application.DTOs.Hall;
 using iCinema.Application.Interfaces.Services;
 using iCinema.Infrastructure.Common.Mappings;
 using MassTransit;
@@ -59,6 +65,15 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
         services.AddScoped<IActorRepository, ActorRepository>();
+        
+        // Register repositories as IBaseRepository for generic handlers
+        services.AddScoped<IBaseRepository<ActorDto, ActorCreateDto, ActorUpdateDto>>(sp => sp.GetRequiredService<IActorRepository>());
+        services.AddScoped<IBaseRepository<DirectorDto, DirectorCreateDto, DirectorUpdateDto>>(sp => sp.GetRequiredService<IDirectorRepository>());
+        services.AddScoped<IBaseRepository<GenreDto, GenreCreateDto, GenreUpdateDto>>(sp => sp.GetRequiredService<IGenreRepository>());
+        services.AddScoped<IBaseRepository<CityDto, CityCreateDto, CityUpdateDto>>(sp => sp.GetRequiredService<ICityRepository>());
+        services.AddScoped<IBaseRepository<CountryDto, CountryCreateDto, CountryUpdateDto>>(sp => sp.GetRequiredService<ICountryRepository>());
+        services.AddScoped<IBaseRepository<CinemaDto, CinemaCreateDto, CinemaUpdateDto>>(sp => sp.GetRequiredService<ICinemaRepository>());
+        services.AddScoped<IBaseRepository<HallDto, HallCreateDto, HallUpdateDto>>(sp => sp.GetRequiredService<IHallRepository>());
         
         // Services
         services.AddScoped<IProjectionRulesService, Services.Rules.ProjectionRulesService>();

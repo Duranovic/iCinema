@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/reference_service.dart';
 import '../cubit/actors_cubit.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
 
 class ActorsPage extends StatelessWidget {
   const ActorsPage({super.key});
@@ -15,23 +16,31 @@ class ActorsPage extends StatelessWidget {
     final theme = Theme.of(context);
     return BlocProvider(
       create: (_) => ActorsCubit(ReferenceService())..load(),
-      child: Scaffold(
-        appBar: AppBar(
-          leadingWidth: 120,
-          leading: TextButton.icon(
-            onPressed: () => context.go('/admin'),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Nazad'),
-          ),
-          title: const Text('Glumci'),
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-        ),
-        body: StateErrorListener<ActorsCubit, ActorsState>(
-          errorSelector: (s) => s.error,
-          onClear: () => context.read<ActorsCubit>().clearError(),
-          child: const _ActorsContent(),
-        ),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            appBar: AppBar(
+              leadingWidth: 120,
+              leading: TextButton.icon(
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Nazad'),
+              ),
+              title: const Text('Glumci'),
+              backgroundColor: theme.colorScheme.surface,
+              elevation: 0,
+            ),
+            body: StateErrorListener<ActorsCubit, ActorsState>(
+              errorSelector: (s) => s.error,
+              onClear: () => context.read<ActorsCubit>().clearError(),
+              child: StateSuccessListener<ActorsCubit, ActorsState>(
+                successSelector: (s) => s.success,
+                onClear: () => context.read<ActorsCubit>().clearSuccess(),
+                child: const _ActorsContent(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

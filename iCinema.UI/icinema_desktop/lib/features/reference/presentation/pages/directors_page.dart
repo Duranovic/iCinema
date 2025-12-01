@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/reference_service.dart';
 import '../cubit/directors_cubit.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
 
 class DirectorsPage extends StatelessWidget {
   const DirectorsPage({super.key});
@@ -15,23 +16,31 @@ class DirectorsPage extends StatelessWidget {
     final theme = Theme.of(context);
     return BlocProvider(
       create: (_) => DirectorsCubit(ReferenceService())..load(),
-      child: Scaffold(
-        appBar: AppBar(
-          leadingWidth: 120,
-          leading: TextButton.icon(
-            onPressed: () => context.go('/admin'),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Nazad'),
-          ),
-          title: const Text('Režiseri'),
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-        ),
-        body: StateErrorListener<DirectorsCubit, DirectorsState>(
-          errorSelector: (s) => s.error,
-          onClear: () => context.read<DirectorsCubit>().clearError(),
-          child: const _DirectorsContent(),
-        ),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            appBar: AppBar(
+              leadingWidth: 120,
+              leading: TextButton.icon(
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Nazad'),
+              ),
+              title: const Text('Režiseri'),
+              backgroundColor: theme.colorScheme.surface,
+              elevation: 0,
+            ),
+            body: StateErrorListener<DirectorsCubit, DirectorsState>(
+              errorSelector: (s) => s.error,
+              onClear: () => context.read<DirectorsCubit>().clearError(),
+              child: StateSuccessListener<DirectorsCubit, DirectorsState>(
+                successSelector: (s) => s.success,
+                onClear: () => context.read<DirectorsCubit>().clearSuccess(),
+                child: const _DirectorsContent(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

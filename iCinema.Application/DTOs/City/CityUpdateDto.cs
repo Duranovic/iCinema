@@ -1,4 +1,4 @@
-namespace iCinema.Application.DTOs;
+namespace iCinema.Application.DTOs.City;
 
 public class CityUpdateDto
 {

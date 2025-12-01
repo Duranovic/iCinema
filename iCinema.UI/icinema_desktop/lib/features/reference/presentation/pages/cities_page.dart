@@ -8,6 +8,7 @@ import '../../domain/country.dart';
 import '../../domain/city.dart';
 import '../cubit/cities_cubit.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
 
 class CitiesPage extends StatelessWidget {
   const CitiesPage({super.key});
@@ -17,23 +18,31 @@ class CitiesPage extends StatelessWidget {
     final theme = Theme.of(context);
     return BlocProvider(
       create: (_) => CitiesCubit(ReferenceService())..load(),
-      child: Scaffold(
-        appBar: AppBar(
-          leadingWidth: 120,
-          leading: TextButton.icon(
-            onPressed: () => context.go('/admin'),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Nazad'),
-          ),
-          title: const Text('Gradovi'),
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-        ),
-        body: StateErrorListener<CitiesCubit, CitiesState>(
-          errorSelector: (s) => s.error,
-          onClear: () => context.read<CitiesCubit>().clearError(),
-          child: const _CitiesContent(),
-        ),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            appBar: AppBar(
+              leadingWidth: 120,
+              leading: TextButton.icon(
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Nazad'),
+              ),
+              title: const Text('Gradovi'),
+              backgroundColor: theme.colorScheme.surface,
+              elevation: 0,
+            ),
+            body: StateErrorListener<CitiesCubit, CitiesState>(
+              errorSelector: (s) => s.error,
+              onClear: () => context.read<CitiesCubit>().clearError(),
+              child: StateSuccessListener<CitiesCubit, CitiesState>(
+                successSelector: (s) => s.success,
+                onClear: () => context.read<CitiesCubit>().clearSuccess(),
+                child: const _CitiesContent(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

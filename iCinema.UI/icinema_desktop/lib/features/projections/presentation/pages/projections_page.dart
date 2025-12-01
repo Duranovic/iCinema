@@ -7,6 +7,7 @@ import 'package:icinema_desktop/features/projections/presentation/bloc/projectio
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_bloc.dart';
 import 'package:icinema_desktop/features/movies/presentation/bloc/movies_event.dart';
 
@@ -68,25 +69,29 @@ class _ProjectionsPage extends State<ProjectionsPage> {
             }
             bloc.add(LoadProjectionsForMonth(month));
           },
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    const CinemaSelector(),
-                    Expanded(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: constraints.maxWidth - 24, // Account for padding
+          child: StateSuccessListener<ProjectionsBloc, ProjectionsState>(
+            successSelector: (s) => s is ProjectionsLoaded ? s.successMessage : null,
+            onClear: () => context.read<ProjectionsBloc>().add(ClearProjectionsSuccessMessage()),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      const CinemaSelector(),
+                      Expanded(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth - 24, // Account for padding
+                          ),
+                          child: const ProjectionsCalendar(),
                         ),
-                        child: const ProjectionsCalendar(),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../errors/network_exception.dart';
 
 /// Utility class for consistent error handling across the app
@@ -8,16 +9,59 @@ class ErrorHandler {
       return _getNetworkErrorMessage(error);
     }
     
+    if (error is DioException) {
+      return _getDioErrorMessage(error);
+    }
+    
     if (error is Exception) {
       final message = error.toString();
       // Clean up common prefixes
       return message
           .replaceFirst('Exception: ', '')
           .replaceFirst('FormatException: ', '')
-          .replaceFirst('StateError: ', '');
+          .replaceFirst('StateError: ', '')
+          .replaceFirst('DioException: ', '');
     }
     
     return error?.toString() ?? 'An unexpected error occurred';
+  }
+
+  static String _getDioErrorMessage(DioException error) {
+    final status = error.response?.statusCode;
+    final data = error.response?.data;
+
+    // 1. Try to extract backend message from response body
+    if (data is Map<String, dynamic>) {
+      if (data.containsKey('message') && data['message'] != null) return data['message'].toString();
+      if (data.containsKey('error') && data['error'] != null) return data['error'].toString();
+      if (data.containsKey('title') && data['title'] != null) return data['title'].toString();
+    } else if (data is String && data.isNotEmpty) {
+      // Sometimes the body is just the text message
+      if (!data.startsWith('{') && !data.startsWith('<')) {
+        return data;
+      }
+    }
+
+    // 2. Fallback to standard messages based on status code
+    if (status != null) {
+        if (status == 400) return 'Zahtjev odbijen (400).';
+        if (status == 401) return 'Sesija je istekla. Molimo prijavite se ponovo.';
+        if (status == 403) return 'Nemate dozvolu za ovu akciju.';
+        if (status == 404) return 'Traženi resurs nije pronađen.';
+        if (status == 409) return 'Došlo je do konflikta podataka.';
+        if (status >= 500) return 'Greška na serveru. Pokušajte ponovo kasnije.';
+    }
+    
+    // 3. Connection errors
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError) {
+       return 'Problem sa konekcijom. Provjerite internet.';
+    }
+
+    // 4. Fallback
+    return 'Došlo je do mrežne greške.';
   }
 
   static String _getNetworkErrorMessage(NetworkException error) {

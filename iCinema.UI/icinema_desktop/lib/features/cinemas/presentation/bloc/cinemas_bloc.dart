@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/core/utils/error_handler.dart';
 import 'package:injectable/injectable.dart';
 import '../../../projections/data/cinema_service.dart';
 import '../../../projections/domain/cinema.dart';
@@ -25,9 +26,13 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
         final cinemas = results[0] as List<Cinema>;
         final cities = results[1] as List<City>;
         
-        emit(CinemasLoaded(cinemas: cinemas, cities: cities));
+        emit(CinemasLoaded(
+          cinemas: cinemas,
+          cities: cities,
+          successMessage: event.successMessage,
+        ));
       } catch (e) {
-        emit(CinemasError('Greška pri učitavanju kina: $e'));
+        emit(CinemasError(ErrorHandler.getMessage(e)));
       }
     });
 
@@ -38,7 +43,7 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
           final cities = await cityService.fetchCities();
           emit(currentState.copyWith(cities: cities));
         } catch (e) {
-          emit(CinemasError('Greška pri učitavanju gradova: $e'));
+          emit(CinemasError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -74,6 +79,7 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
           filteredCinemas: currentState.filteredCinemas,
           cities: currentState.cities,
           searchQuery: currentState.searchQuery,
+          successMessage: event.successMessage,
         ));
       } else if (state is CinemaSelected) {
         final currentState = state as CinemaSelected;
@@ -86,6 +92,7 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
           filteredCinemas: currentState.filteredCinemas,
           cities: currentState.cities,
           searchQuery: currentState.searchQuery,
+          successMessage: event.successMessage,
         ));
       }
     });
@@ -104,9 +111,9 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
         );
         
         await cinemaService.createCinema(newCinema);
-        add(LoadCinemas()); // Reload to get updated list
+        add(LoadCinemas(successMessage: 'Kino uspješno kreirano'));
       } catch (e) {
-        emit(CinemasError('Greška pri kreiranju kina: $e'));
+        emit(CinemasError(ErrorHandler.getMessage(e)));
       }
     });
 
@@ -145,9 +152,10 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
             filteredCinemas: _filterCinemas(cinemas, currentState.searchQuery),
             cities: cities,
             searchQuery: currentState.searchQuery,
+            successMessage: 'Kino uspješno ažurirano',
           ));
         } catch (e) {
-          emit(CinemasError('Greška pri ažuriranju kina: $e'));
+          emit(CinemasError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -156,9 +164,9 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
       emit(CinemasLoading());
       try {
         await cinemaService.deleteCinema(event.cinemaId);
-        add(LoadCinemas()); // Reload to get updated list
+        add(LoadCinemas(successMessage: 'Kino uspješno obrisano'));
       } catch (e) {
-        emit(CinemasError('Greška pri brisanju kina: $e'));
+        emit(CinemasError(ErrorHandler.getMessage(e)));
       }
     });
 
@@ -198,9 +206,10 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
             allCinemas: cinemas,
             cities: cities,
             searchQuery: currentState.searchQuery,
+            successMessage: 'Sala uspješno dodana',
           ));
         } catch (e) {
-          emit(CinemasError('Greška pri kreiranju sale: $e'));
+          emit(CinemasError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -243,9 +252,10 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
             allCinemas: cinemas,
             cities: cities,
             searchQuery: currentState.searchQuery,
+            successMessage: 'Sala uspješno ažurirana',
           ));
         } catch (e) {
-          emit(CinemasError('Greška pri ažuriranju sale: $e'));
+          emit(CinemasError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -277,9 +287,10 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
             filteredCinemas: _filterCinemas(cinemas, currentState.searchQuery),
             cities: cities,
             searchQuery: currentState.searchQuery,
+            successMessage: 'Sala uspješno obrisana',
           ));
         } catch (e) {
-          emit(CinemasError('Greška pri brisanju sale: $e'));
+          emit(CinemasError(ErrorHandler.getMessage(e)));
         }
       }
     });
@@ -292,6 +303,29 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
           cities: currentState.cities,
           filteredCinemas: _filterCinemas(currentState.allCinemas, currentState.searchQuery),
           searchQuery: currentState.searchQuery,
+        ));
+      }
+    });
+
+    on<ClearCinemasSuccessMessage>((event, emit) {
+      if (state is CinemasLoaded) {
+        final curr = state as CinemasLoaded;
+        emit(CinemasLoaded(
+          cinemas: curr.cinemas,
+          filteredCinemas: curr.filteredCinemas,
+          cities: curr.cities,
+          searchQuery: curr.searchQuery,
+          successMessage: null,
+        ));
+      } else if (state is CinemaSelected) {
+        final curr = state as CinemaSelected;
+        emit(CinemaSelected(
+          cinema: curr.cinema,
+          allCinemas: curr.allCinemas,
+          filteredCinemas: curr.filteredCinemas,
+          cities: curr.cities,
+          searchQuery: curr.searchQuery,
+          successMessage: null,
         ));
       }
     });

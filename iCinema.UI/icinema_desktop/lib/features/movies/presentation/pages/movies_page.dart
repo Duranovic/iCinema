@@ -6,6 +6,8 @@ import '../bloc/movies_state.dart';
 import '../widgets/movie_list.dart';
 import '../widgets/movie_edit_form.dart';
 import 'package:icinema_desktop/app/widgets/state_error_listener.dart';
+import 'package:icinema_desktop/app/widgets/state_success_listener.dart';
+import 'package:icinema_desktop/widgets/confirmation_dialog.dart';
 
 class MoviesPage extends StatefulWidget {
   const MoviesPage({super.key});
@@ -46,9 +48,12 @@ class _MoviesPageState extends State<MoviesPage> {
       body: StateErrorListener<MoviesBloc, MoviesState>(
         errorSelector: (s) => s is MoviesError ? s.message : null,
         onClear: () => context.read<MoviesBloc>().add(LoadMovies()),
-        child: BlocBuilder<MoviesBloc, MoviesState>(
-          builder: (context, state) {
-          if (state is MoviesLoading) {
+        child: StateSuccessListener<MoviesBloc, MoviesState>(
+          successSelector: (s) => s is MoviesLoaded ? s.successMessage : null,
+          onClear: () => context.read<MoviesBloc>().add(ClearSuccessMessage()),
+          child: BlocBuilder<MoviesBloc, MoviesState>(
+            builder: (context, state) {
+              if (state is MoviesLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is MoviesError) {
             return Center(
@@ -94,9 +99,20 @@ class _MoviesPageState extends State<MoviesPage> {
                       onEdit: openEdit,
                       onDelete: (index) {
                         final movie = movies[index];
-                        context.read<MoviesBloc>().add(DeleteMovie(movie.id));
-                        // Optionally, show snackbar, reset editing if deleting current
-                        if (editingIndex == index) closePanel();
+                        showDialog(
+                          context: context,
+                          builder: (dialogContext) => ConfirmationDialog(
+                            title: 'Brisanje filma',
+                            content: 'Da li ste sigurni da želite obrisati film "${movie.title}"? Ova akcija je nepovratna.',
+                            confirmText: 'Obriši',
+                            isDestructive: true,
+                            onConfirm: () {
+                              context.read<MoviesBloc>().add(DeleteMovie(movie.id));
+                              // Optionally, show snackbar, reset editing if deleting current
+                              if (editingIndex == index) closePanel();
+                            },
+                          ),
+                        );
                       },
                       onAdd: openAdd,
                     ),
@@ -146,8 +162,9 @@ class _MoviesPageState extends State<MoviesPage> {
             );
           }
           // Initial or unknown state
-          return const SizedBox();
-          },
+            return const SizedBox();
+            },
+          ),
         ),
       ),
       floatingActionButton: null, // All actions in the UI itself

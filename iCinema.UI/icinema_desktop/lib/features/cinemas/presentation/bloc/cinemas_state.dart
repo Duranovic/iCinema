@@ -12,12 +12,14 @@ class CinemasLoaded extends CinemasState {
   final List<Cinema> filteredCinemas;
   final List<City> cities;
   final String searchQuery;
+  final String? successMessage;
   
   CinemasLoaded({
     required this.cinemas,
     List<Cinema>? filteredCinemas,
     this.cities = const [],
     this.searchQuery = '',
+    this.successMessage,
   }) : filteredCinemas = filteredCinemas ?? cinemas;
   
   CinemasLoaded copyWith({
@@ -25,12 +27,14 @@ class CinemasLoaded extends CinemasState {
     List<Cinema>? filteredCinemas,
     List<City>? cities,
     String? searchQuery,
+    String? successMessage,
   }) {
     return CinemasLoaded(
       cinemas: cinemas ?? this.cinemas,
       filteredCinemas: filteredCinemas ?? this.filteredCinemas,
       cities: cities ?? this.cities,
       searchQuery: searchQuery ?? this.searchQuery,
+      successMessage: successMessage ?? this.successMessage,
     );
   }
 }
@@ -41,6 +45,7 @@ class CinemaSelected extends CinemasState {
   final List<Cinema> filteredCinemas;
   final List<City> cities;
   final String searchQuery;
+  final String? successMessage;
   
   CinemaSelected({
     required this.cinema,
@@ -48,6 +53,7 @@ class CinemaSelected extends CinemasState {
     List<Cinema>? filteredCinemas,
     this.cities = const [],
     this.searchQuery = '',
+    this.successMessage,
   }) : filteredCinemas = filteredCinemas ?? allCinemas;
   
   CinemaSelected copyWith({
@@ -56,6 +62,7 @@ class CinemaSelected extends CinemasState {
     List<Cinema>? filteredCinemas,
     List<City>? cities,
     String? searchQuery,
+    String? successMessage,
   }) {
     return CinemaSelected(
       cinema: cinema ?? this.cinema,
@@ -63,6 +70,7 @@ class CinemaSelected extends CinemasState {
       filteredCinemas: filteredCinemas ?? this.filteredCinemas,
       cities: cities ?? this.cities,
       searchQuery: searchQuery ?? this.searchQuery,
+      successMessage: successMessage ?? this.successMessage,
     );
   }
 }

@@ -18,8 +18,31 @@ class ProjectionsLoaded extends ProjectionsState {
   final DateTime month;
   final List<Cinema> availableCinemas;
   final Cinema? selectedCinema;
+  final String? successMessage;
   
-  ProjectionsLoaded(this.projections, this.month, {this.availableCinemas = const [], this.selectedCinema});
+  ProjectionsLoaded(
+    this.projections,
+    this.month, {
+    this.availableCinemas = const [],
+    this.selectedCinema,
+    this.successMessage,
+  });
+
+  ProjectionsLoaded copyWith({
+    List<Projection>? projections,
+    DateTime? month,
+    List<Cinema>? availableCinemas,
+    Cinema? selectedCinema,
+    String? successMessage,
+  }) {
+    return ProjectionsLoaded(
+      projections ?? this.projections,
+      month ?? this.month,
+      availableCinemas: availableCinemas ?? this.availableCinemas,
+      selectedCinema: selectedCinema ?? this.selectedCinema,
+      successMessage: successMessage ?? this.successMessage,
+    );
+  }
 }
 
 class ProjectionsError extends ProjectionsState {
