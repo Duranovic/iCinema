@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app/di/injection.dart';
 import 'app/router/app_router.dart';
 
+import 'package:flutter/foundation.dart'; // Import for kDebugMode
+
+class DevHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final client = super.createHttpClient(context);
+    // ONLY trust self-signed certs in debug mode
+    if (kDebugMode) {
+      client.badCertificateCallback = (cert, host, port) => true;
+    }
+    return client;
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Enable self-signed certificates ONLY for development/debug builds
+  if (kDebugMode) {
+    HttpOverrides.global = DevHttpOverrides();
+  }
   
   // Configure window size constraints
   await windowManager.ensureInitialized();

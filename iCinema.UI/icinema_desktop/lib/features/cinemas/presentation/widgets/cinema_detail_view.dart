@@ -167,11 +167,11 @@ class CinemaDetailView extends StatelessWidget {
                             ),
                           )
                         : GridView.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              childAspectRatio: 2.0,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 300,
+                              childAspectRatio: 1.6,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
                             ),
                             itemCount: cinema.halls.length,
                             itemBuilder: (context, index) {
@@ -446,7 +446,8 @@ class _HallCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Icon(
                   Icons.event_seat,
