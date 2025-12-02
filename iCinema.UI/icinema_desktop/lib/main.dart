@@ -41,6 +41,7 @@ Future<void> main() async {
   );
   
   windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.setTitle('iCinema');
     await windowManager.show();
     await windowManager.focus();
   });
