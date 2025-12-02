@@ -23,21 +23,22 @@ class CinemasPage extends StatelessWidget {
           backgroundColor: Theme.of(context).colorScheme.surface,
           elevation: 0,
         ),
-        body: StateErrorListener<CinemasBloc, CinemasState>(
-          errorSelector: (s) {
-            if (s is CinemasError) return s.message;
-            if (s is CinemasLoaded) return s.errorMessage;
-            if (s is CinemaSelected) return s.errorMessage;
-            return null;
-          },
-          onClear: () {
-            final currentState = context.read<CinemasBloc>().state;
-            if (currentState is CinemasLoaded || currentState is CinemaSelected) {
-              context.read<CinemasBloc>().add(ClearCinemasErrorMessage());
-            } else {
-              context.read<CinemasBloc>().add(LoadCinemas());
-            }
-          },
+        body: Builder(
+          builder: (context) => StateErrorListener<CinemasBloc, CinemasState>(
+            errorSelector: (s) {
+              if (s is CinemasError) return s.message;
+              if (s is CinemasLoaded) return s.errorMessage;
+              if (s is CinemaSelected) return s.errorMessage;
+              return null;
+            },
+            onClear: (context) {
+              final currentState = context.read<CinemasBloc>().state;
+              if (currentState is CinemasLoaded || currentState is CinemaSelected) {
+                context.read<CinemasBloc>().add(ClearCinemasErrorMessage());
+              } else {
+                context.read<CinemasBloc>().add(LoadCinemas());
+              }
+            },
           child: StateSuccessListener<CinemasBloc, CinemasState>(
             successSelector: (s) {
               if (s is CinemasLoaded) return s.successMessage;
@@ -46,6 +47,7 @@ class CinemasPage extends StatelessWidget {
             },
             onClear: () => context.read<CinemasBloc>().add(ClearCinemasSuccessMessage()),
             child: const CinemasPageContent(),
+          ),
           ),
         ),
       ),

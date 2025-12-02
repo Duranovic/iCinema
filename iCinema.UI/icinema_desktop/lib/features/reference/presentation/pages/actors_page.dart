@@ -30,14 +30,16 @@ class ActorsPage extends StatelessWidget {
               backgroundColor: theme.colorScheme.surface,
               elevation: 0,
             ),
-            body: StateErrorListener<ActorsCubit, ActorsState>(
-              errorSelector: (s) => s.error,
-              onClear: () => context.read<ActorsCubit>().clearError(),
+            body: Builder(
+              builder: (context) => StateErrorListener<ActorsCubit, ActorsState>(
+                errorSelector: (s) => s.error,
+                onClear: (context) => context.read<ActorsCubit>().clearError(),
               child: StateSuccessListener<ActorsCubit, ActorsState>(
                 successSelector: (s) => s.success,
                 onClear: () => context.read<ActorsCubit>().clearSuccess(),
                 child: const _ActorsContent(),
               ),
+            ),
             ),
           );
         },

@@ -45,125 +45,127 @@ class _MoviesPageState extends State<MoviesPage> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
       ),
-      body: StateErrorListener<MoviesBloc, MoviesState>(
-        errorSelector: (s) => s is MoviesError ? s.message : null,
-        onClear: () => context.read<MoviesBloc>().add(LoadMovies()),
-        child: StateSuccessListener<MoviesBloc, MoviesState>(
-          successSelector: (s) => s is MoviesLoaded ? s.successMessage : null,
-          onClear: () => context.read<MoviesBloc>().add(ClearSuccessMessage()),
-          child: BlocBuilder<MoviesBloc, MoviesState>(
-            builder: (context, state) {
-              if (state is MoviesLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is MoviesError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Greška pri učitavanju filmova',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          } else if (state is MoviesLoaded) {
-            final movies = state.movies;
-            const double sidebarWidth = 500;
-            final bool showSidebar = editingIndex != null || isAdding;
-            
-            return Row(
-              children: [
-                // Main content area
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: MovieList(
-                      movies: movies,
-                      onEdit: openEdit,
-                      onDelete: (index) {
-                        final movie = movies[index];
-                        showDialog(
-                          context: context,
-                          builder: (dialogContext) => ConfirmationDialog(
-                            title: 'Brisanje filma',
-                            content: 'Da li ste sigurni da želite obrisati film "${movie.title}"? Ova akcija je nepovratna.',
-                            confirmText: 'Obriši',
-                            isDestructive: true,
-                            onConfirm: () {
-                              context.read<MoviesBloc>().add(DeleteMovie(movie.id));
-                              // Optionally, show snackbar, reset editing if deleting current
-                              if (editingIndex == index) closePanel();
-                            },
+      body: Builder(
+        builder: (builderContext) => StateErrorListener<MoviesBloc, MoviesState>(
+          errorSelector: (s) => s is MoviesError ? s.message : null,
+          onClear: (ctx) => ctx.read<MoviesBloc>().add(LoadMovies()),
+          child: StateSuccessListener<MoviesBloc, MoviesState>(
+            successSelector: (s) => s is MoviesLoaded ? s.successMessage : null,
+            onClear: () => builderContext.read<MoviesBloc>().add(ClearSuccessMessage()),
+            child: BlocBuilder<MoviesBloc, MoviesState>(
+              builder: (context, state) {
+                if (state is MoviesLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is MoviesError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Greška pri učitavanju filmova',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.error,
                           ),
-                        );
-                      },
-                      onAdd: openAdd,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.message,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                // Sidebar - appears/disappears instantly
-                if (showSidebar)
-                  Material(
-                    color: colorScheme.surface,
-                    elevation: 0,
-                    shadowColor: colorScheme.shadow,
-                    child: Container(
-                      width: sidebarWidth,
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        border: Border(
-                          left: BorderSide(
-                            color: colorScheme.outlineVariant,
-                            width: 1,
+                  );
+                } else if (state is MoviesLoaded) {
+                  final movies = state.movies;
+                  const double sidebarWidth = 500;
+                  final bool showSidebar = editingIndex != null || isAdding;
+                  
+                  return Row(
+                    children: [
+                      // Main content area
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: MovieList(
+                            movies: movies,
+                            onEdit: openEdit,
+                            onDelete: (index) {
+                              final movie = movies[index];
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => ConfirmationDialog(
+                                  title: 'Brisanje filma',
+                                  content: 'Da li ste sigurni da želite obrisati film "${movie.title}"? Ova akcija je nepovratna.',
+                                  confirmText: 'Obriši',
+                                  isDestructive: true,
+                                  onConfirm: () {
+                                    context.read<MoviesBloc>().add(DeleteMovie(movie.id));
+                                    // Optionally, show snackbar, reset editing if deleting current
+                                    if (editingIndex == index) closePanel();
+                                  },
+                                ),
+                              );
+                            },
+                            onAdd: openAdd,
                           ),
                         ),
                       ),
-                      child: MovieEditForm(
-                        key: ValueKey('form_${editingIndex}_${isAdding}'),
-                        movie: editingIndex != null ? movies[editingIndex!] : null,
-                        genres: state.genres,
-                        ageRatings: state.ageRatings,
-                        directors: state.directors,
-                        actors: state.actors,
-                        onClose: closePanel,
-                        onSave: (movie, posterPath, mimeType) {
-                          if (isAdding) {
-                            context
-                                .read<MoviesBloc>()
-                                .add(AddMovie(movie, posterPath: posterPath, mimeType: mimeType));
-                          } else {
-                            context
-                                .read<MoviesBloc>()
-                                .add(UpdateMovie(movie, posterPath: posterPath, mimeType: mimeType));
-                          }
-                          closePanel();
-                        },
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          }
-          // Initial or unknown state
-            return const SizedBox();
-            },
+                      // Sidebar - appears/disappears instantly
+                      if (showSidebar)
+                        Material(
+                          color: colorScheme.surface,
+                          elevation: 0,
+                          shadowColor: colorScheme.shadow,
+                          child: Container(
+                            width: sidebarWidth,
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              border: Border(
+                                left: BorderSide(
+                                  color: colorScheme.outlineVariant,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: MovieEditForm(
+                              key: ValueKey('form_${editingIndex}_$isAdding'),
+                              movie: editingIndex != null ? movies[editingIndex!] : null,
+                              genres: state.genres,
+                              ageRatings: state.ageRatings,
+                              directors: state.directors,
+                              actors: state.actors,
+                              onClose: closePanel,
+                              onSave: (movie, posterPath, mimeType) {
+                                if (isAdding) {
+                                  context
+                                      .read<MoviesBloc>()
+                                      .add(AddMovie(movie, posterPath: posterPath, mimeType: mimeType));
+                                } else {
+                                  context
+                                      .read<MoviesBloc>()
+                                      .add(UpdateMovie(movie, posterPath: posterPath, mimeType: mimeType));
+                                }
+                                closePanel();
+                              },
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                }
+                // Initial or unknown state
+                return const SizedBox();
+              },
+            ),
           ),
         ),
       ),

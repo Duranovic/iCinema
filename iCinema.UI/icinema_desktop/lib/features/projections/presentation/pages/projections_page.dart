@@ -52,23 +52,24 @@ class _ProjectionsPage extends State<ProjectionsPage> {
               ..add(LoadMovies()),
           ),
         ],
-        child: StateErrorListener<ProjectionsBloc, ProjectionsState>(
-          errorSelector: (s) => s is ProjectionsError ? s.message : null,
-          onClear: () {
-            final bloc = context.read<ProjectionsBloc>();
-            final st = bloc.state;
-            DateTime month;
-            if (st is ProjectionsLoaded) {
-              month = st.month;
-            } else if (st is ProjectionsLoading) {
-              month = st.month;
-            } else if (st is ProjectionsError) {
-              month = st.month;
-            } else {
-              month = DateTime.now();
-            }
-            bloc.add(LoadProjectionsForMonth(month));
-          },
+        child: Builder(
+          builder: (context) => StateErrorListener<ProjectionsBloc, ProjectionsState>(
+            errorSelector: (s) => s is ProjectionsError ? s.message : null,
+            onClear: (context) {
+              final bloc = context.read<ProjectionsBloc>();
+              final st = bloc.state;
+              DateTime month;
+              if (st is ProjectionsLoaded) {
+                month = st.month;
+              } else if (st is ProjectionsLoading) {
+                month = st.month;
+              } else if (st is ProjectionsError) {
+                month = st.month;
+              } else {
+                month = DateTime.now();
+              }
+              bloc.add(LoadProjectionsForMonth(month));
+            },
           child: StateSuccessListener<ProjectionsBloc, ProjectionsState>(
             successSelector: (s) => s is ProjectionsLoaded ? s.successMessage : null,
             onClear: () => context.read<ProjectionsBloc>().add(ClearProjectionsSuccessMessage()),
@@ -93,6 +94,7 @@ class _ProjectionsPage extends State<ProjectionsPage> {
               },
             ),
           ),
+            ),
         ),
       ),
     );

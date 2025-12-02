@@ -32,13 +32,15 @@ class CitiesPage extends StatelessWidget {
               backgroundColor: theme.colorScheme.surface,
               elevation: 0,
             ),
-            body: StateErrorListener<CitiesCubit, CitiesState>(
-              errorSelector: (s) => s.error,
-              onClear: () => context.read<CitiesCubit>().clearError(),
-              child: StateSuccessListener<CitiesCubit, CitiesState>(
-                successSelector: (s) => s.success,
-                onClear: () => context.read<CitiesCubit>().clearSuccess(),
-                child: const _CitiesContent(),
+            body: Builder(
+              builder: (context) => StateErrorListener<CitiesCubit, CitiesState>(
+                errorSelector: (s) => s.error,
+                onClear: (context) => context.read<CitiesCubit>().clearError(),
+                child: StateSuccessListener<CitiesCubit, CitiesState>(
+                  successSelector: (s) => s.success,
+                  onClear: () => context.read<CitiesCubit>().clearSuccess(),
+                  child: const _CitiesContent(),
+                ),
               ),
             ),
           );

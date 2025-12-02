@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// the error in the state to avoid retriggering on rebuilds.
 class StateErrorListener<B extends StateStreamable<S>, S> extends StatelessWidget {
   final String? Function(S state) errorSelector;
-  final VoidCallback onClear;
+  final void Function(BuildContext context) onClear;
   final Widget child;
 
   const StateErrorListener({
@@ -36,7 +36,7 @@ class StateErrorListener<B extends StateStreamable<S>, S> extends StatelessWidge
               behavior: SnackBarBehavior.floating,
             ),
           );
-        onClear();
+        onClear(context);
       },
       child: child,
     );

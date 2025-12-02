@@ -30,14 +30,16 @@ class GenresPage extends StatelessWidget {
               backgroundColor: theme.colorScheme.surface,
               elevation: 0,
             ),
-            body: StateErrorListener<GenresCubit, GenresState>(
-              errorSelector: (s) => s.error,
-              onClear: () => context.read<GenresCubit>().clearError(),
+            body: Builder(
+              builder: (context) => StateErrorListener<GenresCubit, GenresState>(
+                errorSelector: (s) => s.error,
+                onClear: (context) => context.read<GenresCubit>().clearError(),
               child: StateSuccessListener<GenresCubit, GenresState>(
                 successSelector: (s) => s.success,
                 onClear: () => context.read<GenresCubit>().clearSuccess(),
                 child: const _GenresContent(),
               ),
+            ),
             ),
           );
         },

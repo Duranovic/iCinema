@@ -30,14 +30,16 @@ class CountriesPage extends StatelessWidget {
               backgroundColor: theme.colorScheme.surface,
               elevation: 0,
             ),
-            body: StateErrorListener<CountriesCubit, CountriesState>(
-              errorSelector: (s) => s.error,
-              onClear: () => context.read<CountriesCubit>().clearError(),
+            body: Builder(
+              builder: (context) => StateErrorListener<CountriesCubit, CountriesState>(
+                errorSelector: (s) => s.error,
+                onClear: (context) => context.read<CountriesCubit>().clearError(),
               child: StateSuccessListener<CountriesCubit, CountriesState>(
                 successSelector: (s) => s.success,
                 onClear: () => context.read<CountriesCubit>().clearSuccess(),
                 child: const _CountriesContent(),
               ),
+            ),
             ),
           );
         },

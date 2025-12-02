@@ -30,14 +30,16 @@ class DirectorsPage extends StatelessWidget {
               backgroundColor: theme.colorScheme.surface,
               elevation: 0,
             ),
-            body: StateErrorListener<DirectorsCubit, DirectorsState>(
-              errorSelector: (s) => s.error,
-              onClear: () => context.read<DirectorsCubit>().clearError(),
+            body: Builder(
+              builder: (context) => StateErrorListener<DirectorsCubit, DirectorsState>(
+                errorSelector: (s) => s.error,
+                onClear: (context) => context.read<DirectorsCubit>().clearError(),
               child: StateSuccessListener<DirectorsCubit, DirectorsState>(
                 successSelector: (s) => s.success,
                 onClear: () => context.read<DirectorsCubit>().clearSuccess(),
                 child: const _DirectorsContent(),
               ),
+            ),
             ),
           );
         },
