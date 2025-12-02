@@ -32,6 +32,7 @@ public class UpdateHallCommandValidator : AbstractValidator<UpdateCommand<HallDt
             .MaximumLength(50).When(x => !string.IsNullOrWhiteSpace(x.Dto.ScreenSize));
 
         RuleFor(x => x.Dto.CinemaId)
-            .NotEmpty().WithMessage(ErrorMessages.CinemaIdRequired);
+            .Must(id => id != Guid.Empty)
+            .WithMessage(ErrorMessages.CinemaIdRequired);
     }
 }

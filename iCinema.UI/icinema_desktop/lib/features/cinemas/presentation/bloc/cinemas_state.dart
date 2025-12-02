@@ -13,6 +13,7 @@ class CinemasLoaded extends CinemasState {
   final List<City> cities;
   final String searchQuery;
   final String? successMessage;
+  final String? errorMessage;
   
   CinemasLoaded({
     required this.cinemas,
@@ -20,6 +21,7 @@ class CinemasLoaded extends CinemasState {
     this.cities = const [],
     this.searchQuery = '',
     this.successMessage,
+    this.errorMessage,
   }) : filteredCinemas = filteredCinemas ?? cinemas;
   
   CinemasLoaded copyWith({
@@ -28,13 +30,15 @@ class CinemasLoaded extends CinemasState {
     List<City>? cities,
     String? searchQuery,
     String? successMessage,
+    String? errorMessage,
   }) {
     return CinemasLoaded(
       cinemas: cinemas ?? this.cinemas,
       filteredCinemas: filteredCinemas ?? this.filteredCinemas,
       cities: cities ?? this.cities,
       searchQuery: searchQuery ?? this.searchQuery,
-      successMessage: successMessage ?? this.successMessage,
+      successMessage: successMessage,
+      errorMessage: errorMessage,
     );
   }
 }
@@ -46,6 +50,7 @@ class CinemaSelected extends CinemasState {
   final List<City> cities;
   final String searchQuery;
   final String? successMessage;
+  final String? errorMessage;
   
   CinemaSelected({
     required this.cinema,
@@ -54,6 +59,7 @@ class CinemaSelected extends CinemasState {
     this.cities = const [],
     this.searchQuery = '',
     this.successMessage,
+    this.errorMessage,
   }) : filteredCinemas = filteredCinemas ?? allCinemas;
   
   CinemaSelected copyWith({
@@ -63,6 +69,7 @@ class CinemaSelected extends CinemasState {
     List<City>? cities,
     String? searchQuery,
     String? successMessage,
+    String? errorMessage,
   }) {
     return CinemaSelected(
       cinema: cinema ?? this.cinema,
@@ -70,7 +77,8 @@ class CinemaSelected extends CinemasState {
       filteredCinemas: filteredCinemas ?? this.filteredCinemas,
       cities: cities ?? this.cities,
       searchQuery: searchQuery ?? this.searchQuery,
-      successMessage: successMessage ?? this.successMessage,
+      successMessage: successMessage,
+      errorMessage: errorMessage,
     );
   }
 }

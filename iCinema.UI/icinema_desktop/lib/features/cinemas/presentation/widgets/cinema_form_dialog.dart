@@ -26,6 +26,7 @@ class _CinemaFormDialogState extends State<CinemaFormDialog> {
   final _phoneController = TextEditingController();
   
   City? _selectedCity;
+  List<City> _cities = []; // Cache cities to persist across state changes
 
   @override
   void initState() {
@@ -39,6 +40,26 @@ class _CinemaFormDialogState extends State<CinemaFormDialog> {
       _emailController.text = cinema.email ?? '';
       _phoneController.text = cinema.phoneNumber ?? '';
     }
+    
+    // Initialize cities from current bloc state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<CinemasBloc>().state;
+      if (state is CinemasLoaded) {
+        _initializeCities(state.cities);
+      } else if (state is CinemaSelected) {
+        _initializeCities(state.cities);
+      }
+    });
+  }
+  
+  void _initializeCities(List<City> cities) {
+    setState(() {
+      _cities = cities;
+      // Set selected city for editing if not already set
+      if (widget.cinema != null && _selectedCity == null && widget.cinema!.cityId != null) {
+        _selectedCity = _cities.where((city) => city.id == widget.cinema!.cityId).firstOrNull;
+      }
+    });
   }
 
   @override
@@ -55,16 +76,17 @@ class _CinemaFormDialogState extends State<CinemaFormDialog> {
     final isEditing = widget.cinema != null;
     
     return BlocBuilder<CinemasBloc, CinemasState>(
+      // Don't rebuild during loading - keep the form functional
+      buildWhen: (prev, curr) => curr is! CinemasLoading,
       builder: (context, state) {
-        final cities = <City>[];
-        if (state is CinemasLoaded) {
-          cities.addAll(state.cities);
-        } else if (state is CinemaSelected) {
-          cities.addAll(state.cities);
-          
+        // Update cities cache if state has cities
+        if (state is CinemasLoaded && state.cities.isNotEmpty) {
+          _cities = state.cities;
+        } else if (state is CinemaSelected && state.cities.isNotEmpty) {
+          _cities = state.cities;
           // Set selected city for editing if not already set
           if (isEditing && _selectedCity == null && widget.cinema!.cityId != null) {
-            _selectedCity = cities.where((city) => city.id == widget.cinema!.cityId).firstOrNull;
+            _selectedCity = _cities.where((city) => city.id == widget.cinema!.cityId).firstOrNull;
           }
         }
 
@@ -117,7 +139,7 @@ class _CinemaFormDialogState extends State<CinemaFormDialog> {
                       prefixIcon: Icon(Icons.location_city),
                     ),
                     hint: const Text('Odaberite grad'),
-                    items: cities.map((city) {
+                    items: _cities.map((city) {
                       return DropdownMenuItem<City>(
                         value: city,
                         child: Text(city.name),
@@ -156,7 +178,7 @@ class _CinemaFormDialogState extends State<CinemaFormDialog> {
                     ),
                     keyboardType: TextInputType.phone,
                   ),
-                  if (cities.isEmpty)
+                  if (_cities.isEmpty)
                     Container(
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.all(12),

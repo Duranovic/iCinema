@@ -24,8 +24,20 @@ class CinemasPage extends StatelessWidget {
           elevation: 0,
         ),
         body: StateErrorListener<CinemasBloc, CinemasState>(
-          errorSelector: (s) => s is CinemasError ? s.message : null,
-          onClear: () => context.read<CinemasBloc>().add(LoadCinemas()),
+          errorSelector: (s) {
+            if (s is CinemasError) return s.message;
+            if (s is CinemasLoaded) return s.errorMessage;
+            if (s is CinemaSelected) return s.errorMessage;
+            return null;
+          },
+          onClear: () {
+            final currentState = context.read<CinemasBloc>().state;
+            if (currentState is CinemasLoaded || currentState is CinemaSelected) {
+              context.read<CinemasBloc>().add(ClearCinemasErrorMessage());
+            } else {
+              context.read<CinemasBloc>().add(LoadCinemas());
+            }
+          },
           child: StateSuccessListener<CinemasBloc, CinemasState>(
             successSelector: (s) {
               if (s is CinemasLoaded) return s.successMessage;
@@ -54,32 +66,12 @@ class CinemasPageContent extends StatelessWidget {
           );
         }
 
+        // Don't show error page - errors are shown via toaster
+        // If error occurs, try to show previous state or default to empty
         if (state is CinemasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  state.message,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<CinemasBloc>().add(LoadCinemas());
-                  },
-                  child: const Text('Pokušaj ponovo'),
-                ),
-              ],
-            ),
-          );
+          // Return empty or try to reload - but don't show error page
+          // The error toaster will handle the notification
+          return const SizedBox.shrink();
         }
 
         if (state is CinemasLoaded) {

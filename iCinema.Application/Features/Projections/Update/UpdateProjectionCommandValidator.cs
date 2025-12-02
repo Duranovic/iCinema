@@ -10,10 +10,12 @@ public class UpdateProjectionCommandValidator : AbstractValidator<UpdateCommand<
     public UpdateProjectionCommandValidator()
     {
         RuleFor(x => x.Dto.MovieId)
-            .NotEmpty().WithMessage(ErrorMessages.MovieIdRequired);
+            .Must(id => id != Guid.Empty)
+            .WithMessage(ErrorMessages.MovieIdRequired);
 
         RuleFor(x => x.Dto.HallId)
-            .NotEmpty().WithMessage(ErrorMessages.HallIdRequired);
+            .Must(id => id != Guid.Empty)
+            .WithMessage(ErrorMessages.HallIdRequired);
 
         RuleFor(x => x.Dto.StartTime)
             .NotEmpty().WithMessage(ErrorMessages.StartTimeRequired)

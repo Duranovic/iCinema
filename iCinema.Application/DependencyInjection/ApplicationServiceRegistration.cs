@@ -36,13 +36,13 @@ public static class ApplicationServiceRegistration
         services.AddTransient<IRequestHandler<CreateCommand<CinemaDto, CinemaCreateDto>, CinemaDto>, CreateHandler<CinemaDto, CinemaCreateDto, CinemaUpdateDto>>();
         services.AddTransient<IRequestHandler<CreateCommand<HallDto, HallCreateDto>, HallDto>, CreateHandler<HallDto, HallCreateDto, HallUpdateDto>>();
         
-        // Register generic Update handlers
+        // Register generic Update handlers (Cinema has a specific handler, so it's picked up by RegisterServicesFromAssembly)
         services.AddTransient<IRequestHandler<UpdateCommand<ActorDto, ActorUpdateDto>, ActorDto?>, UpdateHandler<ActorDto, ActorCreateDto, ActorUpdateDto>>();
         services.AddTransient<IRequestHandler<UpdateCommand<DirectorDto, DirectorUpdateDto>, DirectorDto?>, UpdateHandler<DirectorDto, DirectorCreateDto, DirectorUpdateDto>>();
         services.AddTransient<IRequestHandler<UpdateCommand<GenreDto, GenreUpdateDto>, GenreDto?>, UpdateHandler<GenreDto, GenreCreateDto, GenreUpdateDto>>();
         services.AddTransient<IRequestHandler<UpdateCommand<CityDto, CityUpdateDto>, CityDto?>, UpdateHandler<CityDto, CityCreateDto, CityUpdateDto>>();
         services.AddTransient<IRequestHandler<UpdateCommand<CountryDto, CountryUpdateDto>, CountryDto?>, UpdateHandler<CountryDto, CountryCreateDto, CountryUpdateDto>>();
-        services.AddTransient<IRequestHandler<UpdateCommand<CinemaDto, CinemaUpdateDto>, CinemaDto?>, UpdateHandler<CinemaDto, CinemaCreateDto, CinemaUpdateDto>>();
+        // Cinema has UpdateCinemaCommandHandler, so it's registered via RegisterServicesFromAssembly
         services.AddTransient<IRequestHandler<UpdateCommand<HallDto, HallUpdateDto>, HallDto?>, UpdateHandler<HallDto, HallCreateDto, HallUpdateDto>>();
         
         // Register generic Delete handlers

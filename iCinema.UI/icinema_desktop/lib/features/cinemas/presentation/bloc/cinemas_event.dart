@@ -112,3 +112,5 @@ class DeleteHall extends CinemasEvent {
 class ClearSelection extends CinemasEvent {}
 
 class ClearCinemasSuccessMessage extends CinemasEvent {}
+
+class ClearCinemasErrorMessage extends CinemasEvent {}

@@ -10,19 +10,19 @@ public class ProjectionRulesService(iCinemaDbContext context) : IProjectionRules
    public async Task<bool> HasFutureProjectionsForMovie(Guid movieId, CancellationToken cancellationToken = default)
     {
         return await context.Projections
-            .AnyAsync(p => p.MovieId == movieId && p.StartTime > DateTime.UtcNow, cancellationToken);
+            .AnyAsync(p => p.MovieId == movieId && p.IsActive && p.StartTime > DateTime.UtcNow, cancellationToken);
     }
 
     public async Task<bool> HasFutureProjectionsForHall(Guid hallId, CancellationToken cancellationToken = default)
     {
         return await context.Projections
-            .AnyAsync(p => p.HallId == hallId && p.StartTime > DateTime.UtcNow, cancellationToken);
+            .AnyAsync(p => p.HallId == hallId && p.IsActive && p.StartTime > DateTime.UtcNow, cancellationToken);
     }
 
     public async Task<bool> HasFutureProjectionsForCinema(Guid cinemaId, CancellationToken cancellationToken = default)
     {
         return await context.Projections
-            .AnyAsync(p => p.Hall.CinemaId == cinemaId && p.StartTime > DateTime.UtcNow, cancellationToken);
+            .AnyAsync(p => p.Hall.CinemaId == cinemaId && p.IsActive && p.StartTime > DateTime.UtcNow, cancellationToken);
     }
 
     public async Task EnsureNoOverlap(Guid hallId, Guid movieId, DateTime startTime, Guid? projectionId = null, CancellationToken cancellationToken = default)

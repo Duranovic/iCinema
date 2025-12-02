@@ -31,11 +31,15 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (ValidationException ex)
         {
+            var errorDetails = ex.Errors != null 
+                ? string.Join("; ", ex.Errors.Select(e => $"{e.Key}: [{string.Join(", ", e.Value)}]"))
+                : "No details";
             logger.LogWarning(
-                "Validation error. TraceId: {TraceId}, Path: {Path}, Errors: {ErrorCount}", 
+                "Validation error. TraceId: {TraceId}, Path: {Path}, Errors: {ErrorCount}, Details: {ErrorDetails}", 
                 context.TraceIdentifier, 
                 context.Request.Path,
-                ex.Errors?.Count ?? 0);
+                ex.Errors?.Count ?? 0,
+                errorDetails);
             await HandleExceptionAsync(context, HttpStatusCode.BadRequest, ErrorMessages.ValidationError, ex.Message, ex.Errors);
         }
         catch (BusinessRuleException ex)

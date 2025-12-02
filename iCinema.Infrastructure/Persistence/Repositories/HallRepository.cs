@@ -68,19 +68,17 @@ public class HallRepository(iCinemaDbContext context, IMapper mapper, IUnitOfWor
     {
         var hall = await DbSet
             .Include(h => h.Projections)
+            .Include(h => h.Seats)
             .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
         if (hall == null)
             return false;
 
-        // Block deletion if hall has future projections
-        
-        var hasFutureProjections = await _projectionRulesService.HasFutureProjectionsForHall(hall.Id, cancellationToken);
-        if (hasFutureProjections)
-            throw new BusinessRuleException("Ne možete obrisati salu koja ima zakazane buduće projekcije.");
-
-        // Delete past projections
+        // Delete all projections (past, future, and inactive) - they will be removed with the hall
         _context.Projections.RemoveRange(hall.Projections);
+
+        // Delete seats
+        _context.Seats.RemoveRange(hall.Seats);
 
         // Delete hall
         DbSet.Remove(hall);

@@ -18,14 +18,15 @@ public class CreateCinemaCommandValidator : AbstractValidator<CreateCommand<Cine
             .MaximumLength(200).WithMessage(ErrorMessages.AddressMaxLength);
 
         RuleFor(x => x.Dto.CityId)
-            .NotEmpty().WithMessage(ErrorMessages.CityIdRequired);
+            .Must(id => id != Guid.Empty)
+            .WithMessage(ErrorMessages.CityIdRequired);
 
         RuleFor(x => x.Dto.Email)
             .EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Dto.Email))
             .WithMessage(ErrorMessages.InvalidEmailFormat);
 
         RuleFor(x => x.Dto.PhoneNumber)
-            .Matches(@"^\+?[0-9]{7,15}$").When(x => !string.IsNullOrWhiteSpace(x.Dto.PhoneNumber))
+            .Matches(@"^\+?[\d\s\-\(\)]{7,20}$").When(x => !string.IsNullOrWhiteSpace(x.Dto.PhoneNumber))
             .WithMessage(ErrorMessages.InvalidPhoneFormat);
     }
 }

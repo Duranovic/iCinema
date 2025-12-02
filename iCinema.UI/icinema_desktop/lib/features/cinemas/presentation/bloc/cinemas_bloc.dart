@@ -161,12 +161,26 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
     });
 
     on<DeleteCinema>((event, emit) async {
+      final previousState = state;
       emit(CinemasLoading());
       try {
         await cinemaService.deleteCinema(event.cinemaId);
         add(LoadCinemas(successMessage: 'Kino uspješno obrisano'));
       } catch (e) {
-        emit(CinemasError(ErrorHandler.getMessage(e)));
+        // Restore previous state with error message
+        if (previousState is CinemasLoaded) {
+          emit(previousState.copyWith(
+            successMessage: null,
+            errorMessage: ErrorHandler.getMessage(e),
+          ));
+        } else if (previousState is CinemaSelected) {
+          emit(previousState.copyWith(
+            successMessage: null,
+            errorMessage: ErrorHandler.getMessage(e),
+          ));
+        } else {
+          emit(CinemasError(ErrorHandler.getMessage(e)));
+        }
       }
     });
 
@@ -290,7 +304,11 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
             successMessage: 'Sala uspješno obrisana',
           ));
         } catch (e) {
-          emit(CinemasError(ErrorHandler.getMessage(e)));
+          // Restore previous state with error message
+          emit(currentState.copyWith(
+            successMessage: null,
+            errorMessage: ErrorHandler.getMessage(e),
+          ));
         }
       }
     });
@@ -310,23 +328,20 @@ class CinemasBloc extends Bloc<CinemasEvent, CinemasState> {
     on<ClearCinemasSuccessMessage>((event, emit) {
       if (state is CinemasLoaded) {
         final curr = state as CinemasLoaded;
-        emit(CinemasLoaded(
-          cinemas: curr.cinemas,
-          filteredCinemas: curr.filteredCinemas,
-          cities: curr.cities,
-          searchQuery: curr.searchQuery,
-          successMessage: null,
-        ));
+        emit(curr.copyWith(successMessage: null));
       } else if (state is CinemaSelected) {
         final curr = state as CinemaSelected;
-        emit(CinemaSelected(
-          cinema: curr.cinema,
-          allCinemas: curr.allCinemas,
-          filteredCinemas: curr.filteredCinemas,
-          cities: curr.cities,
-          searchQuery: curr.searchQuery,
-          successMessage: null,
-        ));
+        emit(curr.copyWith(successMessage: null));
+      }
+    });
+
+    on<ClearCinemasErrorMessage>((event, emit) {
+      if (state is CinemasLoaded) {
+        final curr = state as CinemasLoaded;
+        emit(curr.copyWith(errorMessage: null));
+      } else if (state is CinemaSelected) {
+        final curr = state as CinemaSelected;
+        emit(curr.copyWith(errorMessage: null));
       }
     });
   }
