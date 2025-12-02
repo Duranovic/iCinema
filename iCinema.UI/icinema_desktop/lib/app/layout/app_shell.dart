@@ -56,6 +56,7 @@ class AppShell extends StatelessWidget {
                       tooltip: 'Otvori korisnički meni',
                       child: const CircleAvatar(
                         radius: 25,
+                        child: Icon(Icons.person),
                       ),
                       onSelected: (action) {
                         if (action == UserAction.profile) {
