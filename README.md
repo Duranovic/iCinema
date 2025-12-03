@@ -9,20 +9,82 @@ iCinema je kompletan sistem za upravljanje kinom koji se sastoji od:
 
 ### Preduvjeti
 
+- **Docker i Docker Compose** (preporučeno - sve radi "out of the box")
+- ILI .NET 8 SDK + Flutter SDK (3.5.0+) + SQL Server za lokalno pokretanje
+
+---
+
+## 🐳 Pokretanje sa Docker-om (Preporučeno - Out of the Box)
+
+**Sve je konfigurisano i radi bez dodatnih izmjena koda, linkova, portova ili connection stringova!**
+
+### Jednostavno Pokretanje
+
+1. Pokreni sve servise (SQL Server, API, RabbitMQ):
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Sačekaj da se sve pokrene (oko 30-60 sekundi):
+   ```bash
+   docker-compose logs -f api
+   ```
+   
+   Kada vidiš poruku da je API pokrenut, sve je spremno!
+
+3. API će biti dostupan na:
+   - HTTP: `http://localhost:5218`
+   - HTTPS: `https://localhost:7026`
+
+### Što se automatski dešava:
+
+✅ **Baza podataka** se automatski kreira (`docker-init.sql`)  
+✅ **Migracije** se automatski primjenjuju pri pokretanju API-ja  
+✅ **Seed podaci** se automatski dodaju (korisnici, filmovi, žanrovi, itd.)  
+✅ **Connection string** je već konfigurisan u `docker-compose.yml`  
+✅ **Portovi** su već konfigurisani (5218, 7026)  
+✅ **Nema potrebe za mijenjanjem koda ili konfiguracija**
+
+### Upravljanje
+
+**Zaustavljanje:**
+```bash
+docker-compose down
+```
+
+**Brisanje svih podataka (fresh start):**
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+**Pregled logova:**
+```bash
+docker-compose logs -f
+```
+
+---
+
+## 💻 Lokalno Pokretanje (Bez Docker-a)
+
+### Preduvjeti
+
 - .NET 8 SDK
 - Flutter SDK (3.5.0+)
-- SQL Server (lokalno ili Docker)
+- SQL Server (lokalno)
 - Node.js (za SignalR client, opciono)
 
 ### Backend API
 
 1. Navigiraj u `iCinema.Api` folder
-2. Ažuriraj connection string u `appsettings.json`:
+2. **Ažuriraj connection string u `appsettings.json`** (ako je potrebno):
    ```json
    "ConnectionStrings": {
      "DefaultConnection": "Data Source=localhost,1433;Database=iCinema;user=sa;password=YourPassword;TrustServerCertificate=True;"
    }
    ```
+   **Napomena:** Ako koristiš default SQL Server konfiguraciju (localhost, sa, password iz appsettings.json), nije potrebno mijenjati ništa.
+
 3. Pokreni migracije:
    ```bash
    cd iCinema.Infrastructure
@@ -37,6 +99,8 @@ iCinema je kompletan sistem za upravljanje kinom koji se sastoji od:
    API će biti dostupan na:
    - HTTP: `http://localhost:5218`
    - HTTPS: `https://localhost:7026`
+   
+   **Napomena:** Aplikacija je konfigurisana da radi bez dodatnih izmjena koda. Sve konfiguracije se nalaze u `appsettings.json` fajlu.
 
 ### Desktop Aplikacija
 
@@ -53,11 +117,11 @@ iCinema je kompletan sistem za upravljanje kinom koji se sastoji od:
    ```
 
 **Konfiguracija API URL-a:**
-- API URL se može konfigurisati kroz `--dart-define`:
+- **Default vrijednost:** `http://localhost:5218` (radi bez dodatnih izmjena ako je API pokrenut lokalno)
+- API URL se može konfigurisati kroz `--dart-define` bez mijenjanja koda:
   ```bash
-  flutter run --dart-define=API_BASE_URL=http://localhost:5218
+  flutter run --dart-define=API_BASE_URL=http://your-api-url:5218
   ```
-- Default vrijednost: `http://localhost:5218`
 
 ### Mobile Aplikacija
 
@@ -66,33 +130,37 @@ iCinema je kompletan sistem za upravljanje kinom koji se sastoji od:
    ```bash
    flutter pub get
    ```
-3. Za Android Emulator, API URL je automatski postavljen na `http://10.0.2.2:5218`
-4. Pokreni aplikaciju:
+3. Pokreni aplikaciju:
    ```bash
    flutter run
    ```
 
 **Konfiguracija API URL-a:**
-- API URL se može konfigurisati kroz `--dart-define`:
+- **Default vrijednost:** `http://10.0.2.2:5218` (radi bez dodatnih izmjena za Android Emulator)
+- Za fizički Android uređaj, API URL se može konfigurisati kroz `--dart-define` bez mijenjanja koda:
   ```bash
-  flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5218
+  flutter run --dart-define=API_BASE_URL=http://your-computer-ip:5218
   ```
-- Default vrijednost za Android Emulator: `http://10.0.2.2:5218`
 
 ## Korisnički Podaci za Pristup Aplikaciji
+
+**Napomena:** Ovi korisnici se automatski kreiraju pri prvom pokretanju (seed podaci).
 
 ### Desktop Verzija
 
 **Korisničko ime:** `admin@icinema.com`  
-**Lozinka:** `test`
+**Lozinka:** `test`  
+**Uloga:** Admin
 
 ### Mobilna Verzija
 
 **Korisničko ime:** `customer@icinema.com`  
-**Lozinka:** `test`
+**Lozinka:** `test`  
+**Uloga:** Customer
 
 **Korisničko ime:** `staff@icinema.com`  
-**Lozinka:** `test`
+**Lozinka:** `test`  
+**Uloga:** Staff
 
 ## Build Aplikacija
 
@@ -132,18 +200,25 @@ iCinema/
 
 ## Konfiguracijski Podaci
 
-Svi konfiguracijski podaci se nalaze u konfiguracijskim fajlovima:
+Svi konfiguracijski podaci se nalaze u konfiguracijskim fajlovima i mogu se mijenjati **bez modifikacije programskog koda**:
 
-- **Backend**: `iCinema.Api/appsettings.json`
-- **Mobile**: `iCinema.UI/icinema_mobile_client/lib/app/config/app_config.dart`
-- **Desktop**: `iCinema.UI/icinema_desktop/lib/app/di/network_module.dart`
+- **Backend**: `iCinema.Api/appsettings.json` - connection string, JWT keys, itd.
+- **Mobile**: Default API URL je `http://10.0.2.2:5218` (za Android Emulator)
+- **Desktop**: Default API URL je `http://localhost:5218` (za lokalni API)
 
-Konfiguracija se može mijenjati kroz:
-- Environment varijable
-- `--dart-define` flag za Flutter aplikacije
-- `appsettings.json` za backend
+**Konfiguracija bez mijenjanja koda:**
+- **Backend**: Mijenjaj `appsettings.json` fajl
+- **Flutter aplikacije**: Koristi `--dart-define` flag pri build-u ili run-u:
+  ```bash
+  flutter run --dart-define=API_BASE_URL=http://your-api-url:5218
+  ```
 
-**Važno:** Konfiguracijski podaci (connection strings, API keys, itd.) se **ne hardcoduju** u source code-u, već se čuvaju u konfiguracijskim fajlovima.
+**Važno:** 
+- **Docker opcija** je potpuno "out of the box" - samo `docker-compose up -d` i sve radi bez ikakvih izmjena
+- Aplikacija je konfigurisana da radi "out of the box" sa default vrijednostima
+- Sve konfiguracije se mogu mijenjati bez modifikacije source code-a
+- Connection strings, API keys i portovi se ne hardcoduju u kodu, već se čuvaju u konfiguracijskim fajlovima
+- Migracije i seed podaci se automatski primjenjuju pri pokretanju (bez dodatnih komandi)
 
 ## Dokumentacija
 
