@@ -74,6 +74,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthCubit>.value(value: authCubit),
       ],
       child: MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'iCinema',
       routerConfig: router,
       theme: ThemeData(
