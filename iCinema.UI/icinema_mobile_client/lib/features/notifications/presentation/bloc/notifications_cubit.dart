@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../domain/usecases/get_notifications_usecase.dart';
 import 'notifications_state.dart';
 import '../../data/models/notification.dart';
@@ -63,7 +64,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       final items = await _getNotificationsUseCase(top: top);
       emit(NotificationsLoaded(items));
     } catch (e) {
-      emit(NotificationsError('Greška pri učitavanju notifikacija.'));
+      emit(NotificationsError(ErrorHandler.getMessage(e)));
     }
   }
 
@@ -97,11 +98,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     try {
       final items = await _getNotificationsUseCase(top: 50);
       emit(NotificationsLoaded(items));
-    } catch (_) {
+    } catch (e) {
       if (current is NotificationsLoaded) {
         emit(current); // keep old data
       } else {
-        emit(NotificationsError('Greška pri osvježavanju notifikacija.'));
+        emit(NotificationsError(ErrorHandler.getMessage(e)));
       }
     }
   }

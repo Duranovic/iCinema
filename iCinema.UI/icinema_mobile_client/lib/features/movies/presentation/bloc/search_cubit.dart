@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../domain/usecases/search_movies_usecase.dart';
 import '../../data/models/movie_model.dart';
 
@@ -98,7 +99,7 @@ class SearchCubit extends Cubit<SearchState> {
       _buffer = List<MovieModel>.from(res.items);
       emit(SearchLoaded(items: _buffer, total: res.total, page: res.page, pageSize: res.pageSize));
     } catch (e) {
-      emit(SearchError('Došlo je do greške. Pokušaj ponovo.'));
+      emit(SearchError(ErrorHandler.getMessage(e)));
     }
   }
 

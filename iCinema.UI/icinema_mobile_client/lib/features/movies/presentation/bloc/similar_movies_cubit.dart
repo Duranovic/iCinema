@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../data/models/movie_score_dto.dart';
 import '../../domain/usecases/get_similar_movies_usecase.dart';
 
@@ -31,7 +32,7 @@ class SimilarMoviesCubit extends Cubit<SimilarMoviesState> {
       final result = await _getSimilarMoviesUseCase(movieId: movieId, top: top);
       emit(SimilarMoviesLoaded(result));
     } catch (e) {
-      emit(SimilarMoviesError('Greška pri dohvaćanju sličnih filmova. Pokušajte ponovo.'));
+      emit(SimilarMoviesError(ErrorHandler.getMessage(e)));
     }
   }
 }

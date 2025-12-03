@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import 'package:icinema_desktop/features/projections/data/cinema_service.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_event.dart';
 import 'package:icinema_desktop/features/projections/presentation/bloc/projections_state.dart';
@@ -93,7 +94,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
       } catch (e) {
         // Guard against stale errors
         if (_latestRequestKey != key) return;
-        emit(ProjectionsError('Error fetching projections', month,
+        emit(ProjectionsError(ErrorHandler.getMessage(e), month,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       }
     });
@@ -108,7 +109,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno dodana')); // reload after add
       } catch (e) {
-        emit(ProjectionsError('Error adding projection', currentMonth,
+        emit(ProjectionsError(ErrorHandler.getMessage(e), currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       }
     });
@@ -123,7 +124,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno ažurirana'));
       } catch (e) {
-        emit(ProjectionsError('Error updating projection', currentMonth,
+        emit(ProjectionsError(ErrorHandler.getMessage(e), currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       }
     });
@@ -148,7 +149,7 @@ class ProjectionsBloc extends Bloc<ProjectionsEvent, ProjectionsState> {
         _invalidateMonth(currentMonth);
         add(LoadProjectionsForMonth(currentMonth, successMessage: 'Projekcija uspješno obrisana'));
       } catch (e) {
-        emit(ProjectionsError('Error deleting projection', currentMonth,
+        emit(ProjectionsError(ErrorHandler.getMessage(e), currentMonth,
             availableCinemas: _availableCinemas, selectedCinema: _selectedCinema));
       }
     });
