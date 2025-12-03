@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:icinema_desktop/app/services/auth_service.dart';
 import 'package:injectable/injectable.dart';
@@ -25,6 +26,15 @@ abstract class NetworkModule {
       client.badCertificateCallback = (cert, host, port) => true;
       return client;
     };
+
+    // Add logging interceptor for development only (not in release builds)
+    if (kDebugMode) {
+      dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (object) => print(object),
+      ));
+    }
 
     // Attach interceptor to inject Authorization header and handle errors (401, 400)
     dio.interceptors.add(InterceptorsWrapper(

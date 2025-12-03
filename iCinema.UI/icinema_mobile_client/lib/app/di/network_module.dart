@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:get_it/get_it.dart';
 import '../services/auth_service.dart';
@@ -35,15 +36,14 @@ abstract class NetworkModule {
       return client;
     };
 
-    // Add logging interceptor for development
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      logPrint: (object) {
-        // In production, you might want to use a proper logging framework
-        print(object);
-      },
-    ));
+    // Add logging interceptor for development only (not in release builds)
+    if (kDebugMode) {
+      dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (object) => print(object),
+      ));
+    }
 
     // Attach interceptor to inject Authorization header and handle 401
     dio.interceptors.add(InterceptorsWrapper(
