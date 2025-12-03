@@ -35,10 +35,11 @@ class ErrorHandler {
       if (data.containsKey('message') && data['message'] != null) return data['message'].toString();
       if (data.containsKey('error') && data['error'] != null) return data['error'].toString();
       if (data.containsKey('title') && data['title'] != null) return data['title'].toString();
-    } else if (data is String && data.isNotEmpty) {
-      // Sometimes the body is just the text message
-      if (!data.startsWith('{') && !data.startsWith('<')) {
-        return data;
+    } else if (data != null) {
+      // Handle string response or any other type that can be converted to string
+      final dataStr = data.toString().trim();
+      if (dataStr.isNotEmpty && !dataStr.startsWith('{') && !dataStr.startsWith('<') && !dataStr.startsWith('<!')) {
+        return dataStr;
       }
     }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../../../../app/di/injection.dart';
 import '../../../../app/services/auth_service.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -44,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().contains('Neispravni') ? 'Neispravni kredencijali.' : 'Došlo je do greške. Pokušajte ponovo.')),
+        SnackBar(content: Text(ErrorHandler.getMessage(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);

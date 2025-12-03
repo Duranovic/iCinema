@@ -44,14 +44,11 @@ class _LoginSheetState extends State<LoginSheet> {
       listener: (context, state) {
         if (state.status == AuthStatus.authenticated) {
           if (mounted) Navigator.of(context).pop(true);
-        } else if (state.status == AuthStatus.error ||
-            state.status == AuthStatus.unauthenticated) {
+        } else if (state.status == AuthStatus.error) {
           if (!mounted) return;
           setState(() {
             _loading = false;
-            _errorText = state is AuthState && state.errorMessage != null
-                ? state.errorMessage
-                : 'Došlo je do greške. Pokušajte ponovo.';
+            _errorText = state.errorMessage ?? 'Došlo je do greške. Pokušajte ponovo.';
           });
         } else if (state.status == AuthStatus.authenticating) {
           if (mounted) setState(() => _loading = true);

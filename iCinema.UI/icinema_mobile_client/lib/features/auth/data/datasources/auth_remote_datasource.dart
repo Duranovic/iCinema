@@ -71,31 +71,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final expiresAt = expiresAtRaw != null ? DateTime.tryParse(expiresAtRaw) : null;
       return (token, expiresAt);
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      if (status == 401) {
-        throw Exception('Neispravni kredencijali.');
-      }
-      final body = e.response?.data;
-      if (body is String && body.isNotEmpty) {
-        throw Exception(body);
-      }
-      if (body is Map) {
-        final msg = body['message'] ?? body['error'] ?? body['title'];
-        if (msg is String && msg.isNotEmpty) {
-          throw Exception(msg);
-        }
-      }
-      if (e.type == DioExceptionType.connectionError ||
-          e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Nema konekcije sa serverom.');
-      }
-      if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception('Vrijeme za odgovor je isteklo.');
-      }
-      if (e.type == DioExceptionType.badCertificate) {
-        throw Exception('SSL greška (certifikat).');
-      }
-      throw Exception('Greška (${status ?? 'nepoznata'}). Pokušajte ponovo.');
+      // Let ErrorHandler extract the message from DioException
+      // It will check response.data first (which contains "Nevažeći podaci za prijavu.")
+      // before falling back to default messages
+      rethrow;
     }
   }
 

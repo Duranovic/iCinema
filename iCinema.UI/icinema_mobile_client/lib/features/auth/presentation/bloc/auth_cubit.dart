@@ -53,7 +53,6 @@ class AuthCubit extends Cubit<AuthState> {
       _signalRService?.connect();
     } catch (e) {
       emit(AuthState.error(ErrorHandler.getMessage(e)));
-      emit(AuthState.unauthenticated());
     }
   }
 
@@ -87,7 +86,6 @@ class AuthCubit extends Cubit<AuthState> {
       _signalRService?.connect();
     } catch (e) {
       emit(AuthState.error(ErrorHandler.getMessage(e)));
-      emit(AuthState.unauthenticated());
     }
   }
 }
