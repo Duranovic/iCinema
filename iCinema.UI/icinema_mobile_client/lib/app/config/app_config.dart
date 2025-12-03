@@ -1,8 +1,9 @@
 class AppConfig {
-  // Configure via --dart-define=API_BASE_URL=https://<host>:<port>
+  // Configure via --dart-define=API_BASE_URL=http://<host>:<port>
+  // For Android Emulator use: http://10.0.2.2:5218
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://localhost:7026',
+    defaultValue: 'http://10.0.2.2:5218',
   );
 
   // Dev only: set via --dart-define=ALLOW_INSECURE_CERT=true to bypass cert checks

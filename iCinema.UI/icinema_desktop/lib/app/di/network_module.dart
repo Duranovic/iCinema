@@ -14,18 +14,13 @@ abstract class NetworkModule {
   Dio get dio {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'https://localhost:7026',
+        baseUrl: 'http://localhost:5218',
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 3),
       ),
     );
 
-    // Allow self-signed certificates for development
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
-      client.badCertificateCallback = (cert, host, port) => true;
-      return client;
-    };
+    // HTTP only - no SSL needed
 
     // Add logging interceptor for development only (not in release builds)
     if (kDebugMode) {

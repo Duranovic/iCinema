@@ -174,10 +174,11 @@ public static class DatabaseSeed
                 await userManager.AddToRoleAsync(user, role);
             }
         }
-
-        await CreateUserAsync("admin@icinema.com", "Admin@12345", "Admin");
-        await CreateUserAsync("staff@icinema.com", "Staff@12345", "Staff");
-        await CreateUserAsync("customer@icinema.com", "Customer@12345", "Customer");
+        // Desktop
+        await CreateUserAsync("admin@icinema.com", "test", "Admin");
+        // Mobile
+        await CreateUserAsync("staff@icinema.com", "test", "Staff");
+        await CreateUserAsync("customer@icinema.com", "test", "Customer");
     }
 
     private static void SeedGenres(iCinemaDbContext context)
