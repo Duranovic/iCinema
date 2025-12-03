@@ -173,17 +173,25 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                       if (state.movie.cast.isNotEmpty)
                         _buildCastSection(state.movie),
 
-                      // Available dates horizontal slider
-                      _buildDateSlider(projections),
-
-                      // Projection times for selected date (non-scrollable list inside page scroll)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 24.0),
-                        child: _buildProjectionTimes(),
+                      // Available dates and projection times section with background
+                      Container(
+                        margin: const EdgeInsets.only(top: 32, bottom: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.only(top: 16.0, bottom: 4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDateSlider(projections),
+                            _buildProjectionTimes(),
+                          ],
+                        ),
                       ),
 
                       // Similar movies section
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 24),
                       _buildSimilarMoviesSection(),
                     ],
                   ),
@@ -202,53 +210,65 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   // Slični filmovi section
   // ========================
   Widget _buildSimilarMoviesSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Column(
+    return BlocBuilder<SimilarMoviesCubit, SimilarMoviesState>(
+      builder: (context, state) {
+        // Hide entire section if no items or if items list is empty
+        if (state is SimilarMoviesLoaded && state.items.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Slični filmovi',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSimilarMoviesContent(state),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSimilarMoviesContent(SimilarMoviesState state) {
+    if (state is SimilarMoviesLoading || state is SimilarMoviesInitial) {
+      return const SizedBox(
+        height: 180,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (state is SimilarMoviesError) {
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Slični filmovi',
+          Text(
+            'Greška pri dohvaćanju sličnih filmova. Pokušajte ponovo.',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.error,
             ),
           ),
-          const SizedBox(height: 12),
-          BlocBuilder<SimilarMoviesCubit, SimilarMoviesState>(
-            builder: (context, state) {
-              if (state is SimilarMoviesLoading || state is SimilarMoviesInitial) {
-                return const SizedBox(
-                  height: 180,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (state is SimilarMoviesError) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Greška pri dohvaćanju sličnih filmova. Pokušajte ponovo.',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () => context.read<SimilarMoviesCubit>().loadSimilar(widget.movieId, top: 10),
-                      child: const Text('Pokušaj ponovo'),
-                    ),
-                  ],
-                );
-              }
-              if (state is SimilarMoviesLoaded) {
-                final items = state.items;
-                if (items.isEmpty) {
-                  return const Text(
-                    'Trenutno nema sličnih naslova.',
-                    style: TextStyle(fontSize: 14),
-                  );
-                }
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => context.read<SimilarMoviesCubit>().loadSimilar(widget.movieId, top: 10),
+            child: const Text('Pokušaj ponovo'),
+          ),
+        ],
+      );
+    }
+    if (state is SimilarMoviesLoaded) {
+      final items = state.items;
+      if (items.isEmpty) {
+        return const SizedBox.shrink();
+      }
 
                 const cardsPerPage = 2;
                 final pageCount = (items.length / cardsPerPage).ceil();
@@ -339,11 +359,6 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                 );
               }
               return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _similarPosterPlaceholder() {
@@ -812,96 +827,93 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     final maxWindows = (availableDates.length / cardsPerWindow).ceil();
     _windowIndex = _windowIndex.clamp(0, maxWindows - 1);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Dostupni termini',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Dostupni termini',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              children: [
-                _navButton(context, Icons.chevron_left, () {
-                  final target = (_windowIndex - 1).clamp(0, maxWindows - 1);
-                  if (target != _windowIndex) {
-                    setState(() => _windowIndex = target);
-                    _datesController.animateToPage(
-                      _windowIndex,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                }),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: SizedBox(
-                      height: 64,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final contentWidth = constraints.maxWidth;
-                          const double spacing = 6.0;
-                          const int cardsPerWindow = 5;
-                          final totalSpacing = spacing * (cardsPerWindow - 1);
-                          final cardWidth = (contentWidth - totalSpacing) / cardsPerWindow;
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            children: [
+              _navButton(context, Icons.chevron_left, () {
+                final target = (_windowIndex - 1).clamp(0, maxWindows - 1);
+                if (target != _windowIndex) {
+                  setState(() => _windowIndex = target);
+                  _datesController.animateToPage(
+                    _windowIndex,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              }),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: SizedBox(
+                    height: 64,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final contentWidth = constraints.maxWidth;
+                        const double spacing = 6.0;
+                        const int cardsPerWindow = 5;
+                        final totalSpacing = spacing * (cardsPerWindow - 1);
+                        final cardWidth = (contentWidth - totalSpacing) / cardsPerWindow;
 
-                          return PageView.builder(
-                            controller: _datesController,
-                            itemCount: maxWindows,
-                            onPageChanged: (i) => setState(() => _windowIndex = i),
-                            pageSnapping: true,
-                            physics: const PageScrollPhysics(),
-                            itemBuilder: (context, pageIndex) {
-                              final start = pageIndex * cardsPerWindow;
-                              final dates = availableDates.skip(start).take(cardsPerWindow).toList();
-                              return Row(
-                                children: [
-                                  for (int i = 0; i < dates.length; i++) ...[
-                                    _buildDateCard(
-                                      dates[i],
-                                      _isSameDay(dates[i], selectedDate),
-                                      width: cardWidth,
-                                    ),
-                                    if (i < dates.length - 1) const SizedBox(width: spacing),
-                                  ],
+                        return PageView.builder(
+                          controller: _datesController,
+                          itemCount: maxWindows,
+                          onPageChanged: (i) => setState(() => _windowIndex = i),
+                          pageSnapping: true,
+                          physics: const PageScrollPhysics(),
+                          itemBuilder: (context, pageIndex) {
+                            final start = pageIndex * cardsPerWindow;
+                            final dates = availableDates.skip(start).take(cardsPerWindow).toList();
+                            return Row(
+                              children: [
+                                for (int i = 0; i < dates.length; i++) ...[
+                                  _buildDateCard(
+                                    dates[i],
+                                    _isSameDay(dates[i], selectedDate),
+                                    width: cardWidth,
+                                  ),
+                                  if (i < dates.length - 1) const SizedBox(width: spacing),
                                 ],
-                              );
-                            },
-                          );
-                        },
-                      ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                _navButton(context, Icons.chevron_right, () {
-                  final target = (_windowIndex + 1).clamp(0, maxWindows - 1);
-                  if (target != _windowIndex) {
-                    setState(() => _windowIndex = target);
-                    _datesController.animateToPage(
-                      _windowIndex,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                }),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              _navButton(context, Icons.chevron_right, () {
+                final target = (_windowIndex + 1).clamp(0, maxWindows - 1);
+                if (target != _windowIndex) {
+                  setState(() => _windowIndex = target);
+                  _datesController.animateToPage(
+                    _windowIndex,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              }),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1078,7 +1090,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
             ),
             const SizedBox(height: 16),
             SafeArea(
-              minimum: const EdgeInsets.only(bottom: 16),
+              minimum: const EdgeInsets.only(bottom: 0),
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: list.length,

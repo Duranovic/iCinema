@@ -65,61 +65,35 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          // Logo
-          Row(
+      child: GestureDetector(
+        onTap: () => context.push('/search'),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Row(
             children: [
               Icon(
-                Icons.movie,
-                color: Theme.of(context).colorScheme.primary,
-                size: 32,
+                Icons.search,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'iCinema',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Pretraži filmove i termine',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          
-          // Search bar (tappable -> navigate to /search)
-          GestureDetector(
-            onTap: () => context.push('/search'),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.search,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Pretraži filmove i termine',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -592,7 +566,7 @@ class _HomePageState extends State<HomePage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: SizedBox(
@@ -631,10 +605,12 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           color: Theme.of(context).colorScheme.surface,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 item.title,

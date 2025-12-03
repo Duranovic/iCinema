@@ -216,7 +216,18 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('iCinema'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.movie,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            const Text('iCinema'),
+          ],
+        ),
         actions: [
           if (GetIt.I<AuthService>().authState.isAuthenticated) _bellWithBadge(),
         ],

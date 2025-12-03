@@ -61,57 +61,68 @@ class NotificationsPage extends StatelessWidget {
                   ),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                confirmDismiss: (direction) async {
-                  return await _confirmDelete(context, n.title);
-                },
                 onDismissed: (direction) {
                   context.read<NotificationsCubit>().delete(n.id);
                 },
-                child: Card(
-                  elevation: 1,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: Icon(
-                      n.isRead ? Icons.notifications_none : Icons.notifications_active,
-                      color: n.isRead
-                          ? Theme.of(context).colorScheme.onSurfaceVariant
-                          : Theme.of(context).colorScheme.primary,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: n.isRead
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
                     ),
-                    title: Text(n.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(n.message),
-                        const SizedBox(height: 6),
-                        Text(
-                          _formatDate(n.createdAt),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 12,
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => context.read<NotificationsCubit>().markRead(n.id),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              if (!n.isRead) ...[
+                                Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  n.title,
+                                  style: TextStyle(
+                                    fontWeight: n.isRead ? FontWeight.w500 : FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatDate(n.createdAt),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!n.isRead)
-                          TextButton(
-                            onPressed: () => context.read<NotificationsCubit>().markRead(n.id),
-                            child: const Text('Pročitano'),
+                          const SizedBox(height: 4),
+                          Text(
+                            n.message,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20),
-                          onPressed: () async {
-                            final confirm = await _confirmDelete(context, n.title);
-                            if (confirm == true && context.mounted) {
-                              context.read<NotificationsCubit>().delete(n.id);
-                            }
-                          },
-                          tooltip: 'Izbriši',
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

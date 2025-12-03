@@ -229,7 +229,7 @@ class _SeatGrid extends StatelessWidget {
     const double vPad = 6.0;
 
     final grid = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Center(
           child: Text('Platno', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
@@ -248,6 +248,7 @@ class _SeatGrid extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: vPad),
             child: Wrap(
+              alignment: WrapAlignment.center,
               spacing: hPad * 2,
               runSpacing: 0,
               children: [

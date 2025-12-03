@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../home/data/models/projection_model.dart';
 import '../../data/models/movie_model.dart';
 import '../bloc/movies_cubit.dart';
+import '../../../../app/config/url_utils.dart';
 
 class MoviesPage extends StatefulWidget {
   const MoviesPage({super.key});
@@ -99,7 +100,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeader(context, state),
                         const SizedBox(height: 12),
                         _buildDatePicker(context, state),
                         const SizedBox(height: 12),
@@ -128,21 +128,6 @@ class _MoviesPageState extends State<MoviesPage> {
           return const SizedBox.shrink();
         },
       ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, MoviesLoaded state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Gledaj na repertoaru',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 
@@ -403,27 +388,7 @@ class _MovieListItem extends StatelessWidget {
             // Left image placeholder / poster
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 120,
-                height: 140,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                      Theme.of(context).colorScheme.primary,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.movie,
-                    color: Colors.white.withOpacity(0.9),
-                    size: 44,
-                  ),
-                ),
-              ),
+              child: _buildPosterImage(context),
             ),
             const SizedBox(width: 16),
             // Right centered details
@@ -477,6 +442,59 @@ class _MovieListItem extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPosterImage(BuildContext context) {
+    final posterUrl = movie.posterUrl;
+    final hasPoster = posterUrl != null && posterUrl.isNotEmpty;
+    
+    return Container(
+      width: 120,
+      height: 140,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+      ),
+      child: hasPoster
+          ? Image.network(
+              resolveImageUrl(posterUrl)!,
+              width: 120,
+              height: 140,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(context),
+            )
+          : _buildPlaceholder(context),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context) {
+    return Container(
+      width: 120,
+      height: 140,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.movie,
+          color: Colors.white.withOpacity(0.9),
+          size: 44,
         ),
       ),
     );

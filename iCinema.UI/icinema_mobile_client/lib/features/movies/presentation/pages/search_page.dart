@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/search_cubit.dart';
 import '../../data/models/movie_model.dart';
+import '../../../../app/config/url_utils.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -134,11 +135,22 @@ class _MovieResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final posterUrl = movie.posterUrl;
+    final hasPoster = posterUrl != null && posterUrl.isNotEmpty;
+    
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: CircleAvatar(
-        backgroundColor: color.primary,
-        child: const Icon(Icons.movie, color: Colors.white),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: hasPoster
+            ? Image.network(
+                resolveImageUrl(posterUrl)!,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => _buildPlaceholder(color),
+              )
+            : _buildPlaceholder(color),
       ),
       title: Text(movie.title),
       subtitle: Text(
@@ -154,6 +166,17 @@ class _MovieResultTile extends StatelessWidget {
         if (movie.id == null) return;
         context.push('/movie-details/${Uri.encodeComponent(movie.id!)}');
       },
+    );
+  }
+
+  Widget _buildPlaceholder(ColorScheme color) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: color.primary,
+      ),
+      child: const Icon(Icons.movie, color: Colors.white, size: 28),
     );
   }
 }
