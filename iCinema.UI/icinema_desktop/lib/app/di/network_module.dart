@@ -12,15 +12,34 @@ abstract class NetworkModule {
   // Registers a lazy singleton Dio for entire app.
   @lazySingleton
   Dio get dio {
+    // Get API URL from environment variable or use default
+    // Can be set via: flutter run --dart-define=API_BASE_URL=https://localhost:7026
+    // Or via: export API_BASE_URL=https://localhost:7026 (macOS/Linux) or set API_BASE_URL=https://localhost:7026 (Windows)
+    // Default to HTTPS to avoid redirect issues
+    final apiBaseUrl = const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'https://localhost:7026',
+    );
+    
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'http://localhost:5218',
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 3),
+        baseUrl: apiBaseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        followRedirects: true,
+        maxRedirects: 5,
       ),
     );
 
-    // HTTP only - no SSL needed
+    // Configure HTTP adapter to handle redirects and SSL
+    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
+      // In debug mode, allow self-signed certificates
+      if (kDebugMode) {
+        client.badCertificateCallback = (cert, host, port) => true;
+      }
+      return client;
+    };
 
     // Add logging interceptor for development only (not in release builds)
     if (kDebugMode) {
@@ -42,6 +61,13 @@ abstract class NetworkModule {
         handler.next(options);
       },
       onError: (DioException e, handler) async {
+        // Log connection errors for debugging
+        if (kDebugMode && e.type == DioExceptionType.connectionError) {
+          print('❌ Connection error to API at: ${e.requestOptions.baseUrl}${e.requestOptions.path}');
+          print('   Error: ${e.message}');
+          print('   Make sure the API is running and accessible at: $apiBaseUrl');
+        }
+        
         final status = e.response?.statusCode;
         if (status == 401) {
           // Unauthorized - clear session
