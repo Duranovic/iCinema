@@ -149,17 +149,17 @@ docker-compose logs -f
 ### Desktop Verzija
 
 **Korisničko ime:** `admin@icinema.com`  
-**Lozinka:** `test`  
+**Lozinka:** `Admin@12345`  
 **Uloga:** Admin
 
 ### Mobilna Verzija
 
 **Korisničko ime:** `customer@icinema.com`  
-**Lozinka:** `test`  
+**Lozinka:** `Customer@12345`  
 **Uloga:** Customer
 
 **Korisničko ime:** `staff@icinema.com`  
-**Lozinka:** `test`  
+**Lozinka:** `Staff@12345`  
 **Uloga:** Staff
 
 ## Build Aplikacija

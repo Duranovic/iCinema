@@ -175,10 +175,10 @@ public static class DatabaseSeed
             }
         }
         // Desktop
-        await CreateUserAsync("admin@icinema.com", "test", "Admin");
+        await CreateUserAsync("admin@icinema.com", "Admin@12345", "Admin");
         // Mobile
-        await CreateUserAsync("staff@icinema.com", "test", "Staff");
-        await CreateUserAsync("customer@icinema.com", "test", "Customer");
+        await CreateUserAsync("staff@icinema.com", "Staff@12345", "Staff");
+        await CreateUserAsync("customer@icinema.com", "Customer@12345", "Customer");
     }
 
     private static void SeedGenres(iCinemaDbContext context)
