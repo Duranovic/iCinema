@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import 'package:injectable/injectable.dart';
 import '../models/movie_model.dart';
 
@@ -30,7 +31,7 @@ class MoviesApiService {
   /// GET /movies/{id}
   Future<MovieModel> getMovieById(String movieId) async {
     try {
-      final response = await _dio.get('/movies/$movieId');
+      final response = await _dio.get(ApiEndpoints.movieById(movieId));
       
       if (response.statusCode == 200) {
         return MovieModel.fromJson(response.data as Map<String, dynamic>);
@@ -80,7 +81,7 @@ class MoviesApiService {
   /// GET /movies/{id}/my-rating -> { "rating": number, "review": string? }
   Future<double?> getMyRating(String movieId) async {
     try {
-      final resp = await _dio.get('/movies/$movieId/my-rating');
+      final resp = await _dio.get(ApiEndpoints.movieMyRating(movieId));
       if (resp.statusCode == 200) {
         if (resp.data == null) return null;
         if (resp.data is Map<String, dynamic>) {
@@ -135,7 +136,7 @@ class MoviesApiService {
       // Backend expects integer 1..5. Clamp and round.
       final int intRating = rating.round().clamp(1, 5);
       await _dio.put(
-        '/movies/$movieId/rating',
+        ApiEndpoints.movieRating(movieId),
         data: {
           'rating': intRating,
           // Some backends use RatingValue; send both for compatibility.
@@ -162,7 +163,7 @@ class MoviesApiService {
   /// GET /movies/{id}/can-rate -> { allowed: bool } or { canRate: bool } or a bare bool
   Future<bool> canRate(String movieId) async {
     try {
-      final resp = await _dio.get('/movies/$movieId/can-rate');
+      final resp = await _dio.get(ApiEndpoints.movieCanRate(movieId));
       if (resp.statusCode == 200) {
         final data = resp.data;
         if (data is bool) return data;

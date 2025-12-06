@@ -43,6 +43,13 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Configure routing to use lowercase URLs
+builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true;
+});
 builder.Services.AddResponseCaching();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>

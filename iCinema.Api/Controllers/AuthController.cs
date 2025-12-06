@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("auth")]
 [AllowAnonymous]
 public class AuthController(
     UserManager<ApplicationUser> userManager,

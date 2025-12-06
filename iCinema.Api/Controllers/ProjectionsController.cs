@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers
 {
+    [Route("projections")]
     public class ProjectionsController(IMediator mediator, IReservationRepository reservations)
         : BaseController<ProjectionDto, ProjectionCreateDto, ProjectionUpdateDto, ProjectionFilter>(mediator)
     {

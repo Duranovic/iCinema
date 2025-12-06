@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("reports")]
 [Authorize(Roles = "Admin")]
 public class ReportsController(IMediator mediator) : ControllerBase
 {

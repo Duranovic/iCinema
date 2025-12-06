@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../domain/movie.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -11,7 +12,7 @@ class MovieService {
 
   Future<List<Movie>> fetchMovies() async {
     try {
-      final res = await _dio.get('/movies');
+      final res = await _dio.get(ApiEndpoints.movies);
 
       final items = res.data['items'] as List<dynamic>;
       final movies = items.map((e) => Movie.fromJson(e)).toList();
@@ -22,20 +23,20 @@ class MovieService {
   }
 
   Future<List<dynamic>> fetchGenres() async {
-    final res = await _dio.get('/genres');
+    final res = await _dio.get(ApiEndpoints.genres);
     final items = res.data['items'] as List<dynamic>;
     return items;
   }
 
   Future<List<dynamic>> fetchAgeRatings() async {
-    final res = await _dio.get('/Metadata/age-ratings');
+    final res = await _dio.get(ApiEndpoints.metadataAgeRatings);
     // Expecting a plain JSON array: [{"code":"G","label":"..."}, ...]
     final data = res.data as List<dynamic>;
     return data;
   }
 
   Future<List<dynamic>> fetchDirectors() async {
-    final res = await _dio.get('/Metadata/directors');
+    final res = await _dio.get(ApiEndpoints.metadataDirectors);
     // Expecting a plain JSON array: [{"id":"...","fullName":"..."}, ...]
     final data = res.data as List<dynamic>;
     return data;
@@ -43,14 +44,14 @@ class MovieService {
 
   Future<List<dynamic>> fetchActors() async {
     // Lightweight items list for dropdowns: [{id, fullName}]
-    final res = await _dio.get('/Actors/items');
+    final res = await _dio.get(ApiEndpoints.actorsItems);
     final data = res.data as List<dynamic>;
     return data;
   }
 
   Future<Movie> addMovie(Movie movie, {String? posterPath, String? mimeType}) async {
     final payload = await _createMovieJsonPayload(movie, posterPath: posterPath, mimeType: mimeType);
-    final res = await _dio.post('/movies', data: payload);
+    final res = await _dio.post(ApiEndpoints.movies, data: payload);
     final created = Movie.fromJson(res.data);
     if ((movie.actorIds).isNotEmpty && created.id != null && created.id!.isNotEmpty) {
       await addCast(created.id!, movie.actorIds);
@@ -60,7 +61,7 @@ class MovieService {
 
   Future<Movie> updateMovie(Movie movie, {String? posterPath, String? mimeType}) async {
     final payload = await _createMovieJsonPayload(movie, posterPath: posterPath, mimeType: mimeType);
-    final res = await _dio.put('/movies/${movie.id}', data: payload);
+    final res = await _dio.put(ApiEndpoints.movieById(movie.id!), data: payload);
     final updated = Movie.fromJson(res.data);
     if ((movie.actorIds).isNotEmpty && updated.id != null && updated.id!.isNotEmpty) {
       // For simplicity, we replace cast: remove all, then add new set.
@@ -78,12 +79,12 @@ class MovieService {
   }
 
   Future<void> deleteMovie(String id) async {
-    await _dio.delete('/movies/$id');
+    await _dio.delete(ApiEndpoints.movieById(id));
   }
 
   // ---- Cast management helpers ----
   Future<List<Map<String, dynamic>>> getCast(String movieId) async {
-    final res = await _dio.get('/movies/$movieId/cast');
+    final res = await _dio.get(ApiEndpoints.movieCast(movieId));
     final list = (res.data as List<dynamic>).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
     return list;
   }
@@ -91,15 +92,15 @@ class MovieService {
   Future<void> addCast(String movieId, List<String> actorIds) async {
     if (actorIds.isEmpty) return;
     final items = actorIds.map((id) => {'actorId': id}).toList();
-    await _dio.post('/movies/$movieId/cast', data: {'items': items});
+    await _dio.post(ApiEndpoints.movieCast(movieId), data: {'items': items});
   }
 
   Future<void> updateCastRole(String movieId, String actorId, {String? roleName}) async {
-    await _dio.put('/movies/$movieId/cast/$actorId', data: {'roleName': roleName});
+    await _dio.put(ApiEndpoints.movieCastItem(movieId, actorId), data: {'roleName': roleName});
   }
 
   Future<void> removeCast(String movieId, String actorId) async {
-    await _dio.delete('/movies/$movieId/cast/$actorId');
+    await _dio.delete(ApiEndpoints.movieCastItem(movieId, actorId));
   }
 
   Future<Map<String, dynamic>> _createMovieJsonPayload(

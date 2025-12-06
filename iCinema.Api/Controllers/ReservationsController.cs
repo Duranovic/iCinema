@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("reservations")]
 [Authorize]
 public class ReservationsController(IReservationRepository reservations) : ControllerBase
 {

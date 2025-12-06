@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("recommendations")]
 [Authorize]
 public class RecommendationsController(IRecommendationRepository recommendationRepository) : ControllerBase
 {

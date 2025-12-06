@@ -17,7 +17,7 @@ namespace iCinema.Api.Controllers
     /// <typeparam name="TUpdateDto">The DTO type for entity updates.</typeparam>
     /// <typeparam name="TFilter">The filter type for querying entities.</typeparam>
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]")] // Note: Controllers inheriting this should override with explicit lowercase route
     [Authorize]
     public class BaseController<TDto, TCreateDto, TUpdateDto, TFilter>(IMediator mediator)
         : ControllerBase

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../models/seat_map.dart';
 import '../models/reservation_created.dart';
 import '../models/ticket_dto.dart';
@@ -12,7 +13,7 @@ class ReservationApiService {
 
   Future<SeatMapModel> getSeatMap(String projectionId) async {
     try {
-      final resp = await _dio.get('/projections/$projectionId/seat-map');
+      final resp = await _dio.get(ApiEndpoints.projectionSeatMap(projectionId));
       final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
       return SeatMapModel.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -29,7 +30,7 @@ class ReservationApiService {
     required List<String> seatIds,
   }) async {
     try {
-      final resp = await _dio.post('/reservations', data: {
+      final resp = await _dio.post(ApiEndpoints.reservations, data: {
         'projectionId': projectionId,
         'seatIds': seatIds,
       });
@@ -47,7 +48,7 @@ class ReservationApiService {
 
   Future<bool> cancelReservation(String reservationId) async {
     try {
-      final resp = await _dio.post('/reservations/$reservationId/cancel');
+      final resp = await _dio.post(ApiEndpoints.reservationCancel(reservationId));
       if (resp.data is Map && (resp.data['success'] == true)) return true;
       return resp.statusCode == 200;
     } on DioException catch (e) {
@@ -60,7 +61,7 @@ class ReservationApiService {
 
   Future<ReservationDetailsDto> getReservationDetails(String reservationId) async {
     try {
-      final resp = await _dio.get('/reservations/$reservationId');
+      final resp = await _dio.get(ApiEndpoints.reservationById(reservationId));
       final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
       return ReservationDetailsDto.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -73,7 +74,7 @@ class ReservationApiService {
 
   Future<List<TicketDto>> getTickets(String reservationId) async {
     try {
-      final resp = await _dio.get('/users/me/reservations/$reservationId/tickets');
+      final resp = await _dio.get(ApiEndpoints.reservationTickets(reservationId));
       final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
       final list = (data as List).cast<dynamic>();
       return list.map((e) => TicketDto.fromJson(e as Map<String, dynamic>)).toList();
@@ -87,7 +88,7 @@ class ReservationApiService {
 
   Future<TicketQrDto> getTicketQr(String ticketId) async {
     try {
-      final resp = await _dio.get('/tickets/$ticketId/qr');
+      final resp = await _dio.get(ApiEndpoints.ticketQr(ticketId));
       final data = resp.data is String ? json.decode(resp.data as String) : resp.data;
       return TicketQrDto.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {

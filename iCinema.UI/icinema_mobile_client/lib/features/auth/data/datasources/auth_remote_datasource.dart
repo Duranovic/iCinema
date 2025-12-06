@@ -51,7 +51,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await _dio.post(
-        '/auth/login',
+        ApiEndpoints.login,
         data: {
           'email': email,
           'password': password,
@@ -81,7 +81,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserMeModel> getMe() async {
     try {
-      final response = await _dio.get('/users/me');
+      final response = await _dio.get(ApiEndpoints.usersMe);
       final data = response.data;
       Map<String, dynamic> map;
       if (data is String) {
@@ -114,7 +114,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await _dio.post(
-        '/Auth/register',
+        ApiEndpoints.register,
         data: {
           'email': email,
           'password': password,
@@ -157,7 +157,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _dio.get(
-      '/users/me/reservations',
+      ApiEndpoints.usersMeReservations,
       queryParameters: {
         'status': status,
         'page': page,
@@ -193,7 +193,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<List<TicketModel>> getReservationTickets(String reservationId) async {
-    final resp = await _dio.get('/users/me/reservations/$reservationId/tickets');
+    final resp = await _dio.get(ApiEndpoints.reservationTickets(reservationId));
     final data = resp.data;
     final list = data is String ? (json.decode(data) as List) : (data as List);
     return list.map((e) => TicketModel.fromJson(e as Map<String, dynamic>)).toList();
@@ -207,7 +207,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await _dio.put(
-        '/users/me',
+        ApiEndpoints.usersMe,
         data: {
           'fullName': fullName,
           if (currentPassword != null && currentPassword.isNotEmpty)

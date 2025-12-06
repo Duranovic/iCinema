@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../models/notification.dart';
 
 class NotificationsApiService {
@@ -6,7 +7,7 @@ class NotificationsApiService {
   NotificationsApiService(this._dio);
 
   Future<List<NotificationModel>> getMy({int top = 50}) async {
-    final resp = await _dio.get('/notifications/my', queryParameters: {
+    final resp = await _dio.get(ApiEndpoints.notificationsMy, queryParameters: {
       'top': top,
     });
     final data = resp.data as List<dynamic>;
@@ -16,16 +17,16 @@ class NotificationsApiService {
   }
 
   Future<void> markRead(String id) async {
-    await _dio.post('/notifications/$id/read');
+    await _dio.post(ApiEndpoints.notificationRead(id));
   }
 
   Future<bool> delete(String id) async {
-    final resp = await _dio.delete('/notifications/$id');
+    final resp = await _dio.delete(ApiEndpoints.notificationById(id));
     return resp.statusCode == 200;
   }
 
   Future<int> deleteAll() async {
-    final resp = await _dio.delete('/notifications');
+    final resp = await _dio.delete(ApiEndpoints.notifications);
     final data = resp.data as Map<String, dynamic>;
     return data['deleted'] as int? ?? 0;
   }

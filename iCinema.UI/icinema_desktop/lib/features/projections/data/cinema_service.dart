@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:icinema_desktop/features/projections/domain/cinema.dart';
 import 'package:icinema_desktop/features/projections/domain/hall.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import 'package:injectable/injectable.dart';
 
 @lazySingleton
@@ -9,7 +10,7 @@ class CinemaService {
   CinemaService(this._dio);
 
   Future<List<Cinema>> fetchCinemas() async {
-    final res = await _dio.get('/cinemas');
+    final res = await _dio.get(ApiEndpoints.cinemas);
     final items = res.data['items'] as List<dynamic>;
     return items.map((e) => Cinema.fromJson(e)).toList();
   }
@@ -23,7 +24,7 @@ class CinemaService {
       'cityId': cinema.cityId,
     };
     
-    final res = await _dio.post('/cinemas', data: payload);
+    final res = await _dio.post(ApiEndpoints.cinemas, data: payload);
     return Cinema.fromJson(res.data);
   }
 
@@ -36,12 +37,12 @@ class CinemaService {
       'cityId': cinema.cityId,
     };
     
-    final res = await _dio.put('/cinemas/${cinema.id}', data: payload);
+    final res = await _dio.put('${ApiEndpoints.cinemas}/${cinema.id}', data: payload);
     return Cinema.fromJson(res.data);
   }
 
   Future<void> deleteCinema(String cinemaId) async {
-    await _dio.delete('/cinemas/$cinemaId');
+    await _dio.delete('${ApiEndpoints.cinemas}/$cinemaId');
   }
 
   // Hall management methods
@@ -58,7 +59,7 @@ class CinemaService {
       'cinemaName': hall.cinemaName, // Add cinemaName as required by API
     };
     
-    final res = await _dio.post('/halls', data: payload);
+    final res = await _dio.post(ApiEndpoints.halls, data: payload);
     return Hall.fromJson(res.data);
   }
 
@@ -75,11 +76,11 @@ class CinemaService {
       'cinemaName': hall.cinemaName, // Add cinemaName as required by API
     };
     
-    final res = await _dio.put('/halls/${hall.id}', data: payload);
+    final res = await _dio.put('${ApiEndpoints.halls}/${hall.id}', data: payload);
     return Hall.fromJson(res.data);
   }
 
   Future<void> deleteHall(String cinemaId, String hallId) async {
-    await _dio.delete('/halls/$hallId');
+    await _dio.delete('${ApiEndpoints.halls}/$hallId');
   }
 }

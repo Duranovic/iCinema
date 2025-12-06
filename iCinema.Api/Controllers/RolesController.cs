@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iCinema.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("roles")]
 public class RolesController(IMediator mediator) : Controller
 {
     [HttpGet]

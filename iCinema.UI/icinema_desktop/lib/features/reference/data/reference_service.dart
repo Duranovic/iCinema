@@ -12,7 +12,7 @@ class ReferenceService {
 
   Future<PagedResult<Country>> getCountries({int page = 1, int pageSize = 20, String? search}) async {
     final res = await _dio.get(
-      '/Countries',
+      ApiEndpoints.countries,
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
@@ -31,7 +31,7 @@ class ReferenceService {
 
   Future<PagedResult<City>> getCities({int page = 1, int pageSize = 20, String? search, String? countryId}) async {
     final res = await _dio.get(
-      '/Cities',
+      ApiEndpoints.cities,
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
@@ -51,7 +51,7 @@ class ReferenceService {
 
   Future<PagedResult<Genre>> getGenres({int page = 1, int pageSize = 20, String? search}) async {
     final res = await _dio.get(
-      '/Genres',
+      ApiEndpoints.genres,
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
@@ -70,7 +70,7 @@ class ReferenceService {
 
   Future<PagedResult<Director>> getDirectors({int page = 1, int pageSize = 20, String? search}) async {
     final res = await _dio.get(
-      '/Directors',
+      ApiEndpoints.directors,
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
@@ -89,68 +89,68 @@ class ReferenceService {
 
   // Countries CRUD
   Future<Country> createCountry({required String name}) async {
-    final res = await _dio.post('/Countries', data: {'name': name});
+    final res = await _dio.post(ApiEndpoints.countries, data: {'name': name});
     return Country.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<Country> updateCountry({required String id, required String name}) async {
-    final res = await _dio.put('/Countries/$id', data: {'name': name});
+    final res = await _dio.put('${ApiEndpoints.countries}/$id', data: {'name': name});
     return Country.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteCountry(String id) async {
-    await _dio.delete('/Countries/$id');
+    await _dio.delete('${ApiEndpoints.countries}/$id');
   }
 
   // Cities CRUD
   Future<City> createCity({required String name, required String countryId}) async {
-    final res = await _dio.post('/Cities', data: {'name': name, 'countryId': countryId});
+    final res = await _dio.post(ApiEndpoints.cities, data: {'name': name, 'countryId': countryId});
     return City.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<City> updateCity({required String id, required String name, required String countryId}) async {
-    final res = await _dio.put('/Cities/$id', data: {'name': name, 'countryId': countryId});
+    final res = await _dio.put('${ApiEndpoints.cities}/$id', data: {'name': name, 'countryId': countryId});
     return City.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteCity(String id) async {
-    await _dio.delete('/Cities/$id');
+    await _dio.delete('${ApiEndpoints.cities}/$id');
   }
 
   // Genres CRUD
   Future<Genre> createGenre({required String name}) async {
-    final res = await _dio.post('/Genres', data: {'name': name});
+    final res = await _dio.post(ApiEndpoints.genres, data: {'name': name});
     return Genre.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<Genre> updateGenre({required String id, required String name}) async {
-    final res = await _dio.put('/Genres/$id', data: {'name': name});
+    final res = await _dio.put('${ApiEndpoints.genres}/$id', data: {'name': name});
     return Genre.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteGenre(String id) async {
-    await _dio.delete('/Genres/$id');
+    await _dio.delete('${ApiEndpoints.genres}/$id');
   }
 
   // Directors CRUD
   Future<Director> createDirector({required String fullName}) async {
-    final res = await _dio.post('/Directors', data: {'fullName': fullName});
+    final res = await _dio.post(ApiEndpoints.directors, data: {'fullName': fullName});
     return Director.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<Director> updateDirector({required String id, required String fullName}) async {
-    final res = await _dio.put('/Directors/$id', data: {'fullName': fullName});
+    final res = await _dio.put('${ApiEndpoints.directors}/$id', data: {'fullName': fullName});
     return Director.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteDirector(String id) async {
-    await _dio.delete('/Directors/$id');
+    await _dio.delete('${ApiEndpoints.directors}/$id');
   }
 
   // Actors CRUD
   Future<PagedResult<Actor>> getActors({int page = 1, int pageSize = 20, String? search}) async {
     final res = await _dio.get(
-      '/Actors',
+      ApiEndpoints.actors,
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
@@ -170,21 +170,21 @@ class ReferenceService {
   }
 
   Future<Actor> createActor({required String fullName}) async {
-    final res = await _dio.post('/Actors', data: {'fullName': fullName});
+    final res = await _dio.post(ApiEndpoints.actors, data: {'fullName': fullName});
     return Actor.fromJson(res.data as Map<String, dynamic>);
     }
 
   Future<Actor> updateActor({required String id, required String fullName}) async {
-    final res = await _dio.put('/Actors/$id', data: {'fullName': fullName});
+    final res = await _dio.put('${ApiEndpoints.actors}/$id', data: {'fullName': fullName});
     return Actor.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteActor(String id) async {
-    await _dio.delete('/Actors/$id');
+    await _dio.delete('${ApiEndpoints.actors}/$id');
   }
 
   Future<List<Map<String, dynamic>>> getActorItems() async {
-    final res = await _dio.get('/Actors/items');
+    final res = await _dio.get(ApiEndpoints.actorsItems);
     final items = (res.data as List<dynamic>).whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
     return items;
   }

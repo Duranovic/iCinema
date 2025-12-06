@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class AuthRemoteDataSource {
@@ -12,7 +13,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<Map<String,dynamic>> login(String email, String password) async {
-    final res = await _dio.post('/auth/login-admin', data: {
+    final res = await _dio.post(ApiEndpoints.loginAdmin, data: {
       'email': email,
       'password': password,
     });

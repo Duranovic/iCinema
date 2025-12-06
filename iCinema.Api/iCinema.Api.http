@@ -1,17 +1,17 @@
 @Api_HostAddress = http://localhost:5218
 
-GET {{Api_HostAddress}}/Movies/
+GET {{Api_HostAddress}}/movies/
 Accept: application/json
 
 ###
-GET {{Api_HostAddress}}/Countries
+GET {{Api_HostAddress}}/countries
 
 ###
-GET {{Api_HostAddress}}/Genres
+GET {{Api_HostAddress}}/genres
 
 ###
 # Test 1: Create Movie with JSON only (traditional approach)
-POST {{Api_HostAddress}}/Movies
+POST {{Api_HostAddress}}/movies
 Content-Type: application/json
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
@@ -25,7 +25,7 @@ Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
 ###
 # Test 2: Create Movie with Multipart Form (JSON + Poster)
-POST {{Api_HostAddress}}/Movies
+POST {{Api_HostAddress}}/movies
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
@@ -49,7 +49,7 @@ Content-Type: image/jpeg
 
 ###
 # Test 3: Update Movie with JSON only
-PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+PUT {{Api_HostAddress}}/movies/MOVIE_ID_HERE
 Content-Type: application/json
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
@@ -63,7 +63,7 @@ Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
 ###
 # Test 4: Update Movie with Multipart Form (JSON + New Poster)
-PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+PUT {{Api_HostAddress}}/movies/MOVIE_ID_HERE
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
@@ -87,7 +87,7 @@ Content-Type: image/jpeg
 
 ###
 # Test 5: Update Movie with Multipart Form (JSON only, no poster)
-PUT {{Api_HostAddress}}/Movies/MOVIE_ID_HERE
+PUT {{Api_HostAddress}}/movies/MOVIE_ID_HERE
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 

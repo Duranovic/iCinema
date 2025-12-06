@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:icinema_shared/icinema_shared.dart';
 import '../models/validation_result.dart';
 
 class ValidationApiService {
@@ -11,7 +12,7 @@ class ValidationApiService {
   Future<ValidationResult> validateTicket(String qrCode) async {
     try {
       final response = await _dio.post(
-        '/tickets/validate',
+        ApiEndpoints.ticketsValidate,
         data: {'token': qrCode},
       );
 

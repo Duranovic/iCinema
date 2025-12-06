@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iCinema.Api.Controllers;
 
+[Route("movies")]
 public class MoviesController(IMediator mediator, IRatingRepository ratings, IMovieRepository movies)
     : BaseController<MovieDto, MovieCreateDto, MovieUpdateDto, MovieFilter>(mediator)
 {
